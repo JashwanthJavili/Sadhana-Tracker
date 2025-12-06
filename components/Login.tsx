@@ -65,29 +65,37 @@ const Login: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 lg:gap-4">
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-lg border border-orange-200">
-              <BookOpen className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8 mb-3" />
-              <h3 className="font-semibold text-orange-900 mb-1 text-sm lg:text-base">Daily Planning</h3>
-              <p className="text-xs lg:text-sm text-orange-700">Structured sadhana tracking</p>
+          <div className="grid grid-cols-2 gap-4 lg:gap-5">
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-5 lg:p-7 shadow-xl hover:shadow-2xl border-2 border-orange-200 hover:border-orange-400 transition-all duration-300 transform hover:-translate-y-1">
+              <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl p-2 inline-block mb-4 group-hover:scale-110 transition-transform duration-300">
+                <BookOpen className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8" />
+              </div>
+              <h3 className="font-bold text-orange-900 mb-2 text-base lg:text-lg">Daily Planning</h3>
+              <p className="text-sm lg:text-base text-orange-700 leading-relaxed">Structured sadhana tracking</p>
             </div>
             
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-lg border border-orange-200">
-              <TrendingUp className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8 mb-3" />
-              <h3 className="font-semibold text-orange-900 mb-1 text-sm lg:text-base">Progress Analytics</h3>
-              <p className="text-xs lg:text-sm text-orange-700">Visual growth insights</p>
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-5 lg:p-7 shadow-xl hover:shadow-2xl border-2 border-orange-200 hover:border-orange-400 transition-all duration-300 transform hover:-translate-y-1">
+              <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl p-2 inline-block mb-4 group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8" />
+              </div>
+              <h3 className="font-bold text-orange-900 mb-2 text-base lg:text-lg">Progress Analytics</h3>
+              <p className="text-sm lg:text-base text-orange-700 leading-relaxed">Visual growth insights</p>
             </div>
             
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-lg border border-orange-200">
-              <Heart className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8 mb-3" />
-              <h3 className="font-semibold text-orange-900 mb-1 text-sm lg:text-base">Devotional Journal</h3>
-              <p className="text-xs lg:text-sm text-orange-700">Record inner feelings</p>
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-5 lg:p-7 shadow-xl hover:shadow-2xl border-2 border-orange-200 hover:border-orange-400 transition-all duration-300 transform hover:-translate-y-1">
+              <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl p-2 inline-block mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Heart className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8" />
+              </div>
+              <h3 className="font-bold text-orange-900 mb-2 text-base lg:text-lg">Devotional Journal</h3>
+              <p className="text-sm lg:text-base text-orange-700 leading-relaxed">Record inner feelings</p>
             </div>
             
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-lg border border-orange-200">
-              <Cloud className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8 mb-3" />
-              <h3 className="font-semibold text-orange-900 mb-1 text-sm lg:text-base">Cloud Sync</h3>
-              <p className="text-xs lg:text-sm text-orange-700">Access anywhere</p>
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-5 lg:p-7 shadow-xl hover:shadow-2xl border-2 border-orange-200 hover:border-orange-400 transition-all duration-300 transform hover:-translate-y-1">
+              <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl p-2 inline-block mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Cloud className="text-orange-600 w-6 h-6 lg:w-8 lg:h-8" />
+              </div>
+              <h3 className="font-bold text-orange-900 mb-2 text-base lg:text-lg">Cloud Sync</h3>
+              <p className="text-sm lg:text-base text-orange-700 leading-relaxed">Access anywhere</p>
             </div>
           </div>
         </div>
@@ -123,32 +131,32 @@ const Login: React.FC = () => {
                   <div className="h-0.5 w-20 bg-gradient-to-r from-transparent via-orange-400 to-transparent mx-auto mt-1"></div>
                 </div>
 
-                <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
+                <div className="flex items-center justify-center gap-5 sm:gap-8 flex-wrap">
                   {/* Gurumaharaj Feet Image */}
-                  <div className="group relative transform transition-transform hover:scale-105">
-                    <div className="absolute -inset-2 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition duration-500"></div>
-                    <div className="relative bg-white rounded-2xl p-3 shadow-xl ring-2 ring-orange-300">
+                  <div className="group relative transform transition-all duration-500 hover:scale-105 hover:-translate-y-1">
+                    <div className="absolute -inset-3 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                    <div className="relative bg-white rounded-2xl p-4 shadow-2xl ring-4 ring-orange-300 group-hover:ring-orange-400 transition-all duration-300">
                       <img 
                         src={guruMaharajImage} 
                         alt="HH Radhanath Swamy Maharaj's Divine Lotus Feet" 
-                        className="w-32 h-32 sm:w-40 sm:h-40 object-contain rounded-xl"
+                        className="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-xl"
                       />
-                      <div className="mt-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs sm:text-sm font-bold py-2 px-2 rounded-lg shadow-md text-center">
+                      <div className="mt-3 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white text-sm sm:text-base font-bold py-2.5 px-3 rounded-xl shadow-lg text-center group-hover:shadow-xl transition-shadow duration-300">
                         HH Radhanath Swamy
                       </div>
                     </div>
                   </div>
 
                   {/* Guru Image */}
-                  <div className="group relative transform transition-transform hover:scale-105">
-                    <div className="absolute -inset-2 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition duration-500"></div>
-                    <div className="relative bg-white rounded-2xl p-3 shadow-xl ring-2 ring-orange-300">
+                  <div className="group relative transform transition-all duration-500 hover:scale-105 hover:-translate-y-1">
+                    <div className="absolute -inset-3 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                    <div className="relative bg-white rounded-2xl p-4 shadow-2xl ring-4 ring-orange-300 group-hover:ring-orange-400 transition-all duration-300">
                       <img 
                         src={guruImage} 
                         alt="HG Pranavananda Das Prabhuji" 
-                        className="w-32 h-32 sm:w-40 sm:h-40 object-contain rounded-xl"
+                        className="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-xl"
                       />
-                      <div className="mt-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs sm:text-sm font-bold py-2 px-2 rounded-lg shadow-md text-center">
+                      <div className="mt-3 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white text-sm sm:text-base font-bold py-2.5 px-3 rounded-xl shadow-lg text-center group-hover:shadow-xl transition-shadow duration-300">
                         HG Pranavananda Das
                       </div>
                     </div>
@@ -191,51 +199,51 @@ const Login: React.FC = () => {
             )}
 
             {/* Login Buttons */}
-            <div className="space-y-4">
+            <div className="space-y-5">
               <button 
                 onClick={handleLogin}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 bg-white border-2 border-orange-300 hover:border-orange-500 hover:bg-orange-50 text-stone-800 font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl group disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-4 bg-white border-3 border-orange-300 hover:border-orange-500 hover:bg-orange-50 text-stone-900 font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl group disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.03] active:scale-[0.97] min-h-[56px] focus:outline-none focus:ring-4 focus:ring-orange-300"
               >
                 <img 
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
                   alt="Google" 
-                  className="w-6 h-6"
+                  className="w-7 h-7 group-hover:scale-110 transition-transform duration-300"
                 />
-                <span className="group-hover:text-orange-700 transition-colors text-base">
+                <span className="group-hover:text-orange-700 transition-colors text-lg">
                   {isLoading ? 'Signing in...' : 'Sign in with Google'}
                 </span>
               </button>
 
-              <div className="relative">
+              <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t-2 border-orange-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-4 text-orange-700 font-bold uppercase tracking-wide">Or Quick Access</span>
+                  <span className="bg-white px-5 py-1 text-orange-700 font-bold uppercase tracking-wider shadow-sm rounded-full">Or Quick Access</span>
                 </div>
               </div>
 
               <button 
                 onClick={handleGuestLogin}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-700 hover:via-amber-700 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-700 hover:via-amber-700 hover:to-orange-600 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-[0_20px_50px_rgba(234,88,12,0.4)] transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px] focus:outline-none focus:ring-4 focus:ring-orange-400"
               >
-                <UserCircle size={20} />
-                <span className="text-base">{isLoading ? 'Loading...' : 'Continue as Guest'}</span>
+                <UserCircle size={24} className="group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-lg">{isLoading ? 'Loading...' : 'Continue as Guest'}</span>
               </button>
             </div>
 
             {/* Info Card */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-3 border-2 border-amber-200 shadow-inner">
-              <div className="flex items-start gap-2">
-                <div className="bg-amber-100 p-1.5 rounded-lg">
-                  <Cloud className="text-amber-700 w-4 h-4" />
+            <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl p-5 border-3 border-amber-300 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-2.5 rounded-xl shadow-md flex-shrink-0">
+                  <Cloud className="text-amber-700 w-6 h-6" />
                 </div>
-                <div className="flex-1 text-xs text-amber-900">
-                  <p className="font-bold mb-0.5">Choose Your Path:</p>
-                  <p className="mb-1"><strong className="text-orange-700">🔐 Google Sign-in:</strong> Cloud sync, access from any device, secure backup</p>
-                  <p><strong className="text-orange-700">👤 Guest Mode:</strong> Quick start, data stored locally on this device only</p>
+                <div className="flex-1 text-sm text-amber-900 space-y-2.5">
+                  <p className="font-bold text-base text-orange-800 mb-2">Choose Your Path:</p>
+                  <p className="leading-relaxed"><strong className="text-orange-700 text-base">🔐 Google Sign-in:</strong> Cloud sync, access from any device, secure backup</p>
+                  <p className="leading-relaxed"><strong className="text-orange-700 text-base">👤 Guest Mode:</strong> Quick start, data stored locally on this device only</p>
                 </div>
               </div>
             </div>
