@@ -30,7 +30,15 @@ const Community: React.FC = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Set a timeout to stop loading even if data doesn't arrive
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [user]);
 
   useEffect(() => {

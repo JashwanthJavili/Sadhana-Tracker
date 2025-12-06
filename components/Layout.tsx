@@ -58,7 +58,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         const count = await getTotalUnreadCount(user.uid);
         setUnreadCount(count);
       } catch (error) {
-        console.error('Error loading unread count:', error);
+        console.warn('Unable to load unread count:', error);
+        setUnreadCount(0); // Set to 0 instead of throwing
       }
     };
     

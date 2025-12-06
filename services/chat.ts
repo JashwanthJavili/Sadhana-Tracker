@@ -5,16 +5,21 @@ import { UserProfile, Chat, ChatMessage, TypingStatus } from '../types/chat';
 // ============= USER PROFILES & PRESENCE =============
 
 export const createUserProfile = async (uid: string, profile: Omit<UserProfile, 'uid' | 'isOnline' | 'lastSeen' | 'joinedDate'>) => {
-  const userProfile: UserProfile = {
-    ...profile,
-    uid,
-    isOnline: true,
-    lastSeen: Date.now(),
-    joinedDate: Date.now(),
-  };
-  
-  await set(ref(database, `users/${uid}`), userProfile);
-  await setUserOnlineStatus(uid, true);
+  try {
+    const userProfile: UserProfile = {
+      ...profile,
+      uid,
+      isOnline: true,
+      lastSeen: Date.now(),
+      joinedDate: Date.now(),
+    };
+    
+    await set(ref(database, `users/${uid}`), userProfile);
+    await setUserOnlineStatus(uid, true);
+  } catch (error) {
+    console.error('Error creating user profile:', error);
+    throw error; // Re-throw to handle in calling code
+  }
 };
 
 export const updateUserProfile = async (uid: string, updates: Partial<UserProfile>) => {
@@ -22,8 +27,13 @@ export const updateUserProfile = async (uid: string, updates: Partial<UserProfil
 };
 
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
-  const snapshot = await get(ref(database, `users/${uid}`));
-  return snapshot.exists() ? snapshot.val() : null;
+  try {
+    const snapshot = await get(ref(database, `users/${uid}`));
+    return snapshot.exists() ? snapshot.val() : null;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
 };
 
 export const getAllUsers = (callback: (users: UserProfile[]) => void) => {
@@ -35,84 +45,97 @@ export const getAllUsers = (callback: (users: UserProfile[]) => void) => {
       users.push(childSnapshot.val());
     });
     callback(users);
+  }, (error) => {
+    console.error('Error loading users:', error);
+    callback([]); // Return empty array on error
   });
   
   return () => off(usersRef);
 };
 
 export const setUserOnlineStatus = async (uid: string, isOnline: boolean) => {
-  const userStatusRef = ref(database, `users/${uid}`);
-  
-  await update(userStatusRef, {
-    isOnline,
-    lastSeen: Date.now(),
-  });
-  
-  // Set up automatic offline detection when user disconnects
-  if (isOnline) {
-    const offlineData = {
-      isOnline: false,
-      lastSeen: Date.now(),
-    };
+  try {
+    const userStatusRef = ref(database, `users/${uid}`);
     
-    onDisconnect(userStatusRef).update(offlineData);
+    await update(userStatusRef, {
+      isOnline,
+      lastSeen: Date.now(),
+    });
+    
+    // Set up automatic offline detection when user disconnects
+    if (isOnline) {
+      const offlineData = {
+        isOnline: false,
+        lastSeen: Date.now(),
+      };
+      
+      onDisconnect(userStatusRef).update(offlineData);
+    }
+  } catch (error) {
+    console.warn('Unable to update online status:', error);
+    // Don't throw - online status is not critical
   }
 };
 
 // ============= CHAT MANAGEMENT =============
 
 export const createOrGetChat = async (currentUserId: string, otherUserId: string): Promise<string> => {
-  // Check if chat already exists
-  const chatsRef = ref(database, 'chats');
-  const snapshot = await get(chatsRef);
-  
-  if (snapshot.exists()) {
-    const chats = snapshot.val();
-    for (const [chatId, chat] of Object.entries(chats as Record<string, Chat>)) {
-      if (chat.participants.includes(currentUserId) && chat.participants.includes(otherUserId)) {
-        return chatId;
+  try {
+    // Check if chat already exists
+    const chatsRef = ref(database, 'chats');
+    const snapshot = await get(chatsRef);
+    
+    if (snapshot.exists()) {
+      const chats = snapshot.val();
+      for (const [chatId, chat] of Object.entries(chats as Record<string, Chat>)) {
+        if (chat.participants.includes(currentUserId) && chat.participants.includes(otherUserId)) {
+          return chatId;
+        }
       }
     }
-  }
-  
-  // Create new chat
-  const currentUser = await getUserProfile(currentUserId);
-  const otherUser = await getUserProfile(otherUserId);
-  
-  if (!currentUser || !otherUser) {
-    throw new Error('User profiles not found');
-  }
-  
-  const newChatRef = push(ref(database, 'chats'));
-  const chatId = newChatRef.key!;
-  
-  const newChat: Chat = {
-    id: chatId,
-    participants: [currentUserId, otherUserId],
-    participantDetails: {
-      [currentUserId]: {
-        userName: currentUser.userName,
-        photoURL: currentUser.photoURL,
-        guruName: currentUser.guruName,
-        iskconCenter: currentUser.iskconCenter,
+    
+    // Create new chat
+    const currentUser = await getUserProfile(currentUserId);
+    const otherUser = await getUserProfile(otherUserId);
+    
+    if (!currentUser || !otherUser) {
+      throw new Error('User profiles not found');
+    }
+    
+    const newChatRef = push(ref(database, 'chats'));
+    const chatId = newChatRef.key!;
+    
+    const newChat: Chat = {
+      id: chatId,
+      participants: [currentUserId, otherUserId],
+      participantDetails: {
+        [currentUserId]: {
+          userName: currentUser.userName,
+          photoURL: currentUser.photoURL,
+          guruName: currentUser.guruName,
+          iskconCenter: currentUser.iskconCenter,
+        },
+        [otherUserId]: {
+          userName: otherUser.userName,
+          photoURL: otherUser.photoURL,
+          guruName: otherUser.guruName,
+          iskconCenter: otherUser.iskconCenter,
+        },
       },
-      [otherUserId]: {
-        userName: otherUser.userName,
-        photoURL: otherUser.photoURL,
-        guruName: otherUser.guruName,
-        iskconCenter: otherUser.iskconCenter,
+      unreadCount: {
+        [currentUserId]: 0,
+        [otherUserId]: 0,
       },
-    },
-    unreadCount: {
-      [currentUserId]: 0,
-      [otherUserId]: 0,
-    },
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-  
-  await set(newChatRef, newChat);
-  return chatId;
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    
+    await set(newChatRef, newChat);
+    return chatId;
+  } catch (error) {
+    console.error('Error creating/getting chat:', error);
+    throw error; // Re-throw to handle in UI
+  }
 };
 
 export const getUserChats = (userId: string, callback: (chats: Chat[]) => void) => {
@@ -130,6 +153,9 @@ export const getUserChats = (userId: string, callback: (chats: Chat[]) => void) 
     // Sort by most recent activity
     chats.sort((a, b) => (b.lastMessage?.timestamp || b.updatedAt) - (a.lastMessage?.timestamp || a.updatedAt));
     callback(chats);
+  }, (error) => {
+    console.error('Error loading chats:', error);
+    callback([]); // Return empty array on error
   });
   
   return () => off(chatsRef);
@@ -302,18 +328,23 @@ export const searchUsers = async (
 };
 
 export const getTotalUnreadCount = async (userId: string): Promise<number> => {
-  const chatsRef = ref(database, 'chats');
-  const snapshot = await get(chatsRef);
-  
-  if (!snapshot.exists()) return 0;
-  
-  let totalUnread = 0;
-  snapshot.forEach((childSnapshot) => {
-    const chat = childSnapshot.val() as Chat;
-    if (chat.participants.includes(userId)) {
-      totalUnread += chat.unreadCount[userId] || 0;
-    }
-  });
-  
-  return totalUnread;
+  try {
+    const chatsRef = ref(database, 'chats');
+    const snapshot = await get(chatsRef);
+    
+    if (!snapshot.exists()) return 0;
+    
+    let totalUnread = 0;
+    snapshot.forEach((childSnapshot) => {
+      const chat = childSnapshot.val() as Chat;
+      if (chat.participants.includes(userId)) {
+        totalUnread += chat.unreadCount[userId] || 0;
+      }
+    });
+    
+    return totalUnread;
+  } catch (error) {
+    console.warn('Unable to fetch unread count:', error);
+    return 0; // Return 0 instead of throwing
+  }
 };

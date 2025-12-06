@@ -2,7 +2,7 @@
   "rules": {
     "users": {
       "$userId": {
-        ".read": "auth != null && auth.uid == $userId",
+        ".read": "auth != null",
         ".write": "auth != null && auth.uid == $userId",
         "entries": {
           "$entryId": {
@@ -11,6 +11,43 @@
         },
         "settings": {
           ".validate": "newData.hasChildren(['userName', 'iskconCenter'])"
+        }
+      }
+    },
+    "chats": {
+      "$chatId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "messages": {
+      "$chatId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$messageId": {
+          ".validate": "newData.hasChildren(['id', 'chatId', 'senderId', 'senderName', 'text', 'timestamp'])"
+        }
+      }
+    },
+    "typing": {
+      "$chatId": {
+        "$uid": {
+          ".read": "auth != null",
+          ".write": "auth != null && $uid === auth.uid"
+        }
+      }
+    },
+    "questions": {
+      ".read": "auth != null",
+      "$questionId": {
+        ".write": "auth != null"
+      }
+    },
+    "answers": {
+      "$questionId": {
+        ".read": "auth != null",
+        "$answerId": {
+          ".write": "auth != null"
         }
       }
     }

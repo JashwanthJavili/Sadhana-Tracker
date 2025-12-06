@@ -21,18 +21,29 @@ const ChatsList: React.FC = () => {
       setLoading(false);
     });
 
-    // Load total unread count
+    // Load total unread count with error handling
     const loadUnreadCount = async () => {
-      const count = await getTotalUnreadCount(user.uid);
-      setTotalUnread(count);
+      try {
+        const count = await getTotalUnreadCount(user.uid);
+        setTotalUnread(count);
+      } catch (error) {
+        console.warn('Failed to load unread count:', error);
+        setTotalUnread(0);
+      }
     };
 
     loadUnreadCount();
     const interval = setInterval(loadUnreadCount, 5000); // Update every 5 seconds
 
+    // Set timeout to stop loading
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     return () => {
       unsubscribe();
       clearInterval(interval);
+      clearTimeout(timeout);
     };
   }, [user]);
 
@@ -215,6 +226,27 @@ const ChatsList: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && filteredChats.length === 0 && (
+        <div className="text-center py-16 px-4">
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-12 border-2 border-orange-200 max-w-md mx-auto">
+            <MessageCircle size={64} className="text-orange-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-stone-800 mb-3">No Messages Yet</h3>
+            <p className="text-stone-600 mb-6">
+              {searchTerm
+                ? 'No conversations match your search.'
+                : 'Start connecting with devotees from the Community page!'}
+            </p>
+            <button
+              onClick={() => navigate('/community')}
+              className="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-amber-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+            >
+              Browse Community
+            </button>
+          </div>
         </div>
       )}
     </div>
