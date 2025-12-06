@@ -72,23 +72,28 @@ const DevotionalJournal: React.FC = () => {
 
   const handleSave = async () => {
     if (user && currentEntry.title && currentEntry.content) {
-      const entry: JournalEntry = {
-        id: editingId || Date.now().toString(),
-        date: new Date().toISOString().split('T')[0],
-        timestamp: Date.now(),
-        title: currentEntry.title!,
-        content: currentEntry.content!,
-        mood: currentEntry.mood || 'peaceful',
-        tags: currentEntry.tags || []
-      };
+      try {
+        const entry: JournalEntry = {
+          id: editingId || Date.now().toString(),
+          date: new Date().toISOString().split('T')[0],
+          timestamp: Date.now(),
+          title: currentEntry.title!,
+          content: currentEntry.content!,
+          mood: currentEntry.mood || 'peaceful',
+          tags: currentEntry.tags || []
+        };
 
-      await saveJournalEntry(user.uid, entry);
-      const updated = await getJournalEntries(user.uid);
-      setEntries(updated);
-      
-      setIsWriting(false);
-      setEditingId(null);
-      setCurrentEntry({ title: '', content: '', mood: 'peaceful', tags: [] });
+        await saveJournalEntry(user.uid, entry);
+        const updated = await getJournalEntries(user.uid);
+        setEntries(updated);
+        
+        setIsWriting(false);
+        setEditingId(null);
+        setCurrentEntry({ title: '', content: '', mood: 'peaceful', tags: [] });
+      } catch (error) {
+        console.error('Error saving journal entry:', error);
+        alert('Failed to save entry. Please try again.');
+      }
     }
   };
 
@@ -150,6 +155,7 @@ const DevotionalJournal: React.FC = () => {
               {editingId ? (language === 'en' ? 'Edit Entry' : language === 'hi' ? 'प्रविष्टि संपादित करें' : 'ఎంట్రీని సవరించండి') : (language === 'en' ? 'New Journal Entry' : language === 'hi' ? 'नई डायरी प्रविष्टि' : 'క్రొత్త డైరీ ఎంట్రీ')}
             </h2>
             <button
+              type="button"
               onClick={() => {
                 setIsWriting(false);
                 setEditingId(null);
@@ -183,6 +189,7 @@ const DevotionalJournal: React.FC = () => {
                 {(Object.keys(moodEmojis) as Array<keyof typeof moodEmojis>).map((mood) => (
                   <button
                     key={mood}
+                    type="button"
                     onClick={() => setCurrentEntry({ ...currentEntry, mood })}
                     className={`p-3 rounded-lg border-2 transition-all duration-300 transform hover:scale-110 active:scale-95 ${
                       currentEntry.mood === mood
@@ -223,6 +230,7 @@ const DevotionalJournal: React.FC = () => {
                   placeholder={language === 'en' ? 'Add a tag...' : language === 'hi' ? 'एक टैग जोड़ें...' : 'ట్యాగ్ జోడించండి...'}
                 />
                 <button
+                  type="button"
                   onClick={addTag}
                   className="px-4 py-2 bg-stone-900 text-white rounded-lg hover:bg-stone-800"
                 >
@@ -236,7 +244,7 @@ const DevotionalJournal: React.FC = () => {
                     className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm flex items-center gap-2"
                   >
                     {tag}
-                    <button onClick={() => removeTag(tag)} className="hover:text-orange-900">
+                    <button type="button" onClick={() => removeTag(tag)} className="hover:text-orange-900">
                       <X size={14} />
                     </button>
                   </span>
@@ -247,6 +255,7 @@ const DevotionalJournal: React.FC = () => {
 
           <div className="flex gap-3 pt-4">
             <button
+              type="button"
               onClick={handleSave}
               disabled={!currentEntry.title || !currentEntry.content}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
@@ -255,6 +264,7 @@ const DevotionalJournal: React.FC = () => {
               {t.common.save}
             </button>
             <button
+              type="button"
               onClick={() => {
                 setIsWriting(false);
                 setEditingId(null);

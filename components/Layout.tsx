@@ -64,16 +64,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 flex flex-col md:flex-row font-sans">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
       {/* Mobile Header */}
-      <div className="md:hidden bg-orange-700 text-white p-4 flex justify-between items-center shadow-md">
+      <div className="md:hidden bg-orange-700 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
         <div className="flex items-center gap-2">
            <svg className="h-8 w-8 text-orange-200 fill-current" viewBox="0 0 24 24">
              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/> 
            </svg>
           <span className="font-serif font-bold text-lg">Sadhana</span>
         </div>
-        <button onClick={toggleSidebar}>
-          {isSidebarOpen ? <X /> : <Menu />}
+        <button 
+          onClick={toggleSidebar}
+          className="p-2 hover:bg-orange-600 rounded-lg transition-colors active:scale-95"
+          aria-label="Toggle menu"
+        >
+          {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 

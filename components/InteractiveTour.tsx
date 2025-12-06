@@ -273,19 +273,19 @@ const InteractiveTour: React.FC<InteractiveTourProps> = ({ onComplete }) => {
 
   return (
     <>
-      {/* Dark Overlay with proper z-index */}
-      <div className="fixed inset-0 bg-black/75 z-[100000] backdrop-blur-sm transition-all duration-300" onClick={handleSkip}>
+      {/* Dark Overlay - No blur to keep text readable */}
+      <div className="fixed inset-0 bg-black/60 z-[100000] transition-all duration-300" onClick={handleSkip}>
         {/* Spotlight effect on highlighted element */}
         {highlightedElement && (
           <div
-            className="absolute rounded-xl transition-all duration-500 pointer-events-none"
+            className="absolute rounded-xl transition-all duration-500 pointer-events-none ring-4 ring-orange-400"
             style={{
               top: highlightedElement.getBoundingClientRect().top - 8,
               left: highlightedElement.getBoundingClientRect().left - 8,
               width: highlightedElement.getBoundingClientRect().width + 16,
               height: highlightedElement.getBoundingClientRect().height + 16,
-              boxShadow: '0 0 0 4px rgba(251, 146, 60, 0.6), 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 60px 20px rgba(251, 146, 60, 0.4)',
-              border: '4px solid rgba(251, 146, 60, 0.9)',
+              boxShadow: '0 0 0 4px rgba(251, 146, 60, 1), 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 80px 30px rgba(251, 146, 60, 0.8)',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
               zIndex: 100001
             }}
           />

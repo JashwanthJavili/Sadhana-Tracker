@@ -71,7 +71,7 @@ function AppContent() {
     checkFirstTime();
   }, [user]);
 
-  const handleOnboardingComplete = async (data: { userName: string; guruName: string; iskconCenter: string; language: 'en' | 'hi' | 'te' }) => {
+  const handleOnboardingComplete = async (data: { userName: string; guruName: string; iskconCenter: string }) => {
     if (user) {
       const settings = await getSettings(user.uid);
       await saveSettings(user.uid, {
@@ -79,7 +79,7 @@ function AppContent() {
         userName: data.userName,
         guruName: data.guruName,
         iskconCenter: data.iskconCenter,
-        language: data.language,
+        language: 'en', // Default to English
         isFirstTime: false,
       });
       setShowOnboarding(false);
