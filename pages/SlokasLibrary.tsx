@@ -357,34 +357,34 @@ const SlokasLibrary: React.FC = () => {
                 onClick={() => setExpandedSlokas({ ...expandedSlokas, [sloka.id]: !expandedSlokas[sloka.id] })}
               >
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1">
                     {/* Drag Handle for Admin */}
                     {user?.email === ADMIN_EMAIL && !searchTerm && (
                       <div 
-                        className="cursor-move text-stone-400 hover:text-stone-600"
+                        className="cursor-move text-stone-400 hover:text-stone-600 hidden sm:block"
                         onClick={(e) => e.stopPropagation()}
                         title="Drag to reorder"
                       >
                         <GripVertical size={24} />
                       </div>
                     )}
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-stone-800 mb-2">{sloka.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-stone-600">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg sm:text-2xl font-bold text-stone-800 mb-2 break-words">{sloka.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-stone-600">
                         <span className="flex items-center gap-1">
-                          <User size={16} />
-                          {sloka.addedByName}
+                          <User size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
+                          <span className="truncate max-w-[100px] sm:max-w-none">{sloka.addedByName}</span>
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Clock size={16} />
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Clock size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
                           {new Date(sloka.timestamp).toLocaleDateString()}
                         </span>
-                        <span className="flex items-center gap-2 px-3 py-1 bg-purple-100 rounded-full">
-                          <Heart size={14} fill={sloka.likedBy?.includes(user?.uid || '') ? 'red' : 'none'} className="text-red-500" />
+                        <span className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-purple-100 rounded-full">
+                          <Heart size={12} fill={sloka.likedBy?.includes(user?.uid || '') ? 'red' : 'none'} className="sm:w-3.5 sm:h-3.5 text-red-500" />
                           <span className="font-semibold">{sloka.likes || 0}</span>
                         </span>
-                        <span className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
-                          <MessageSquare size={14} className="text-blue-600" />
+                        <span className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-blue-100 rounded-full">
+                          <MessageSquare size={12} className="sm:w-3.5 sm:h-3.5 text-blue-600" />
                           <span className="font-semibold">{sloka.comments?.length || 0}</span>
                         </span>
                       </div>
@@ -397,7 +397,7 @@ const SlokasLibrary: React.FC = () => {
                           e.stopPropagation();
                           handleDeleteSloka(sloka.id);
                         }}
-                        className="text-red-500 hover:text-red-700 transition-colors p-2"
+                        className="text-red-500 hover:text-red-700 transition-colors p-1.5 sm:p-2"
                         title="Delete"
                       >
                         <Trash2 size={20} />

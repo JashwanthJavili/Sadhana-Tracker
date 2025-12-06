@@ -355,14 +355,14 @@ const FestivalsPage: React.FC = () => {
             {upcomingFestivals.map((festival) => (
               <div
                 key={festival.id}
-                className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-300 shadow-lg hover:shadow-xl transition-all"
+                className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-purple-300 shadow-lg hover:shadow-xl transition-all"
               >
                 {/* Festival Header */}
                 <div className="mb-4">
-                  <h3 className="text-2xl font-bold text-purple-900 mb-2">
+                  <h3 className="text-xl sm:text-2xl font-bold text-purple-900 mb-2">
                     {translations[festival.id] ? translations[festival.id].name : festival.name}
                   </h3>
-                  <p className="text-purple-700 font-semibold mb-3">
+                  <p className="text-sm sm:text-base text-purple-700 font-semibold mb-3">
                     {new Date(festival.date).toLocaleDateString('en-US', { 
                       weekday: 'long', 
                       year: 'numeric', 
@@ -370,7 +370,7 @@ const FestivalsPage: React.FC = () => {
                       day: 'numeric' 
                     })}
                   </p>
-                  <p className="text-stone-700 mb-4">
+                  <p className="text-sm sm:text-base text-stone-700 mb-4">
                     {translations[festival.id] ? translations[festival.id].description : festival.shortDescription}
                   </p>
                 </div>

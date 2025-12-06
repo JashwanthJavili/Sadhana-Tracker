@@ -248,11 +248,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-stone-50">
+      <main className="flex-1 flex flex-col min-h-screen md:h-screen overflow-hidden relative bg-stone-50">
         {/* Guest Mode Banner */}
         {isGuest && (
           <div className="sticky top-0 z-30 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 text-white px-4 py-3 shadow-lg">
-            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
               <div className="flex items-center gap-3">
                 <Lock size={20} className="flex-shrink-0" />
                 <div className="text-sm">
@@ -264,7 +264,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
               <button
                 onClick={handleLogout}
-                className="bg-white text-orange-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-colors whitespace-nowrap"
+                className="bg-white text-orange-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-colors whitespace-nowrap self-end sm:self-auto"
               >
                 Sign In
               </button>
@@ -272,8 +272,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         )}
         
-        <div className="flex-1 overflow-y-auto bg-stone-50" style={{ overscrollBehavior: 'none' }}>
-          <div className="max-w-7xl mx-auto p-4 md:p-8 pb-24">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-stone-50 touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+          <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-8 pb-24">
             {children}
           </div>
         </div>
