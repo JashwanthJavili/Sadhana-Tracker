@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
 import { UserSettings } from '../types';
-import { Save, User, Wrench, Users } from 'lucide-react';
+import { Save, User, Wrench, Users, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
 import { createUserProfile } from '../services/chat';
+import { ref, remove } from 'firebase/database';
+import { db } from '../services/firebase';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
@@ -13,6 +15,7 @@ const Settings: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSettings, setEditedSettings] = useState<UserSettings | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
+  const [clearDataStatus, setClearDataStatus] = useState<'idle' | 'clearing' | 'success' | 'error'>('idle');
   
   // Admin email - only this user has admin privileges
   const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
@@ -113,6 +116,64 @@ const Settings: React.FC = () => {
       setMigrationStatus('error');
       alert('❌ Migration failed. Check console for details.');
       setTimeout(() => setMigrationStatus('idle'), 3000);
+    }
+  };
+
+  const handleClearMyData = async () => {
+    if (!user || user.uid === 'guest') {
+      alert('⛔ Cannot clear data for guest user');
+      return;
+    }
+
+    const confirmed = confirm(
+      '⚠️ WARNING: This will permanently delete ALL your data including:\n\n' +
+      '• Daily entries and history\n' +
+      '• Settings and preferences\n' +
+      '• Journal entries\n' +
+      '• All saved progress\n\n' +
+      'This action CANNOT be undone!\n\n' +
+      'Are you absolutely sure you want to proceed?'
+    );
+
+    if (!confirmed) return;
+
+    const doubleCheck = confirm(
+      '🚨 FINAL WARNING!\n\n' +
+      'This is your last chance to cancel.\n\n' +
+      'Click OK to PERMANENTLY DELETE all your data.'
+    );
+
+    if (!doubleCheck) return;
+
+    try {
+      setClearDataStatus('clearing');
+      
+      // Delete all user data from Firebase
+      await remove(ref(db, `users/${user.uid}`));
+      
+      // Clear localStorage just in case
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sl_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      setClearDataStatus('success');
+      alert('✅ All your data has been permanently deleted.\n\nThe page will now reload.');
+      
+      // Reload the page to show fresh state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error clearing user data:', error);
+      setClearDataStatus('error');
+      alert('❌ Failed to clear data. Please try again or contact support.');
+      setTimeout(() => setClearDataStatus('idle'), 3000);
     }
   };
 
@@ -289,6 +350,48 @@ const Settings: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Danger Zone - Clear All Data */}
+      <section className="bg-gradient-to-br from-white to-red-50 rounded-2xl shadow-xl border-3 border-red-300 p-8">
+        <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-red-500 to-red-700 p-3 rounded-xl shadow-lg">
+            <Trash2 className="text-white" size={28}/>
+          </div>
+          Danger Zone
+          <span className="ml-auto text-sm bg-red-600 text-white px-3 py-1 rounded-full">⚠️ Irreversible</span>
+        </h3>
+        
+        <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
+          <h4 className="text-lg font-bold text-red-900 mb-2">Clear All My Data</h4>
+          <p className="text-red-800 mb-4">
+            Permanently delete all your entries, settings, journal, and progress. This action cannot be undone.
+          </p>
+          <button
+            onClick={handleClearMyData}
+            disabled={clearDataStatus === 'clearing' || user?.uid === 'guest'}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+              clearDataStatus === 'clearing' 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : clearDataStatus === 'success'
+                ? 'bg-green-600 text-white'
+                : clearDataStatus === 'error'
+                ? 'bg-orange-600 text-white'
+                : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800'
+            }`}
+          >
+            <Trash2 size={20} />
+            {clearDataStatus === 'clearing' ? 'Clearing...' : 
+             clearDataStatus === 'success' ? '✅ Cleared!' :
+             clearDataStatus === 'error' ? '❌ Failed' :
+             'Clear All My Data'}
+          </button>
+          {user?.uid === 'guest' && (
+            <p className="text-red-600 text-sm mt-2 font-semibold">
+              ⓘ Guest users cannot use this feature. Please sign in with Google.
+            </p>
+          )}
+        </div>
+      </section>
     </div>
   );
 };
