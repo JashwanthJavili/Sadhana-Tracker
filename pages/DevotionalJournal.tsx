@@ -360,7 +360,7 @@ const DevotionalJournal: React.FC = () => {
 
               <p className="text-stone-700 font-serif whitespace-pre-wrap mb-4">{entry.content}</p>
 
-              {entry.tags.length > 0 && (
+              {entry.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {entry.tags.map((tag) => (
                     <span
