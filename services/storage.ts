@@ -1,6 +1,6 @@
 import { ref, get, set, child } from 'firebase/database';
 import { db } from './firebase';
-import { DailyEntry, UserSettings, INITIAL_METRICS, INITIAL_REFLECTIONS, INITIAL_SETTINGS } from '../types';
+import { DailyEntry, UserSettings, INITIAL_METRICS, INITIAL_REFLECTIONS, DEFAULT_SETTINGS } from '../types';
 
 // Helper to generate default slots
 export const generateTimeSlots = () => {
@@ -136,8 +136,8 @@ export const getSettings = async (userId: string): Promise<UserSettings> => {
   if (isGuest(userId)) {
     validateGuestOnly(userId, 'getSettings');
     const local = localStorage.getItem(`sl_${userId}_settings`);
-    if (local) return { ...INITIAL_SETTINGS, ...JSON.parse(local) };
-    return INITIAL_SETTINGS;
+    if (local) return { ...DEFAULT_SETTINGS, ...JSON.parse(local) };
+    return DEFAULT_SETTINGS;
   }
 
   try {
@@ -145,12 +145,12 @@ export const getSettings = async (userId: string): Promise<UserSettings> => {
     const snapshot = await get(child(dbRef, `users/${userId}/settings`));
     
     if (snapshot.exists()) {
-      return { ...INITIAL_SETTINGS, ...snapshot.val() };
+      return { ...DEFAULT_SETTINGS, ...snapshot.val() };
     }
-    return INITIAL_SETTINGS;
+    return DEFAULT_SETTINGS;
   } catch (error) {
     console.error("Error fetching settings:", error);
-    return INITIAL_SETTINGS;
+    return DEFAULT_SETTINGS;
   }
 };
 

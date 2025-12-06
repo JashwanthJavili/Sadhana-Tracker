@@ -4,9 +4,7 @@ const CACHE_NAME = 'sadhana-sanga-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/src/index.css',
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Inter:wght@300;400;500;600;700&display=swap'
+  '/src/index.css'
 ];
 
 // Install event - cache essential files
