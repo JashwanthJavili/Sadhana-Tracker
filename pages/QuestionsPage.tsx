@@ -220,14 +220,14 @@ const QuestionsPage: React.FC = () => {
                   <button
                     onClick={(e) => handleUpvote(question.id, e)}
                     className={`p-2 rounded-lg transition-all ${
-                      user && question.upvotes.includes(user.uid)
+                      user && question.upvotes?.includes(user.uid)
                         ? 'bg-orange-100 text-orange-600'
                         : 'bg-stone-100 text-stone-600 hover:bg-orange-50'
                     }`}
                   >
                     <ThumbsUp size={20} />
                   </button>
-                  <span className="font-bold text-lg text-stone-900">{question.upvotes.length}</span>
+                  <span className="font-bold text-lg text-stone-900">{question.upvotes?.length || 0}</span>
                 </div>
 
                 {/* Question Content */}
