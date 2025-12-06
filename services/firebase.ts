@@ -29,6 +29,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+const database = db; // Alias for chat service
 const googleProvider = new GoogleAuthProvider();
 
 // Initialize analytics only if supported (prevents errors in some environments)
@@ -39,4 +40,4 @@ isSupported().then(yes => {
   }
 }).catch(err => console.warn("Analytics not supported:", err));
 
-export { auth, db, googleProvider, analytics };
+export { auth, db, database, googleProvider, analytics };

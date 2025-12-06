@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
+import { setUserOnlineStatus } from '../services/chat';
 
 interface AuthContextType {
   user: User | null;
@@ -17,13 +18,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       // If we are already in guest mode, don't overwrite with null
       if (user?.uid === 'guest') return;
       setUser(currentUser);
       setLoading(false);
+      
+      // Set online status when user logs in
+      if (currentUser && currentUser.uid !== 'guest') {
+        try {
+          await setUserOnlineStatus(currentUser.uid, true);
+        } catch (error) {
+          console.error('Error setting online status:', error);
+        }
+      }
     });
-    return () => unsubscribe();
+    
+    // Set offline status when component unmounts or user changes
+    return () => {
+      if (user && user.uid !== 'guest') {
+        setUserOnlineStatus(user.uid, false).catch(console.error);
+      }
+      unsubscribe();
+    };
   }, [user]);
 
   const signInWithGoogle = async () => {
@@ -65,6 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user?.uid === 'guest') {
         setUser(null);
       } else {
+        // Set offline status before signing out
+        if (user) {
+          await setUserOnlineStatus(user.uid, false);
+        }
         await signOut(auth);
       }
     } catch (error) {

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart } from 'lucide-react';
+import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle } from 'lucide-react';
 import { getSettings, trackUsage, shouldShowFeedback } from '../services/storage';
+import { getTotalUnreadCount } from '../services/chat';
 import { UserSettings } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import InteractiveTour from './InteractiveTour';
 import FeedbackPrompt from './FeedbackPrompt';
+import { useSyncChatProfile } from '../hooks/useSyncChatProfile';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,8 +19,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [showTour, setShowTour] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Sync chat profile for existing users
+  useSyncChatProfile();
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -43,6 +49,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     checkFeedback();
   }, [user]);
 
+  // Load unread messages count
+  useEffect(() => {
+    if (!user || user.uid === 'guest') return;
+    
+    const loadUnread = async () => {
+      try {
+        const count = await getTotalUnreadCount(user.uid);
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Error loading unread count:', error);
+      }
+    };
+    
+    loadUnread();
+    const interval = setInterval(loadUnread, 10000); // Update every 10 seconds
+    
+    return () => clearInterval(interval);
+  }, [user]);
+
   const handleLogout = async () => {
     await logout();
     navigate('/');
@@ -56,6 +81,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { to: '/analytics', icon: BarChart2, label: 'Analytics', tourAttr: 'analytics' },
     { to: '/journal', icon: Heart, label: 'Devotional Journal', tourAttr: 'journal' },
     { to: '/history', icon: BookOpen, label: 'History', tourAttr: 'history' },
+    { to: '/community', icon: Users, label: 'Community', tourAttr: 'community' },
+    { to: '/chats', icon: MessageCircle, label: 'Messages', tourAttr: 'messages' },
     { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings' },
     { to: '/about', icon: Info, label: 'About' },
   ];
@@ -116,7 +143,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               onClick={() => setIsSidebarOpen(false)}
               data-tour={item.tourAttr}
               className={({ isActive }) => `
-                flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
                 ${isActive 
                   ? 'bg-orange-700 text-white shadow-lg' 
                   : 'text-stone-300 hover:bg-stone-800 hover:text-white'}
@@ -124,6 +151,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <item.icon size={20} />
               <span className="font-medium">{item.label}</span>
+              {item.to === '/chats' && unreadCount > 0 && (
+                <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
