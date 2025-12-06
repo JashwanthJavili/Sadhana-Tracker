@@ -70,7 +70,6 @@ const Dashboard: React.FC = () => {
               Guided by {settings.guruName}
             </p>
           )}
-        </div>
           <div className="mt-8 flex gap-4">
             <Link 
               to="/planner" 
