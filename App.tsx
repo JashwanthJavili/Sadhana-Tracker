@@ -7,9 +7,11 @@ import Analytics from './pages/Analytics';
 import History from './pages/History';
 import Settings from './pages/Settings';
 import About from './pages/About';
+import DevotionalJournal from './pages/DevotionalJournal';
 import Login from './components/Login';
 import OnboardingModal from './components/OnboardingModal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { getSettings, saveSettings } from './services/storage';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,9 +41,11 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 function App() {
   return (
     <AuthProvider>
-      <HashRouter>
-        <AppContent />
-      </HashRouter>
+      <LanguageProvider>
+        <HashRouter>
+          <AppContent />
+        </HashRouter>
+      </LanguageProvider>
     </AuthProvider>
   );
 }
@@ -90,6 +94,7 @@ function AppContent() {
           <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/planner" element={<PrivateRoute><DailyPlanner /></PrivateRoute>} />
           <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
+          <Route path="/journal" element={<PrivateRoute><DevotionalJournal /></PrivateRoute>} />
           <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
           <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
           <Route path="/about" element={<PrivateRoute><About /></PrivateRoute>} />

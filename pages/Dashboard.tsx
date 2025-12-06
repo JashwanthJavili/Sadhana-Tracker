@@ -50,12 +50,16 @@ const Dashboard: React.FC = () => {
     .reverse()
     .map(e => ({ value: e.metrics.disciplineScore }));
 
-  if (loading) return <div className="p-8 text-center text-stone-500">Loading your spiritual data...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-96">
+      <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-600 border-t-transparent"></div>
+    </div>
+  );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-700 to-orange-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-orange-700 to-orange-900 rounded-2xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden transform transition-all duration-300 hover:shadow-2xl">
         {/* Decorative Background Pattern */}
         <div className="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10">
              <svg width="200" height="200" viewBox="0 0 24 24" fill="white">
@@ -89,7 +93,7 @@ const Dashboard: React.FC = () => {
           <div className="mt-8 flex gap-4">
             <Link 
               to="/planner" 
-              className="bg-white text-orange-900 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-all shadow-lg flex items-center gap-2"
+              className="bg-white text-orange-900 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 transform hover:scale-105 active:scale-95"
             >
               <span>Go to Today's Planner</span>
               <TrendingUp size={18} />
@@ -100,13 +104,13 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-blue-200 transition-all duration-300 transform hover:scale-105">
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-stone-500 text-sm font-medium">Discipline Score</p>
               <h3 className="text-2xl font-bold text-stone-900">{getAverageScore('disciplineScore')} / 5</h3>
             </div>
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg transition-all duration-300 hover:scale-110">
               <Award size={20} />
             </div>
           </div>
@@ -119,26 +123,26 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-orange-200 transition-all duration-300 transform hover:scale-105">
            <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-stone-500 text-sm font-medium">Avg Chanting</p>
               <h3 className="text-2xl font-bold text-stone-900">{getAverageScore('chantingRounds')} Rnds</h3>
             </div>
-            <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+            <div className="p-2 bg-orange-100 text-orange-600 rounded-lg transition-all duration-300 hover:scale-110">
               <Sun size={20} />
             </div>
           </div>
            <p className="text-xs text-stone-500">Target: 16 Rounds daily</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-indigo-200 transition-all duration-300 transform hover:scale-105">
            <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-stone-500 text-sm font-medium">Sleep Avg</p>
               <h3 className="text-2xl font-bold text-stone-900">{getAverageScore('totalSleep')} Hrs</h3>
             </div>
-            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg transition-all duration-300 hover:scale-110">
               <Moon size={20} />
             </div>
           </div>

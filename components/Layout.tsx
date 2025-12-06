@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare } from 'lucide-react';
-import { getSettings } from '../services/storage';
+import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart } from 'lucide-react';
+import { getSettings, trackUsage, shouldShowFeedback } from '../services/storage';
 import { UserSettings } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import GuidedTour from './GuidedTour';
+import InteractiveTour from './InteractiveTour';
+import FeedbackPrompt from './FeedbackPrompt';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [showTour, setShowTour] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -28,6 +30,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     fetchSettings();
   }, [location.pathname, user]);
 
+  useEffect(() => {
+    const checkFeedback = async () => {
+      if (user) {
+        await trackUsage(user.uid);
+        const shouldShow = await shouldShowFeedback(user.uid);
+        if (shouldShow) {
+          setTimeout(() => setShowFeedback(true), 5000); // Show after 5 seconds
+        }
+      }
+    };
+    checkFeedback();
+  }, [user]);
+
   const handleLogout = async () => {
     await logout();
     navigate('/');
@@ -36,11 +51,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/planner', icon: PenTool, label: 'Daily Planner' },
-    { to: '/analytics', icon: BarChart2, label: 'Analytics' },
-    { to: '/history', icon: BookOpen, label: 'History' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', tourAttr: 'dashboard' },
+    { to: '/planner', icon: PenTool, label: 'Daily Planner', tourAttr: 'planner' },
+    { to: '/analytics', icon: BarChart2, label: 'Analytics', tourAttr: 'analytics' },
+    { to: '/journal', icon: Heart, label: 'Devotional Journal', tourAttr: 'journal' },
+    { to: '/history', icon: BookOpen, label: 'History', tourAttr: 'history' },
+    { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings' },
     { to: '/about', icon: Info, label: 'About' },
   ];
 
@@ -87,6 +103,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               key={item.to}
               to={item.to}
               onClick={() => setIsSidebarOpen(false)}
+              data-tour={item.tourAttr}
               className={({ isActive }) => `
                 flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
                 ${isActive 
@@ -150,12 +167,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </main>
 
-      {/* Guided Tour */}
-      <GuidedTour 
-        isOpen={showTour} 
-        onClose={() => setShowTour(false)} 
-        language={settings?.language || 'en'}
-      />
+      {/* Interactive Tour */}
+      {showTour && <InteractiveTour onComplete={() => setShowTour(false)} />}
+      
+      {/* Feedback Prompt */}
+      {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
     </div>
   );
 };

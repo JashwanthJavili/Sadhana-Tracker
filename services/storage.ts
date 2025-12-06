@@ -151,6 +151,141 @@ export const saveSettings = async (userId: string, settings: UserSettings): Prom
   }
 };
 
+// --- Journal Functions ---
+
+export interface JournalEntry {
+  id: string;
+  date: string;
+  timestamp: number;
+  title: string;
+  content: string;
+  mood: 'peaceful' | 'joyful' | 'contemplative' | 'struggling' | 'grateful';
+  tags: string[];
+}
+
+export const getJournalEntries = async (userId: string): Promise<JournalEntry[]> => {
+  if (isGuest(userId)) {
+    const entries: JournalEntry[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sl_journal_')) {
+        try {
+          const entry = JSON.parse(localStorage.getItem(key) || '{}');
+          if (entry.id) entries.push(entry);
+        } catch (e) { console.error("Bad journal entry", e); }
+      }
+    }
+    return entries.sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  try {
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, `users/${userId}/journal`));
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      return (Object.values(data) as JournalEntry[]).sort((a, b) => b.timestamp - a.timestamp);
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching journal:", error);
+    return [];
+  }
+};
+
+export const saveJournalEntry = async (userId: string, entry: JournalEntry): Promise<void> => {
+  if (isGuest(userId)) {
+    localStorage.setItem(`sl_journal_${entry.id}`, JSON.stringify(entry));
+    return;
+  }
+
+  try {
+    await set(ref(db, `users/${userId}/journal/${entry.id}`), entry);
+  } catch (error) {
+    console.error("Error saving journal entry:", error);
+    throw error;
+  }
+};
+
+export const deleteJournalEntry = async (userId: string, entryId: string): Promise<void> => {
+  if (isGuest(userId)) {
+    localStorage.removeItem(`sl_journal_${entryId}`);
+    return;
+  }
+
+  try {
+    await set(ref(db, `users/${userId}/journal/${entryId}`), null);
+  } catch (error) {
+    console.error("Error deleting journal entry:", error);
+    throw error;
+  }
+};
+
+// --- Usage Tracking ---
+
+export const trackUsage = async (userId: string): Promise<void> => {
+  if (isGuest(userId)) return;
+
+  try {
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, `users/${userId}/usage`));
+    
+    const usage = snapshot.exists() ? snapshot.val() : {
+      loginCount: 0,
+      totalDaysActive: 0,
+      lastFeedbackPrompt: 0,
+      firstLogin: Date.now()
+    };
+
+    usage.loginCount += 1;
+    usage.lastActive = Date.now();
+
+    await set(ref(db, `users/${userId}/usage`), usage);
+  } catch (error) {
+    console.error("Error tracking usage:", error);
+  }
+};
+
+export const shouldShowFeedback = async (userId: string): Promise<boolean> => {
+  if (isGuest(userId)) return false;
+
+  try {
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, `users/${userId}/usage`));
+    
+    if (!snapshot.exists()) return false;
+
+    const usage = snapshot.val();
+    const daysSinceFirst = Math.floor((Date.now() - usage.firstLogin) / (1000 * 60 * 60 * 24));
+    const daysSinceLastPrompt = usage.lastFeedbackPrompt 
+      ? Math.floor((Date.now() - usage.lastFeedbackPrompt) / (1000 * 60 * 60 * 24))
+      : 999;
+
+    // Show feedback after 7 days of use OR 20 logins, and not prompted in last 30 days
+    return (daysSinceFirst >= 7 || usage.loginCount >= 20) && daysSinceLastPrompt >= 30;
+  } catch (error) {
+    console.error("Error checking feedback status:", error);
+    return false;
+  }
+};
+
+export const markFeedbackShown = async (userId: string): Promise<void> => {
+  if (isGuest(userId)) return;
+
+  try {
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, `users/${userId}/usage`));
+    
+    if (snapshot.exists()) {
+      const usage = snapshot.val();
+      usage.lastFeedbackPrompt = Date.now();
+      await set(ref(db, `users/${userId}/usage`), usage);
+    }
+  } catch (error) {
+    console.error("Error marking feedback shown:", error);
+  }
+};
+
 export const seedDataIfEmpty = async (userId: string) => {
   const entries = await getAllEntries(userId);
   if (entries.length === 0) {
