@@ -97,73 +97,86 @@ const Settings: React.FC = () => {
     }
   };
 
-  if (!settings) return <div className="p-8 text-center text-stone-500">Loading settings...</div>;
+  if (!settings) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div><p className="text-stone-600 font-medium text-lg">Loading settings...</p></div></div>;
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center">
-        <div>
-           <h2 className="text-2xl font-serif font-bold text-stone-900">App Customization</h2>
-           <p className="text-stone-500">Personalize your spiritual workspace.</p>
+    <div className="space-y-8 max-w-5xl mx-auto animate-fadeIn">
+      <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-4xl font-serif font-bold text-white mb-2 flex items-center gap-3">
+              <div className="bg-white/20 p-3 rounded-xl">
+                <Wrench className="text-white" size={36} />
+              </div>
+              App Customization
+            </h2>
+            <p className="text-orange-100 text-lg font-medium">Personalize your spiritual workspace</p>
+          </div>
+          <button
+            onClick={handleSave}
+            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 min-h-[58px] ${
+              saveStatus === 'saved' 
+                ? 'bg-green-600 text-white hover:bg-green-700' 
+                : 'bg-white text-orange-700 hover:bg-orange-50'
+            }`}
+          >
+            <Save size={24} />
+            {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
+          </button>
         </div>
-        <button
-          onClick={handleSave}
-          className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all shadow-md ${
-            saveStatus === 'saved' 
-              ? 'bg-green-600 text-white' 
-              : 'bg-orange-700 text-white hover:bg-orange-800'
-          }`}
-        >
-          <Save size={18} />
-          {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
-        </button>
       </div>
 
       {/* Identity Section */}
-      <section className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-          <User className="text-orange-600" size={20}/> Identity & Center
+      <section className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl border-3 border-blue-300 p-8">
+        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+            <User className="text-white" size={28}/>
+          </div>
+          Identity & Center
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Your Name</label>
+            <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
             <input
               type="text"
               value={settings.userName}
               onChange={(e) => setSettings({ ...settings, userName: e.target.value })}
-              className="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+              className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">ISKCON Center / Group Name</label>
+            <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
             <input
               type="text"
               value={settings.iskconCenter}
               onChange={(e) => setSettings({ ...settings, iskconCenter: e.target.value })}
-              className="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+              className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
             />
           </div>
         </div>
       </section>
 
       {/* Spiritual Guide Section */}
-      <section className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-          <User className="text-orange-600" size={20}/> Spiritual Guide
+      <section className="bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-xl border-3 border-purple-300 p-8">
+        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+            <User className="text-white" size={28}/>
+          </div>
+          Spiritual Guide
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Guided By</label>
+            <label className="block text-base font-bold text-stone-800 mb-3">Guided By</label>
             <input
               type="text"
               value={settings.guruName}
               onChange={(e) => setSettings({ ...settings, guruName: e.target.value })}
-              className="w-full p-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+              className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 outline-none text-base font-semibold shadow-md hover:border-purple-300 transition-all"
               placeholder="e.g. HG Pranavanand Das Prabhu"
             />
           </div>
-          <div className="bg-orange-50 p-4 rounded-lg">
-            <p className="text-sm text-orange-800 italic">
+          <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-6 rounded-2xl shadow-md border-2 border-orange-300">
+            <p className="text-base text-orange-900 italic font-serif font-semibold leading-relaxed">
               "By the mercy of the spiritual master one receives the benediction of Krishna."
             </p>
           </div>
@@ -171,60 +184,65 @@ const Settings: React.FC = () => {
       </section>
 
       {/* Quotes Section */}
-      <section className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h3 className="text-lg font-bold text-stone-800 mb-6">Motivational Quotes</h3>
+      <section className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-xl border-3 border-green-300 p-8">
+        <h3 className="text-2xl font-bold text-stone-900 mb-8">Motivational Quotes</h3>
         
-        <div className="mb-6 flex gap-2">
+        <div className="mb-8 flex gap-3">
           <input
             type="text"
             placeholder="Quote text..."
             value={newQuoteText}
             onChange={(e) => setNewQuoteText(e.target.value)}
-            className="flex-1 p-2 border border-stone-300 rounded-lg text-sm"
+            className="flex-1 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-green-300 outline-none shadow-md"
           />
           <input
             type="text"
             placeholder="Source (e.g. Gita 2.13)"
             value={newQuoteSource}
             onChange={(e) => setNewQuoteSource(e.target.value)}
-            className="w-48 p-2 border border-stone-300 rounded-lg text-sm"
+            className="w-56 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-green-300 outline-none shadow-md"
           />
           <button 
             onClick={addQuote}
             disabled={!newQuoteText || !newQuoteSource}
-            className="bg-stone-900 text-white p-2 rounded-lg disabled:opacity-50 hover:bg-stone-800"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 rounded-xl disabled:opacity-50 hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
           >
-            <Plus size={20} />
+            <Plus size={24} />
           </button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {(settings.customQuotes || []).map((quote) => (
-            <div key={quote.id} className="flex justify-between items-start p-3 bg-stone-50 rounded-lg group">
-              <div>
-                <p className="text-stone-800 font-serif text-sm">"{quote.text}"</p>
-                <p className="text-stone-500 text-xs mt-1">— {quote.source}</p>
+            <div key={quote.id} className="flex justify-between items-start p-5 bg-white rounded-xl group shadow-md hover:shadow-lg transition-all border-2 border-green-200 hover:border-green-400">
+              <div className="flex-1">
+                <p className="text-stone-800 font-serif text-base leading-relaxed mb-2">"{quote.text}"</p>
+                <p className="text-stone-600 text-sm font-semibold">— {quote.source}</p>
               </div>
               <button 
                 onClick={() => removeQuote(quote.id)}
-                className="text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-stone-400 hover:text-red-600 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 p-2"
               >
-                <Trash2 size={16} />
+                <Trash2 size={20} />
               </button>
             </div>
           ))}
           {(!settings.customQuotes || settings.customQuotes.length === 0) && (
-            <p className="text-stone-400 text-sm text-center py-4">No quotes added yet.</p>
+            <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-green-300">
+              <p className="text-stone-500 text-base font-medium">No quotes added yet. Add your first inspiring quote above!</p>
+            </div>
           )}
         </div>
       </section>
 
       {/* Language Preference */}
-      <section className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-          <Globe className="text-orange-600" size={20}/> Language Preference
+      <section className="bg-gradient-to-br from-white to-amber-50 rounded-2xl shadow-xl border-3 border-amber-300 p-8">
+        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-xl shadow-lg">
+            <Globe className="text-white" size={28}/>
+          </div>
+          Language Preference
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[
             { code: 'en' as const, name: 'English', native: 'English' },
             { code: 'hi' as const, name: 'Hindi', native: 'हिंदी' },
@@ -233,15 +251,15 @@ const Settings: React.FC = () => {
             <button
               key={lang.code}
               onClick={() => setSettings({ ...settings!, language: lang.code })}
-              className={`p-4 rounded-lg border-2 transition-all ${
+              className={`p-6 rounded-xl border-3 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 ${
                 settings.language === lang.code
-                  ? 'border-orange-600 bg-orange-50 text-orange-900'
-                  : 'border-stone-300 hover:border-orange-300'
+                  ? 'border-orange-600 bg-gradient-to-br from-orange-100 to-amber-100 text-orange-900 ring-4 ring-orange-200'
+                  : 'border-stone-300 hover:border-orange-400 bg-white hover:bg-orange-50'
               }`}
             >
               <div className="text-center">
-                <div className="font-medium">{lang.name}</div>
-                <div className="text-sm text-stone-500">{lang.native}</div>
+                <div className="font-bold text-xl mb-1">{lang.name}</div>
+                <div className="text-base text-stone-600 font-semibold">{lang.native}</div>
               </div>
             </button>
           ))}
@@ -249,52 +267,57 @@ const Settings: React.FC = () => {
       </section>
 
       {/* Custom Fields */}
-      <section className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-          <Wrench className="text-orange-600" size={20}/> Custom Fields
+      <section className="bg-gradient-to-br from-white to-indigo-50 rounded-2xl shadow-xl border-3 border-indigo-300 p-8">
+        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-xl shadow-lg">
+            <Wrench className="text-white" size={28}/>
+          </div>
+          Custom Fields
         </h3>
         
-        <div className="mb-6 flex gap-2">
+        <div className="mb-8 flex gap-3">
           <input
             type="text"
             placeholder="Field name (e.g. Temple Service)"
             value={newFieldKey}
             onChange={(e) => setNewFieldKey(e.target.value)}
-            className="flex-1 p-2 border border-stone-300 rounded-lg text-sm"
+            className="flex-1 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300 outline-none shadow-md"
           />
           <input
             type="text"
             placeholder="Value"
             value={newFieldValue}
             onChange={(e) => setNewFieldValue(e.target.value)}
-            className="flex-1 p-2 border border-stone-300 rounded-lg text-sm"
+            className="flex-1 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300 outline-none shadow-md"
           />
           <button 
             onClick={addCustomField}
             disabled={!newFieldKey || !newFieldValue}
-            className="bg-stone-900 text-white p-2 rounded-lg disabled:opacity-50 hover:bg-stone-800"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-xl disabled:opacity-50 hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
           >
-            <Plus size={20} />
+            <Plus size={24} />
           </button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {settings.customFields && Object.entries(settings.customFields).map(([key, value]) => (
-            <div key={key} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg group">
+            <div key={key} className="flex justify-between items-center p-5 bg-white rounded-xl group shadow-md hover:shadow-lg transition-all border-2 border-indigo-200 hover:border-indigo-400">
               <div>
-                <span className="font-medium text-stone-800">{key}:</span>{' '}
-                <span className="text-stone-600">{value}</span>
+                <span className="font-bold text-stone-900 text-base">{key}:</span>{' '}
+                <span className="text-stone-700 text-base">{value}</span>
               </div>
               <button 
                 onClick={() => removeCustomField(key)}
-                className="text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-stone-400 hover:text-red-600 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 p-2"
               >
-                <Trash2 size={16} />
+                <Trash2 size={20} />
               </button>
             </div>
           ))}
           {(!settings.customFields || Object.keys(settings.customFields).length === 0) && (
-            <p className="text-stone-400 text-sm text-center py-4">No custom fields added yet.</p>
+            <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-indigo-300">
+              <p className="text-stone-500 text-base font-medium">No custom fields added yet. Create your personalized fields above!</p>
+            </div>
           )}
         </div>
       </section>

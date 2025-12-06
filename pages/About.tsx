@@ -8,27 +8,31 @@ import guruImage from '../utils/Images/OIP.webp';
 
 const About: React.FC = () => {
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-10 animate-fadeIn pb-12">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-700 to-orange-900 rounded-2xl p-8 text-white shadow-xl">
-        <div className="flex items-center gap-3 mb-4">
-          <Sparkles size={32} />
-          <h1 className="text-3xl font-serif font-bold">About Sadhana Lifeforce</h1>
+      <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-10 text-white shadow-2xl border-2 border-orange-400">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-white/20 p-4 rounded-xl">
+            <Sparkles size={40} className="text-yellow-200" />
+          </div>
+          <h1 className="text-5xl font-serif font-bold">About Sadhana Lifeforce</h1>
         </div>
-        <p className="text-orange-100 text-lg">
+        <p className="text-orange-100 text-xl font-medium leading-relaxed">
           A humble attempt to serve devotees in their spiritual journey, created by the causeless mercy of my spiritual masters.
         </p>
       </div>
 
       {/* App Description */}
-      <section className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h2 className="text-2xl font-serif font-bold text-stone-900 mb-4 flex items-center gap-2">
-          <Book className="text-orange-600" size={24} />
+      <section className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-2xl border-3 border-blue-300 p-10">
+        <h2 className="text-3xl font-serif font-bold text-stone-900 mb-6 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+            <Book className="text-white" size={32} />
+          </div>
           About the App
         </h2>
-        <div className="space-y-4 text-stone-600">
+        <div className="space-y-6 text-stone-700 text-lg leading-relaxed">
           <p>
-            <strong className="text-stone-900">Sadhana Lifeforce</strong> is a humble service offering, 
+            <strong className="text-stone-900 font-bold">Sadhana Lifeforce</strong> is a humble service offering, 
             created with the hope of assisting fellow devotees in their spiritual practice. This simple platform 
             is the result of the infinite mercy and guidance of my spiritual masters.
           </p>
@@ -37,19 +41,20 @@ const About: React.FC = () => {
             study hours, and spiritual activities. Any usefulness in this application is entirely due to Their blessings, 
             and all shortcomings are solely my own.
           </p>
-          <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-600">
-            <p className="text-orange-900 italic">
+          <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-6 rounded-2xl border-l-4 border-orange-600 shadow-lg">
+            <p className="text-orange-900 italic font-serif font-semibold text-lg leading-relaxed">
               "By the mercy of the spiritual master one receives the benediction of Krishna. 
-              Without the grace of the spiritual master, one cannot make any advancement." - Caitanya Caritamrita
+              Without the grace of the spiritual master, one cannot make any advancement." 
+              <span className="block mt-2 text-base text-orange-800">— Caitanya Caritamrita</span>
             </p>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-        <h2 className="text-2xl font-serif font-bold text-stone-900 mb-4">Key Features</h2>
-        <div className="grid md:grid-cols-2 gap-3">
+      <section className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-2xl border-3 border-green-300 p-10">
+        <h2 className="text-3xl font-serif font-bold text-stone-900 mb-8">Key Features</h2>
+        <div className="grid md:grid-cols-2 gap-4">
           {[
             'Daily Planning & Commitments',
             'Timeline Management',
@@ -62,9 +67,9 @@ const About: React.FC = () => {
             'Inspirational Quotes',
             'Multi-language Support'
           ].map((feature, idx) => (
-            <div key={idx} className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-orange-200 hover:bg-orange-50 transition-colors">
-              <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-              <span className="text-stone-700 text-sm font-medium">{feature}</span>
+            <div key={idx} className="group flex items-center gap-4 p-5 bg-white rounded-xl border-2 border-green-200 hover:border-green-500 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105">
+              <div className="w-3 h-3 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full group-hover:scale-125 transition-transform shadow-md"></div>
+              <span className="text-stone-800 text-base font-semibold">{feature}</span>
             </div>
           ))}
         </div>
@@ -86,34 +91,34 @@ const About: React.FC = () => {
               <div className="h-0.5 w-24 bg-gradient-to-r from-transparent via-orange-400 to-transparent mx-auto"></div>
             </div>
             
-            <div className="flex items-center justify-center gap-8 mb-6">
-              <div className="group relative text-center">
-                <div className="absolute -inset-2 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition duration-500"></div>
-                <div className="relative bg-white rounded-2xl p-3 shadow-xl ring-2 ring-orange-300">
+            <div className="flex items-center justify-center gap-10 mb-8">
+              <div className="group relative text-center transform transition-all duration-500 hover:scale-105">
+                <div className="absolute -inset-3 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                <div className="relative bg-white rounded-2xl p-5 shadow-2xl ring-4 ring-orange-300 group-hover:ring-orange-400 transition-all">
                   <img 
                     src={guruMaharajImage}
                     alt="HH Radhanath Swamy Maharaj's Divine Lotus Feet" 
-                    className="w-40 h-40 object-contain rounded-xl"
+                    className="w-44 h-44 object-contain rounded-xl"
                   />
-                  <div className="mt-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-sm font-bold py-2 px-3 rounded-lg shadow-md">
+                  <div className="mt-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white text-base font-bold py-3 px-4 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
                     HH Radhanath Swamy
                   </div>
-                  <p className="text-xs text-orange-700 mt-2 font-semibold">Param Gurumaharaj</p>
+                  <p className="text-sm text-orange-800 mt-2 font-bold">Param Gurumaharaj</p>
                 </div>
               </div>
 
-              <div className="group relative text-center">
-                <div className="absolute -inset-2 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition duration-500"></div>
-                <div className="relative bg-white rounded-2xl p-3 shadow-xl ring-2 ring-orange-300">
+              <div className="group relative text-center transform transition-all duration-500 hover:scale-105">
+                <div className="absolute -inset-3 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                <div className="relative bg-white rounded-2xl p-5 shadow-2xl ring-4 ring-orange-300 group-hover:ring-orange-400 transition-all">
                   <img 
                     src={guruImage}
                     alt="HG Pranavananda Das Prabhuji" 
-                    className="w-40 h-40 object-contain rounded-xl"
+                    className="w-44 h-44 object-contain rounded-xl"
                   />
-                  <div className="mt-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-sm font-bold py-2 px-3 rounded-lg shadow-md">
+                  <div className="mt-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white text-base font-bold py-3 px-4 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
                     HG Pranavananda Das
                   </div>
-                  <p className="text-xs text-orange-700 mt-2 font-semibold">Guru Maharaj</p>
+                  <p className="text-sm text-orange-800 mt-2 font-bold">Guru Maharaj</p>
                 </div>
               </div>
             </div>
@@ -170,9 +175,9 @@ const About: React.FC = () => {
       </section>
 
       {/* Feedback Section */}
-      <section className="bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl p-6 text-white shadow-lg">
-        <h2 className="text-2xl font-serif font-bold mb-3">Share Your Feedback</h2>
-        <p className="text-orange-100 mb-4">
+      <section className="bg-gradient-to-br from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 text-white shadow-2xl border-2 border-orange-400">
+        <h2 className="text-3xl font-serif font-bold mb-4">Share Your Feedback</h2>
+        <p className="text-orange-100 mb-6 text-lg leading-relaxed">
           Your feedback helps us improve Sadhana Lifeforce for the entire community. 
           Please share your thoughts, suggestions, or report any issues.
         </p>
@@ -180,10 +185,10 @@ const About: React.FC = () => {
           href="https://forms.zohopublic.in/jashwanthjashu684gm1/form/SadhanaTracerFeedbackForm/formperma/KOoeajQ20c3B6YQ6Bmmy76hxc3xkOC9-BAc-Lu7GEjU"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-white text-orange-700 px-6 py-3 rounded-lg font-medium hover:bg-orange-50 transition-colors shadow-md"
+          className="inline-flex items-center gap-3 bg-white text-orange-700 px-8 py-4 rounded-xl font-bold text-lg hover:bg-orange-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95"
         >
           <span>Submit Feedback</span>
-          <ExternalLink size={18} />
+          <ExternalLink size={22} />
         </a>
       </section>
 
