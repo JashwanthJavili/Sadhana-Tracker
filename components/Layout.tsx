@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle, HelpCircle as QuestionIcon, Shield, Lock, Flame, BookText, Calendar } from 'lucide-react';
+import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle, HelpCircle as QuestionIcon, Shield, Lock, Flame, BookText, Calendar, Download } from 'lucide-react';
 import { getSettings, trackUsage } from '../services/storage';
 import { getTotalUnreadCount } from '../services/chat';
 import { UserSettings } from '../types';
@@ -17,17 +17,72 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+// Declare global deferredPrompt
+declare global {
+  interface Window {
+    deferredPrompt: any;
+  }
+}
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout, isNewUser } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [showTour, setShowTour] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showInstallButton, setShowInstallButton] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   // Sync chat profile for existing users
   useSyncChatProfile();
+
+  // Check if app can be installed
+  useEffect(() => {
+    const checkInstallable = () => {
+      // Check if already installed
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setShowInstallButton(false);
+        return;
+      }
+      // Check if install prompt is available
+      if (window.deferredPrompt) {
+        setShowInstallButton(true);
+      }
+    };
+
+    checkInstallable();
+
+    // Listen for beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!window.deferredPrompt) {
+      // If no prompt available, show instructions
+      alert('To install this app:\n\niOS: Tap Share button, then "Add to Home Screen"\n\nAndroid: Tap menu (⋮), then "Install app" or "Add to Home screen"');
+      return;
+    }
+
+    window.deferredPrompt.prompt();
+    const { outcome } = await window.deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      setShowInstallButton(false);
+    }
+    
+    window.deferredPrompt = null;
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -205,6 +260,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* User Profile & Logout */}
         <div className="p-4 border-t border-stone-800 bg-stone-900 space-y-2">
+          {/* Install App Button */}
+          {showInstallButton && (
+            <button
+              onClick={handleInstallClick}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl mb-3 active:scale-95"
+            >
+              <Download size={18} />
+              <span>Install App</span>
+            </button>
+          )}
+          
           {/* Help & Feedback Buttons */}
           <div className="grid grid-cols-2 gap-2 mb-3">
             <button

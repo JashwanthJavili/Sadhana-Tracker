@@ -136,33 +136,8 @@
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        
-        // Show install button after 3 seconds
-        setTimeout(() => {
-          if (deferredPrompt) {
-            const installDiv = document.createElement('div');
-            installDiv.id = 'install-prompt';
-            installDiv.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ea580c;color:white;padding:12px 24px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:9999;font-family:Inter,sans-serif;display:flex;gap:12px;align-items:center;max-width:90%;';
-            installDiv.innerHTML = `
-              <span style="font-weight:600;">Install Sadhana Sanga App</span>
-              <button id="install-btn" style="background:white;color:#ea580c;border:none;padding:6px 16px;border-radius:8px;font-weight:600;cursor:pointer;">Install</button>
-              <button id="dismiss-btn" style="background:transparent;color:white;border:1px solid white;padding:6px 12px;border-radius:8px;cursor:pointer;">Later</button>
-            `;
-            document.body.appendChild(installDiv);
-            
-            document.getElementById('install-btn').addEventListener('click', async () => {
-              deferredPrompt.prompt();
-              const { outcome } = await deferredPrompt.userChoice;
-              console.log('Install outcome:', outcome);
-              deferredPrompt = null;
-              installDiv.remove();
-            });
-            
-            document.getElementById('dismiss-btn').addEventListener('click', () => {
-              installDiv.remove();
-            });
-          }
-        }, 3000);
+        window.deferredPrompt = e;
+        // Don't show auto popup - user can click Install button in sidebar
       });
     </script>
   </body>
