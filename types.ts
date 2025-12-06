@@ -62,12 +62,10 @@ export interface UserSettings {
   userName: string;
   guruName: string;
   iskconCenter: string;
-  customQuotes: Quote[];
   themeColor: 'orange' | 'blue' | 'rose';
   language: 'en' | 'hi' | 'te';
   isFirstTime: boolean;
   tourCompleted?: boolean;
-  customFields?: { [key: string]: string };
 }
 
 export const INITIAL_METRICS: DailyMetrics = {
@@ -106,14 +104,12 @@ export const DEFAULT_QUOTES: Quote[] = [
   { id: '3', text: 'Lift yourself by your own mind. Krishna will guide you, but YOU must rise first.', source: 'Gita 6.5' },
 ];
 
-export const INITIAL_SETTINGS: UserSettings = {
-  userName: '',
+export const DEFAULT_SETTINGS: UserSettings = {
+  userName: 'Devotee',
   guruName: '',
   iskconCenter: '',
-  customQuotes: DEFAULT_QUOTES,
   themeColor: 'orange',
   language: 'en',
   isFirstTime: true,
   tourCompleted: false,
-  customFields: {},
 };

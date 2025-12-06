@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllEntries, getSettings } from '../services/storage';
-import { DailyEntry, UserSettings, Quote } from '../types';
+import { DailyEntry, UserSettings } from '../types';
 import { TrendingUp, Award, Calendar, Sun, Moon } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,6 @@ const Dashboard: React.FC = () => {
   const [entries, setEntries] = useState<DailyEntry[]>([]);
   const [todayEntry, setTodayEntry] = useState<DailyEntry | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [randomQuote, setRandomQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,11 +24,6 @@ const Dashboard: React.FC = () => {
         
         const userSettings = await getSettings(user.uid);
         setSettings(userSettings);
-
-        if (userSettings.customQuotes.length > 0) {
-          const rand = userSettings.customQuotes[Math.floor(Math.random() * userSettings.customQuotes.length)];
-          setRandomQuote(rand);
-        }
         setLoading(false);
       }
     };

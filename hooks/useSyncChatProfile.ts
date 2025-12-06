@@ -39,7 +39,6 @@ export const useSyncChatProfile = () => {
             };
             
             if (user.photoURL) profileData.photoURL = user.photoURL;
-            if (settings.customFields?.bio) profileData.bio = settings.customFields.bio;
             
             console.log('[useSyncChatProfile] Profile data being created:', profileData);
             await createUserProfile(user.uid, profileData);
@@ -77,7 +76,6 @@ export const useSyncChatProfile = () => {
             };
             
             if (user.photoURL) profileData.photoURL = user.photoURL;
-            if (settings.customFields?.bio) profileData.bio = settings.customFields.bio;
             
             console.log('[useSyncChatProfile] Updating with:', profileData);
             await createUserProfile(user.uid, profileData);

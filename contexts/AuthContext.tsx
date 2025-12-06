@@ -47,6 +47,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     try {
+      // CRITICAL: Clear ALL guest data from localStorage when a real user signs in
+      // This prevents guest data from contaminating authenticated user data
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sl_guest_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
       const result = await signInWithPopup(auth, googleProvider);
       // Check if this is a new user
       const isNew = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;

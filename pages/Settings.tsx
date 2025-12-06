@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
-import { UserSettings, Quote } from '../types';
-import { Save, Plus, Trash2, User, Wrench, Users } from 'lucide-react';
+import { UserSettings } from '../types';
+import { Save, User, Wrench, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
 import { createUserProfile } from '../services/chat';
@@ -9,11 +9,7 @@ import { createUserProfile } from '../services/chat';
 const Settings: React.FC = () => {
   const { user } = useAuth();
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [newQuoteText, setNewQuoteText] = useState('');
-  const [newQuoteSource, setNewQuoteSource] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [newFieldKey, setNewFieldKey] = useState('');
-  const [newFieldValue, setNewFieldValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedSettings, setEditedSettings] = useState<UserSettings | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
@@ -29,10 +25,6 @@ const Settings: React.FC = () => {
         // If settings are empty, we might want to pre-fill user name from Auth
         if (!data.userName && user.displayName) {
           data.userName = user.displayName;
-        }
-        // Ensure customQuotes is always an array
-        if (!data.customQuotes) {
-          data.customQuotes = [];
         }
         setSettings(data);
       }
@@ -77,7 +69,6 @@ const Settings: React.FC = () => {
           };
           
           if (user.photoURL) profileData.photoURL = user.photoURL;
-          if (editedSettings.customFields?.bio) profileData.bio = editedSettings.customFields.bio;
           
           await createUserProfile(user.uid, profileData);
           console.log('✅ Chat profile updated with new settings');
@@ -122,55 +113,6 @@ const Settings: React.FC = () => {
       setMigrationStatus('error');
       alert('❌ Migration failed. Check console for details.');
       setTimeout(() => setMigrationStatus('idle'), 3000);
-    }
-  };
-
-  const addQuote = () => {
-    if (settings && newQuoteText && newQuoteSource) {
-      const newQuote: Quote = {
-        id: Date.now().toString(),
-        text: newQuoteText,
-        source: newQuoteSource
-      };
-      setSettings({
-        ...settings,
-        customQuotes: [...(settings.customQuotes || []), newQuote]
-      });
-      setNewQuoteText('');
-      setNewQuoteSource('');
-    }
-  };
-
-  const removeQuote = (id: string) => {
-    if (settings) {
-      setSettings({
-        ...settings,
-        customQuotes: (settings.customQuotes || []).filter(q => q.id !== id)
-      });
-    }
-  };
-
-  const addCustomField = () => {
-    if (settings && newFieldKey && newFieldValue) {
-      setSettings({
-        ...settings,
-        customFields: {
-          ...(settings.customFields || {}),
-          [newFieldKey]: newFieldValue
-        }
-      });
-      setNewFieldKey('');
-      setNewFieldValue('');
-    }
-  };
-
-  const removeCustomField = (key: string) => {
-    if (settings && settings.customFields) {
-      const { [key]: _, ...rest } = settings.customFields;
-      setSettings({
-        ...settings,
-        customFields: rest
-      });
     }
   };
 
@@ -347,115 +289,6 @@ const Settings: React.FC = () => {
           </div>
         </section>
       )}
-
-      {/* Quotes Section */}
-      <section className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-xl border-3 border-green-300 p-8">
-        <h3 className="text-2xl font-bold text-stone-900 mb-8">Motivational Quotes</h3>
-        
-        <div className="mb-8 flex gap-3">
-          <input
-            type="text"
-            placeholder="Quote text..."
-            value={newQuoteText}
-            onChange={(e) => setNewQuoteText(e.target.value)}
-            className="flex-1 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-green-300 outline-none shadow-md"
-          />
-          <input
-            type="text"
-            placeholder="Source (e.g. Gita 2.13)"
-            value={newQuoteSource}
-            onChange={(e) => setNewQuoteSource(e.target.value)}
-            className="w-56 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-green-300 outline-none shadow-md"
-          />
-          <button 
-            onClick={addQuote}
-            disabled={!newQuoteText || !newQuoteSource}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 rounded-xl disabled:opacity-50 hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-          >
-            <Plus size={24} />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {(settings.customQuotes || []).map((quote) => (
-            <div key={quote.id} className="flex justify-between items-start p-5 bg-white rounded-xl group shadow-md hover:shadow-lg transition-all border-2 border-green-200 hover:border-green-400">
-              <div className="flex-1">
-                <p className="text-stone-800 font-serif text-base leading-relaxed mb-2">"{quote.text}"</p>
-                <p className="text-stone-600 text-sm font-semibold">— {quote.source}</p>
-              </div>
-              <button 
-                onClick={() => removeQuote(quote.id)}
-                className="text-stone-400 hover:text-red-600 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 p-2"
-              >
-                <Trash2 size={20} />
-              </button>
-            </div>
-          ))}
-          {(!settings.customQuotes || settings.customQuotes.length === 0) && (
-            <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-green-300">
-              <p className="text-stone-500 text-base font-medium">No quotes added yet. Add your first inspiring quote above!</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-
-
-      {/* Custom Fields */}
-      <section className="bg-gradient-to-br from-white to-indigo-50 rounded-2xl shadow-xl border-3 border-indigo-300 p-8">
-        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-xl shadow-lg">
-            <Wrench className="text-white" size={28}/>
-          </div>
-          Custom Fields
-        </h3>
-        
-        <div className="mb-8 flex gap-3">
-          <input
-            type="text"
-            placeholder="Field name (e.g. Temple Service)"
-            value={newFieldKey}
-            onChange={(e) => setNewFieldKey(e.target.value)}
-            className="flex-1 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300 outline-none shadow-md"
-          />
-          <input
-            type="text"
-            placeholder="Value"
-            value={newFieldValue}
-            onChange={(e) => setNewFieldValue(e.target.value)}
-            className="flex-1 p-4 border-3 border-stone-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300 outline-none shadow-md"
-          />
-          <button 
-            onClick={addCustomField}
-            disabled={!newFieldKey || !newFieldValue}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-xl disabled:opacity-50 hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-          >
-            <Plus size={24} />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {settings.customFields && Object.entries(settings.customFields).map(([key, value]) => (
-            <div key={key} className="flex justify-between items-center p-5 bg-white rounded-xl group shadow-md hover:shadow-lg transition-all border-2 border-indigo-200 hover:border-indigo-400">
-              <div>
-                <span className="font-bold text-stone-900 text-base">{key}:</span>{' '}
-                <span className="text-stone-700 text-base">{value}</span>
-              </div>
-              <button 
-                onClick={() => removeCustomField(key)}
-                className="text-stone-400 hover:text-red-600 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110 p-2"
-              >
-                <Trash2 size={20} />
-              </button>
-            </div>
-          ))}
-          {(!settings.customFields || Object.keys(settings.customFields).length === 0) && (
-            <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-indigo-300">
-              <p className="text-stone-500 text-base font-medium">No custom fields added yet. Create your personalized fields above!</p>
-            </div>
-          )}
-        </div>
-      </section>
     </div>
   );
 };

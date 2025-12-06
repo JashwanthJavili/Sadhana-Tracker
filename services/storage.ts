@@ -33,7 +33,19 @@ export const generateTimeSlots = () => {
 
 // --- Storage Logic ---
 
-const isGuest = (userId: string) => userId === 'guest';
+const isGuest = (userId: string) => {
+  // CRITICAL: Only 'guest' user ID should use localStorage
+  // This prevents ANY authenticated user from accidentally using local storage
+  return userId === 'guest';
+};
+
+// SAFETY CHECK: Prevent authenticated users from ever touching localStorage
+const validateGuestOnly = (userId: string, operation: string) => {
+  if (!isGuest(userId)) {
+    console.error(`CRITICAL ERROR: Attempted ${operation} with localStorage for authenticated user ${userId}`);
+    throw new Error('Authenticated users cannot use localStorage. This is a critical security issue.');
+  }
+};
 
 // Create a default empty entry structure
 const createDefaultEntry = (dateStr: string): DailyEntry => ({
@@ -49,6 +61,7 @@ const createDefaultEntry = (dateStr: string): DailyEntry => ({
 
 export const getEntry = async (userId: string, dateStr: string): Promise<DailyEntry> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'getEntry');
     const localData = localStorage.getItem(`sl_${userId}_entry_${dateStr}`);
     if (localData) {
       return JSON.parse(localData);
@@ -74,6 +87,7 @@ export const getEntry = async (userId: string, dateStr: string): Promise<DailyEn
 
 export const saveEntry = async (userId: string, entry: DailyEntry): Promise<void> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'saveEntry');
     localStorage.setItem(`sl_${userId}_entry_${entry.date}`, JSON.stringify(entry));
     return;
   }
@@ -88,6 +102,7 @@ export const saveEntry = async (userId: string, entry: DailyEntry): Promise<void
 
 export const getAllEntries = async (userId: string): Promise<DailyEntry[]> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'getAllEntries');
     const entries: DailyEntry[] = [];
     const keyPrefix = `sl_${userId}_entry_`;
     for (let i = 0; i < localStorage.length; i++) {
@@ -119,6 +134,7 @@ export const getAllEntries = async (userId: string): Promise<DailyEntry[]> => {
 
 export const getSettings = async (userId: string): Promise<UserSettings> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'getSettings');
     const local = localStorage.getItem(`sl_${userId}_settings`);
     if (local) return { ...INITIAL_SETTINGS, ...JSON.parse(local) };
     return INITIAL_SETTINGS;
@@ -140,6 +156,7 @@ export const getSettings = async (userId: string): Promise<UserSettings> => {
 
 export const saveSettings = async (userId: string, settings: UserSettings): Promise<void> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'saveSettings');
     localStorage.setItem(`sl_${userId}_settings`, JSON.stringify(settings));
     return;
   }
@@ -166,6 +183,7 @@ export interface JournalEntry {
 
 export const getJournalEntries = async (userId: string): Promise<JournalEntry[]> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'getJournalEntries');
     const entries: JournalEntry[] = [];
     const keyPrefix = `sl_${userId}_journal_`;
     for (let i = 0; i < localStorage.length; i++) {
@@ -197,6 +215,7 @@ export const getJournalEntries = async (userId: string): Promise<JournalEntry[]>
 
 export const saveJournalEntry = async (userId: string, entry: JournalEntry): Promise<void> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'saveJournalEntry');
     localStorage.setItem(`sl_${userId}_journal_${entry.id}`, JSON.stringify(entry));
     return;
   }
@@ -211,6 +230,7 @@ export const saveJournalEntry = async (userId: string, entry: JournalEntry): Pro
 
 export const deleteJournalEntry = async (userId: string, entryId: string): Promise<void> => {
   if (isGuest(userId)) {
+    validateGuestOnly(userId, 'deleteJournalEntry');
     localStorage.removeItem(`sl_${userId}_journal_${entryId}`);
     return;
   }
