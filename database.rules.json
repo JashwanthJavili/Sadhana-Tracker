@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "users": {
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && auth.uid == $userId",
+        "entries": {
+          "$entryId": {
+            ".validate": "newData.hasChildren(['id', 'date', 'lastUpdated'])"
+          }
+        },
+        "settings": {
+          ".validate": "newData.hasChildren(['userName', 'iskconCenter'])"
+        }
+      }
+    }
+  }
+}
