@@ -5,6 +5,7 @@ import { DailyEntry, UserSettings, Quote } from '../types';
 import { TrendingUp, Award, Calendar, Sun, Moon } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingScreen from '../components/LoadingScreen';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -50,11 +51,7 @@ const Dashboard: React.FC = () => {
     .reverse()
     .map(e => ({ value: e.metrics.disciplineScore }));
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-96">
-      <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-600 border-t-transparent"></div>
-    </div>
-  );
+  if (loading) return <LoadingScreen />;
 
   return (
     <div className="space-y-8 animate-fadeIn">

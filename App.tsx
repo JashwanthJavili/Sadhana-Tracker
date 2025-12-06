@@ -10,6 +10,7 @@ import About from './pages/About';
 import DevotionalJournal from './pages/DevotionalJournal';
 import Login from './components/Login';
 import OnboardingModal from './components/OnboardingModal';
+import LoadingScreen from './components/LoadingScreen';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { getSettings, saveSettings } from './services/storage';
@@ -17,7 +18,7 @@ import { getSettings, saveSettings } from './services/storage';
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return <div className="h-screen flex items-center justify-center bg-stone-50">Loading...</div>;
+  if (loading) return <LoadingScreen />;
   
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -29,7 +30,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return <div className="h-screen flex items-center justify-center bg-stone-50">Loading...</div>;
+  if (loading) return <LoadingScreen />;
   
   if (user) {
     return <Navigate to="/" replace />;
