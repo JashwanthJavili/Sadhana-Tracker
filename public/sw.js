@@ -1,6 +1,6 @@
 /* Service Worker for Sadhana Sanga PWA */
 
-const CACHE_NAME = 'sadhana-sanga-v1';
+const CACHE_NAME = 'sadhana-sanga-v2';
 const urlsToCache = [
   '/',
   '/index.html',
