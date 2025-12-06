@@ -23,6 +23,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       // If we are already in guest mode, don't overwrite with null
       if (user?.uid === 'guest') return;
+      
+      // CRITICAL: Clear ALL localStorage data for authenticated users
+      if (currentUser && currentUser.uid !== 'guest') {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('sl_')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log(`🧹 Cleared ${keysToRemove.length} localStorage items for authenticated user`);
+      }
+      
       setUser(currentUser);
       setLoading(false);
       
