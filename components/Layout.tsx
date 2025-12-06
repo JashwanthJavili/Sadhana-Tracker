@@ -272,7 +272,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         )}
         
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-stone-50 touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-stone-50 touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'auto' }}>
           <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-8 pb-24">
             {children}
           </div>
