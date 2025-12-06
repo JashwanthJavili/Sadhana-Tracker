@@ -135,9 +135,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-stone-900 via-stone-900 to-stone-950 text-stone-100 transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl
-        md:relative md:translate-x-0
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        fixed md:sticky inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-stone-900 via-stone-900 to-stone-950 text-stone-100 transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl md:h-screen
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Branding Area */}
         <div className="p-6 border-b border-stone-700/50 flex flex-col items-center text-center gap-4 bg-gradient-to-br from-orange-900/20 to-transparent">
@@ -264,7 +263,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
               <button
                 onClick={handleLogout}
-                className="bg-white text-orange-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-colors whitespace-nowrap self-end sm:self-auto"
+                className="bg-white text-orange-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-colors whitespace-nowrap self-end sm:self-auto active:scale-95"
               >
                 Sign In
               </button>
@@ -272,9 +271,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         )}
         
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-stone-50 touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'auto' }}>
-          <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-8 pb-24">
-            {children}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-br from-stone-50 via-orange-50/20 to-stone-50 touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'auto' }}>
+          <div className="max-w-7xl mx-auto p-3 sm:p-4 lg:p-8 pb-24">
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-200px)]">
+              {children}
+            </div>
           </div>
         </div>
       </main>

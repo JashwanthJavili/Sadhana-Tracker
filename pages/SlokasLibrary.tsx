@@ -343,7 +343,7 @@ const SlokasLibrary: React.FC = () => {
           filteredSlokas.map((sloka, index) => (
             <div 
               key={sloka.id} 
-              className={`bg-white rounded-xl shadow-xl border-2 border-purple-200 hover:shadow-2xl transition-all overflow-hidden ${
+              className={`bg-white hover-lift rounded-xl border border-purple-200 shadow-md hover:shadow-xl transition-all overflow-hidden ${
                 draggedIndex === index ? 'opacity-50' : ''
               }`}
               draggable={user?.email === ADMIN_EMAIL && !searchTerm}
@@ -353,7 +353,7 @@ const SlokasLibrary: React.FC = () => {
             >
               {/* Sloka Header - Clickable */}
               <div 
-                className="p-6 cursor-pointer hover:bg-purple-50 transition-all"
+                className="p-4 sm:p-6 cursor-pointer hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all"
                 onClick={() => setExpandedSlokas({ ...expandedSlokas, [sloka.id]: !expandedSlokas[sloka.id] })}
               >
                 <div className="flex justify-between items-start">

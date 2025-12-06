@@ -355,7 +355,7 @@ const FestivalsPage: React.FC = () => {
             {upcomingFestivals.map((festival) => (
               <div
                 key={festival.id}
-                className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-purple-300 shadow-lg hover:shadow-xl transition-all"
+                className="bg-white hover-lift rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-200 shadow-md hover:shadow-xl transition-all"
               >
                 {/* Festival Header */}
                 <div className="mb-4">
