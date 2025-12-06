@@ -215,8 +215,6 @@ const DailyPlanner: React.FC = () => {
               ))}
             </div>
           </section>
-            </div>
-          </section>
         </div>
 
         {/* Right Column: Metrics */}

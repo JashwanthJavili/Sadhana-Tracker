@@ -11,6 +11,9 @@ import DevotionalJournal from './pages/DevotionalJournal';
 import Community from './pages/Community';
 import ChatsList from './pages/ChatsList';
 import ChatWindow from './pages/ChatWindow';
+import QuestionsPage from './pages/QuestionsPage';
+import AskQuestionPage from './pages/AskQuestionPage';
+import QuestionDetailPage from './pages/QuestionDetailPage';
 import Login from './components/Login';
 import OnboardingModal from './components/OnboardingModal';
 import LoadingScreen from './components/LoadingScreen';
@@ -124,6 +127,9 @@ function AppContent() {
           <Route path="/community" element={<PrivateRoute><Community /></PrivateRoute>} />
           <Route path="/chats" element={<PrivateRoute><ChatsList /></PrivateRoute>} />
           <Route path="/chat/:chatId" element={<PrivateRoute><ChatWindow /></PrivateRoute>} />
+          <Route path="/questions" element={<PrivateRoute><QuestionsPage /></PrivateRoute>} />
+          <Route path="/questions/ask" element={<PrivateRoute><AskQuestionPage /></PrivateRoute>} />
+          <Route path="/questions/:questionId" element={<PrivateRoute><QuestionDetailPage /></PrivateRoute>} />
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

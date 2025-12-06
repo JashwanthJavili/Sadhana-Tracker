@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle, HelpCircle as QuestionIcon } from 'lucide-react';
 import { getSettings, trackUsage, shouldShowFeedback } from '../services/storage';
 import { getTotalUnreadCount } from '../services/chat';
 import { UserSettings } from '../types';
@@ -83,6 +83,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { to: '/history', icon: BookOpen, label: 'History', tourAttr: 'history' },
     { to: '/community', icon: Users, label: 'Community', tourAttr: 'community' },
     { to: '/chats', icon: MessageCircle, label: 'Messages', tourAttr: 'messages' },
+    { to: '/questions', icon: QuestionIcon, label: 'Q&A Forum', tourAttr: 'questions' },
     { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings' },
     { to: '/about', icon: Info, label: 'About' },
   ];
