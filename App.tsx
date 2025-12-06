@@ -77,6 +77,23 @@ function AppContent() {
   const { user, loading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // CRITICAL: Clear localStorage immediately for authenticated users
+  useEffect(() => {
+    if (user && user.uid !== 'guest') {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sl_')) {
+          keysToRemove.push(key);
+        }
+      }
+      if (keysToRemove.length > 0) {
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log(`🧹 [App.tsx] Cleared ${keysToRemove.length} localStorage items for authenticated user ${user.uid}`);
+      }
+    }
+  }, [user]);
+
   useEffect(() => {
     const checkFirstTime = async () => {
       if (user && user.uid !== 'guest') {
