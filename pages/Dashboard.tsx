@@ -70,17 +70,7 @@ const Dashboard: React.FC = () => {
               Guided by {settings.guruName}
             </p>
           )}
-          {randomQuote && (
-            <figure className="mt-4">
-              <blockquote className="text-orange-100 italic text-lg max-w-2xl font-serif">
-                "{randomQuote.text}"
-              </blockquote>
-              <figcaption className="mt-2 text-sm text-orange-200 uppercase tracking-wider font-semibold">
-                — {randomQuote.source}
-              </figcaption>
-            </figure>
-          )}
-          
+        </div>
           <div className="mt-8 flex gap-4">
             <Link 
               to="/planner" 
