@@ -148,10 +148,12 @@ const DevotionalJournal: React.FC = () => {
   if (isWriting) {
     return (
       <div className="max-w-4xl mx-auto animate-fadeIn">
-        <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 transition-all duration-300">
+        <div className="bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-2xl border-3 border-orange-300 p-8 space-y-8 transition-all duration-300">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-serif font-bold text-stone-900 flex items-center gap-2">
-              <Heart className="text-orange-600" size={28} />
+            <h2 className="text-3xl font-serif font-bold text-stone-900 flex items-center gap-3">
+              <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-3 rounded-xl shadow-lg">
+                <Heart className="text-white" size={32} />
+              </div>
               {editingId ? (language === 'en' ? 'Edit Entry' : language === 'hi' ? 'प्रविष्टि संपादित करें' : 'ఎంట్రీని సవరించండి') : (language === 'en' ? 'New Journal Entry' : language === 'hi' ? 'नई डायरी प्रविष्टि' : 'క్రొత్త డైరీ ఎంట్రీ')}
             </h2>
             <button
@@ -161,57 +163,57 @@ const DevotionalJournal: React.FC = () => {
                 setEditingId(null);
                 setCurrentEntry({ title: '', content: '', mood: 'peaceful', tags: [] });
               }}
-              className="text-stone-400 hover:text-stone-600"
+              className="text-stone-400 hover:text-red-600 transition-all transform hover:scale-110 active:scale-95 p-2 hover:bg-red-50 rounded-lg"
             >
-              <X size={24} />
+              <X size={28} />
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-base font-bold text-stone-800 mb-3">
                 {language === 'en' ? 'Title' : language === 'hi' ? 'शीर्षक' : 'శీర్షిక'}
               </label>
               <input
                 type="text"
                 value={currentEntry.title}
                 onChange={(e) => setCurrentEntry({ ...currentEntry, title: e.target.value })}
-                className="w-full p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all duration-300 hover:border-orange-200"
+                className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none transition-all duration-300 hover:border-orange-300 text-lg font-semibold shadow-md"
                 placeholder={language === 'en' ? 'Give your entry a title...' : language === 'hi' ? 'अपनी प्रविष्टि को शीर्षक दें...' : 'మీ ఎంట్రీకి శీర్షిక ఇవ్వండి...'}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-base font-bold text-stone-800 mb-3">
                 {language === 'en' ? 'How are you feeling?' : language === 'hi' ? 'आप कैसा महसूस कर रहे हैं?' : 'మీరు ఎలా అనుభూతి చెందుతున్నారు?'}
               </label>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-3">
                 {(Object.keys(moodEmojis) as Array<keyof typeof moodEmojis>).map((mood) => (
                   <button
                     key={mood}
                     type="button"
                     onClick={() => setCurrentEntry({ ...currentEntry, mood })}
-                    className={`p-3 rounded-lg border-2 transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+                    className={`p-4 rounded-xl border-3 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-md hover:shadow-xl ${
                       currentEntry.mood === mood
-                        ? 'border-orange-600 bg-orange-50 shadow-md'
-                        : 'border-stone-300 hover:border-orange-300 hover:bg-orange-50/50'
+                        ? 'border-orange-600 bg-gradient-to-br from-orange-100 to-amber-100 shadow-lg ring-4 ring-orange-200'
+                        : 'border-stone-300 hover:border-orange-400 hover:bg-orange-50/50 bg-white'
                     }`}
                   >
-                    <div className="text-2xl text-center mb-1">{moodEmojis[mood]}</div>
-                    <div className="text-xs text-center">{moodLabels[language][mood]}</div>
+                    <div className="text-3xl text-center mb-2">{moodEmojis[mood]}</div>
+                    <div className="text-sm text-center font-semibold text-stone-800">{moodLabels[language][mood]}</div>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-base font-bold text-stone-800 mb-3">
                 {language === 'en' ? 'Your Devotional Thoughts & Feelings' : language === 'hi' ? 'आपके भक्ति विचार और भावनाएं' : 'మీ భక్తి ఆలోచనలు & భావాలు'}
               </label>
               <textarea
                 value={currentEntry.content}
                 onChange={(e) => setCurrentEntry({ ...currentEntry, content: e.target.value })}
-                className="w-full p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none min-h-[300px] font-serif transition-all duration-300 hover:border-orange-200 resize-y"
+                className="w-full p-5 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none min-h-[350px] font-serif text-lg transition-all duration-300 hover:border-orange-300 resize-y leading-relaxed shadow-md bg-white"
                 placeholder={language === 'en' ? 'Pour your heart out... Share your realizations, struggles, gratitude, or any devotional feelings...' : language === 'hi' ? 'अपना दिल खोलें... अपनी अनुभूतियां, संघर्ष, कृतज्ञता, या कोई भी भक्ति भावनाएं साझा करें...' : 'మీ హృదయాన్ని పంచుకోండి... మీ అవగాహనలు, కష్టాలు, కృతజ్ఞత లేదా ఏదైనా భక్తి భావాలను పంచుకోండి...'}
               />
             </div>
@@ -253,14 +255,14 @@ const DevotionalJournal: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-4 pt-6 border-t-2 border-orange-200">
             <button
               type="button"
               onClick={handleSave}
               disabled={!currentEntry.title || !currentEntry.content}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white rounded-xl font-bold text-lg hover:from-orange-700 hover:via-amber-700 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 min-h-[58px]"
             >
-              <Save size={20} />
+              <Save size={24} />
               {t.common.save}
             </button>
             <button
@@ -270,7 +272,7 @@ const DevotionalJournal: React.FC = () => {
                 setEditingId(null);
                 setCurrentEntry({ title: '', content: '', mood: 'peaceful', tags: [] });
               }}
-              className="px-6 py-3 border-2 border-stone-300 text-stone-700 rounded-lg font-semibold hover:bg-stone-50 transition-all duration-300 hover:border-stone-400 transform hover:scale-105 active:scale-95"
+              className="px-8 py-4 border-3 border-stone-300 text-stone-700 rounded-xl font-bold text-lg hover:bg-stone-100 transition-all duration-300 hover:border-stone-400 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg min-h-[58px]"
             >
               {t.common.cancel}
             </button>
@@ -281,91 +283,93 @@ const DevotionalJournal: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="max-w-6xl mx-auto space-y-8 animate-fadeIn">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-stone-900 flex items-center gap-2">
-            <Heart className="text-orange-600" size={32} />
+          <h1 className="text-4xl font-serif font-bold text-white flex items-center gap-3">
+            <Heart className="text-yellow-200" size={40} />
             {language === 'en' ? 'Devotional Journal' : language === 'hi' ? 'भक्ति डायरी' : 'భక్తి డైరీ'}
           </h1>
-          <p className="text-stone-600 mt-1">
+          <p className="text-orange-100 mt-2 text-lg font-medium">
             {language === 'en' ? 'Record your inner devotional feelings and spiritual experiences' : language === 'hi' ? 'अपनी आंतरिक भक्ति भावनाओं और आध्यात्मिक अनुभवों को रिकॉर्ड करें' : 'మీ అంతర్గత భక్తి భావాలు మరియు ఆధ్యాత్మిక అనుభవాలను రికార్డ్ చేయండి'}
           </p>
         </div>
         <button
           onClick={() => setIsWriting(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 w-full sm:w-auto"
+          className="flex items-center gap-3 px-8 py-4 bg-white text-orange-700 rounded-xl font-bold text-lg hover:bg-orange-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 w-full sm:w-auto min-h-[58px]"
         >
-          <Plus size={20} />
+          <Plus size={24} />
           {language === 'en' ? 'New Entry' : language === 'hi' ? 'नई प्रविष्टि' : 'క్రొత్త ఎంట్రీ'}
         </button>
       </div>
 
       {entries.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-12 text-center">
-          <Heart size={64} className="text-stone-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-stone-700 mb-2">
+        <div className="bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-xl border-3 border-orange-200 p-16 text-center">
+          <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 mb-6 shadow-lg">
+            <Heart size={64} className="text-orange-500" />
+          </div>
+          <h3 className="text-2xl font-bold text-stone-800 mb-3">
             {language === 'en' ? 'No journal entries yet' : language === 'hi' ? 'अभी तक कोई डायरी प्रविष्टि नहीं' : 'ఇంకా డైరీ ఎంట్రీలు లేవు'}
           </h3>
-          <p className="text-stone-500 mb-6">
+          <p className="text-stone-600 mb-8 text-lg max-w-md mx-auto">
             {language === 'en' ? 'Start recording your devotional journey and inner feelings' : language === 'hi' ? 'अपनी भक्ति यात्रा और आंतरिक भावनाओं को रिकॉर्ड करना शुरू करें' : 'మీ భక్తి ప్రయాణం మరియు అంతర్గత భావాలను రికార్డ్ చేయడం ప్రారంభించండి'}
           </p>
           <button
             onClick={() => setIsWriting(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors shadow-lg"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white rounded-xl font-bold text-lg hover:from-orange-700 hover:via-amber-700 hover:to-orange-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95"
           >
-            <Plus size={20} />
+            <Plus size={24} />
             {language === 'en' ? 'Write First Entry' : language === 'hi' ? 'पहली प्रविष्टि लिखें' : 'మొదటి ఎంట్రీ వ్రాయండి'}
           </button>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {entries.map((entry) => (
             <div
               key={entry.id}
-              className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 hover:shadow-lg transition-all duration-300 hover:border-orange-200 transform hover:scale-[1.01]"
+              className="group bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-xl border-3 border-orange-200 p-8 hover:shadow-2xl transition-all duration-300 hover:border-orange-400 transform hover:scale-[1.02] hover:-translate-y-1"
             >
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-6">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">{moodEmojis[entry.mood]}</span>
-                    <h3 className="text-xl font-serif font-bold text-stone-900">{entry.title}</h3>
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="text-4xl">{moodEmojis[entry.mood]}</span>
+                    <h3 className="text-2xl font-serif font-bold text-stone-900">{entry.title}</h3>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-stone-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} />
+                  <div className="flex items-center gap-5 text-sm text-stone-600 font-medium">
+                    <span className="flex items-center gap-2 bg-stone-100 px-3 py-1.5 rounded-lg">
+                      <Calendar size={16} />
                       {formatDate(entry.timestamp)}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={14} />
+                    <span className="flex items-center gap-2 bg-stone-100 px-3 py-1.5 rounded-lg">
+                      <Clock size={16} />
                       {formatTime(entry.timestamp)}
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <button
                     onClick={() => handleEdit(entry)}
-                    className="p-2 text-stone-400 hover:text-orange-600 transition-colors"
+                    className="p-3 text-stone-400 hover:text-orange-600 transition-all transform hover:scale-110 active:scale-95 bg-white rounded-xl shadow-md hover:shadow-lg"
                   >
-                    <Edit2 size={18} />
+                    <Edit2 size={22} />
                   </button>
                   <button
                     onClick={() => handleDelete(entry.id)}
-                    className="p-2 text-stone-400 hover:text-red-600 transition-colors"
+                    className="p-3 text-stone-400 hover:text-red-600 transition-all transform hover:scale-110 active:scale-95 bg-white rounded-xl shadow-md hover:shadow-lg"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={22} />
                   </button>
                 </div>
               </div>
 
-              <p className="text-stone-700 font-serif whitespace-pre-wrap mb-4">{entry.content}</p>
+              <p className="text-stone-800 font-serif whitespace-pre-wrap mb-6 text-lg leading-relaxed bg-white p-6 rounded-xl shadow-inner border border-stone-200">{entry.content}</p>
 
               {entry.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {entry.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-sm"
+                      className="px-4 py-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 rounded-xl text-sm font-semibold shadow-md"
                     >
                       #{tag}
                     </span>
