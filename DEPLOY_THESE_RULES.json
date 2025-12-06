@@ -28,6 +28,10 @@
         "feedback": {
           ".read": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
           ".write": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')"
+        },
+        "email": {
+          ".read": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+          ".write": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')"
         }
       }
     },
@@ -48,14 +52,6 @@
       ".write": "auth != null || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com'"
     },
     "answers": {
-      ".read": "auth != null",
-      ".write": "auth != null || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com'"
-    },
-    "slokas": {
-      ".read": "auth != null",
-      ".write": "auth != null || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com'"
-    },
-    "festivals": {
       ".read": "auth != null",
       ".write": "auth != null || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com'"
     }

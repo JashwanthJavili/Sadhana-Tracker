@@ -17,14 +17,14 @@ export const translations = {
     
     // Login Page
     login: {
-      title: 'Sadhana Lifeforce',
+      title: 'Sadhana Sanga',
       subtitle: 'Track Your Spiritual Journey',
       description: 'A complete spiritual productivity platform for ISKCON devotees',
       signInWithGoogle: 'Sign in with Google',
       continueAsGuest: 'Continue as Guest',
       guestNote: 'Guest data is saved locally. Sign in to sync across devices.',
       features: {
-        title: 'Why Sadhana Lifeforce?',
+        title: 'Why Sadhana Sanga?',
         track: 'Track daily spiritual practices',
         analyze: 'Analyze your progress with insights',
         journal: 'Record devotional feelings',

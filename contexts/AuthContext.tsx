@@ -6,6 +6,7 @@ import { setUserOnlineStatus } from '../services/chat';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isNewUser: boolean;
   signInWithGoogle: () => Promise<void>;
   loginAsGuest: () => void;
   logout: () => Promise<void>;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -45,7 +47,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      // Check if this is a new user
+      const isNew = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+      setIsNewUser(isNew);
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
@@ -74,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } as User;
     
     setUser(guestUser);
+    setIsNewUser(true); // Guest users always see the tour
     setLoading(false);
   };
 
@@ -88,13 +94,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         await signOut(auth);
       }
+      setIsNewUser(false);
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, loginAsGuest, logout }}>
+    <AuthContext.Provider value={{ user, loading, isNewUser, signInWithGoogle, loginAsGuest, logout }}>
       {children}
     </AuthContext.Provider>
   );

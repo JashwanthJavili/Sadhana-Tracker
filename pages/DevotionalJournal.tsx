@@ -283,7 +283,7 @@ const DevotionalJournal: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fadeIn">
+    <div className="min-h-full max-w-6xl mx-auto space-y-8 animate-fadeIn">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
         <div>
           <h1 className="text-4xl font-serif font-bold text-white flex items-center gap-3">

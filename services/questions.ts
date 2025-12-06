@@ -167,8 +167,10 @@ export const getAnswersForQuestion = (questionId: string, callback: (answers: An
     answers.sort((a, b) => {
       if (a.isAccepted && !b.isAccepted) return -1;
       if (!a.isAccepted && b.isAccepted) return 1;
-      if (a.upvotes.length !== b.upvotes.length) {
-        return b.upvotes.length - a.upvotes.length;
+      const aUpvotes = a.upvotes?.length || 0;
+      const bUpvotes = b.upvotes?.length || 0;
+      if (aUpvotes !== bUpvotes) {
+        return bUpvotes - aUpvotes;
       }
       return a.timestamp - b.timestamp;
     });

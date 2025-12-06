@@ -24,7 +24,7 @@ const History: React.FC = () => {
   if (loading) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div><p className="text-stone-600 font-medium text-lg">Loading history...</p></div></div>;
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="min-h-full space-y-8 animate-fadeIn">
       <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
         <div className="flex items-center gap-3 mb-2">
           <div className="bg-white/20 p-3 rounded-xl">

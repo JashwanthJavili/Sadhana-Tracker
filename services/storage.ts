@@ -49,7 +49,7 @@ const createDefaultEntry = (dateStr: string): DailyEntry => ({
 
 export const getEntry = async (userId: string, dateStr: string): Promise<DailyEntry> => {
   if (isGuest(userId)) {
-    const localData = localStorage.getItem(`sl_entry_${dateStr}`);
+    const localData = localStorage.getItem(`sl_${userId}_entry_${dateStr}`);
     if (localData) {
       return JSON.parse(localData);
     }
@@ -74,7 +74,7 @@ export const getEntry = async (userId: string, dateStr: string): Promise<DailyEn
 
 export const saveEntry = async (userId: string, entry: DailyEntry): Promise<void> => {
   if (isGuest(userId)) {
-    localStorage.setItem(`sl_entry_${entry.date}`, JSON.stringify(entry));
+    localStorage.setItem(`sl_${userId}_entry_${entry.date}`, JSON.stringify(entry));
     return;
   }
 
@@ -89,9 +89,10 @@ export const saveEntry = async (userId: string, entry: DailyEntry): Promise<void
 export const getAllEntries = async (userId: string): Promise<DailyEntry[]> => {
   if (isGuest(userId)) {
     const entries: DailyEntry[] = [];
+    const keyPrefix = `sl_${userId}_entry_`;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith('sl_entry_')) {
+      if (key && key.startsWith(keyPrefix)) {
         try {
           const entry = JSON.parse(localStorage.getItem(key) || '{}');
           if (entry.id) entries.push(entry);
@@ -118,7 +119,7 @@ export const getAllEntries = async (userId: string): Promise<DailyEntry[]> => {
 
 export const getSettings = async (userId: string): Promise<UserSettings> => {
   if (isGuest(userId)) {
-    const local = localStorage.getItem('sl_settings');
+    const local = localStorage.getItem(`sl_${userId}_settings`);
     if (local) return { ...INITIAL_SETTINGS, ...JSON.parse(local) };
     return INITIAL_SETTINGS;
   }
@@ -139,7 +140,7 @@ export const getSettings = async (userId: string): Promise<UserSettings> => {
 
 export const saveSettings = async (userId: string, settings: UserSettings): Promise<void> => {
   if (isGuest(userId)) {
-    localStorage.setItem('sl_settings', JSON.stringify(settings));
+    localStorage.setItem(`sl_${userId}_settings`, JSON.stringify(settings));
     return;
   }
 
@@ -166,9 +167,10 @@ export interface JournalEntry {
 export const getJournalEntries = async (userId: string): Promise<JournalEntry[]> => {
   if (isGuest(userId)) {
     const entries: JournalEntry[] = [];
+    const keyPrefix = `sl_${userId}_journal_`;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith('sl_journal_')) {
+      if (key && key.startsWith(keyPrefix)) {
         try {
           const entry = JSON.parse(localStorage.getItem(key) || '{}');
           if (entry.id) entries.push(entry);
@@ -195,7 +197,7 @@ export const getJournalEntries = async (userId: string): Promise<JournalEntry[]>
 
 export const saveJournalEntry = async (userId: string, entry: JournalEntry): Promise<void> => {
   if (isGuest(userId)) {
-    localStorage.setItem(`sl_journal_${entry.id}`, JSON.stringify(entry));
+    localStorage.setItem(`sl_${userId}_journal_${entry.id}`, JSON.stringify(entry));
     return;
   }
 
@@ -209,7 +211,7 @@ export const saveJournalEntry = async (userId: string, entry: JournalEntry): Pro
 
 export const deleteJournalEntry = async (userId: string, entryId: string): Promise<void> => {
   if (isGuest(userId)) {
-    localStorage.removeItem(`sl_journal_${entryId}`);
+    localStorage.removeItem(`sl_${userId}_journal_${entryId}`);
     return;
   }
 
@@ -223,11 +225,15 @@ export const deleteJournalEntry = async (userId: string, entryId: string): Promi
 
 // --- Usage Tracking ---
 
-export const trackUsage = async (userId: string): Promise<void> => {
+export const trackUsage = async (userId: string, userEmail?: string): Promise<void> => {
   if (isGuest(userId)) return;
 
   try {
     const dbRef = ref(db);
+    const userRef = ref(db, `users/${userId}`);
+    const usageRef = ref(db, `users/${userId}/usage`);
+    
+    // Get existing usage data
     const snapshot = await get(child(dbRef, `users/${userId}/usage`));
     
     const usage = snapshot.exists() ? snapshot.val() : {
@@ -240,7 +246,19 @@ export const trackUsage = async (userId: string): Promise<void> => {
     usage.loginCount += 1;
     usage.lastActive = Date.now();
 
-    await set(ref(db, `users/${userId}/usage`), usage);
+    // Save usage data
+    await set(usageRef, usage);
+    
+    // Save email at user root level if provided
+    if (userEmail) {
+      const userSnapshot = await get(userRef);
+      const userData = userSnapshot.exists() ? userSnapshot.val() : {};
+      
+      // Only update email if it's not already set
+      if (!userData.email) {
+        await set(ref(db, `users/${userId}/email`), userEmail);
+      }
+    }
   } catch (error) {
     console.error("Error tracking usage:", error);
   }
@@ -256,30 +274,71 @@ export const shouldShowFeedback = async (userId: string): Promise<boolean> => {
     if (!snapshot.exists()) return false;
 
     const usage = snapshot.val();
-    const daysSinceFirst = Math.floor((Date.now() - usage.firstLogin) / (1000 * 60 * 60 * 24));
-    const daysSinceLastPrompt = usage.lastFeedbackPrompt 
-      ? Math.floor((Date.now() - usage.lastFeedbackPrompt) / (1000 * 60 * 60 * 24))
+    const now = Date.now();
+    const today = new Date().toDateString();
+    
+    // Check if already shown today
+    const lastPromptDate = usage.lastFeedbackPrompt ? new Date(usage.lastFeedbackPrompt).toDateString() : null;
+    const promptsToday = (usage.feedbackPromptsToday || 0);
+    const lastPromptDay = usage.lastFeedbackDay || '';
+
+    // Reset counter if it's a new day
+    if (lastPromptDay !== today) {
+      usage.feedbackPromptsToday = 0;
+      usage.lastFeedbackDay = today;
+    }
+
+    // Only show max 2 times per day
+    if (lastPromptDate === today && promptsToday >= 2) {
+      return false;
+    }
+
+    const daysSinceFirst = Math.floor((now - usage.firstLogin) / (1000 * 60 * 60 * 24));
+    const hoursSinceLastPrompt = usage.lastFeedbackPrompt 
+      ? Math.floor((now - usage.lastFeedbackPrompt) / (1000 * 60 * 60))
       : 999;
 
-    // Show feedback after 7 days of use OR 20 logins, and not prompted in last 30 days
-    return (daysSinceFirst >= 7 || usage.loginCount >= 20) && daysSinceLastPrompt >= 30;
+    // Show feedback after 3 days of use OR 10 logins, and at least 4 hours since last prompt
+    return (daysSinceFirst >= 3 || usage.loginCount >= 10) && hoursSinceLastPrompt >= 4;
   } catch (error) {
     console.error("Error checking feedback status:", error);
     return false;
   }
 };
 
-export const markFeedbackShown = async (userId: string): Promise<void> => {
+export const markFeedbackShown = async (userId: string, rating?: number): Promise<void> => {
   if (isGuest(userId)) return;
 
   try {
     const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, `users/${userId}/usage`));
+    const usageSnapshot = await get(child(dbRef, `users/${userId}/usage`));
     
-    if (snapshot.exists()) {
-      const usage = snapshot.val();
+    if (usageSnapshot.exists()) {
+      const usage = usageSnapshot.val();
+      const today = new Date().toDateString();
+      
       usage.lastFeedbackPrompt = Date.now();
+      
+      // Increment prompts counter for today
+      if (usage.lastFeedbackDay === today) {
+        usage.feedbackPromptsToday = (usage.feedbackPromptsToday || 0) + 1;
+      } else {
+        usage.feedbackPromptsToday = 1;
+        usage.lastFeedbackDay = today;
+      }
+      
       await set(ref(db, `users/${userId}/usage`), usage);
+    }
+
+    // Save the star rating if provided
+    if (rating) {
+      const feedbackData = {
+        rating,
+        timestamp: Date.now(),
+        userId,
+        type: 'quick-star-rating'
+      };
+      await set(ref(db, `users/${userId}/quickFeedback/${Date.now()}`), feedbackData);
     }
   } catch (error) {
     console.error("Error marking feedback shown:", error);

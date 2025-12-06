@@ -14,8 +14,8 @@ const Community: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     onlineOnly: false,
-    guruName: '',
-    iskconCenter: '',
+    guruName: 'All',
+    iskconCenter: 'All',
   });
   const [loading, setLoading] = useState(true);
 
@@ -23,10 +23,11 @@ const Community: React.FC = () => {
     if (!user) return;
 
     const unsubscribe = getAllUsers((fetchedUsers) => {
-      // Exclude current user
-      const otherUsers = fetchedUsers.filter(u => u.uid !== user.uid);
-      setUsers(otherUsers);
-      setFilteredUsers(otherUsers);
+      console.log('✅ Fetched users with profiles:', fetchedUsers);
+      // Exclude current user (getAllUsers already filters for valid profiles)
+      const validUsers = fetchedUsers.filter(u => u.uid !== user.uid);
+      setUsers(validUsers);
+      setFilteredUsers(validUsers);
       setLoading(false);
     });
 
@@ -42,24 +43,42 @@ const Community: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    const applyFilters = async () => {
-      if (!searchTerm && !filters.onlineOnly && !filters.guruName && !filters.iskconCenter) {
-        setFilteredUsers(users);
-        return;
+    const applyFilters = () => {
+      let filtered = [...users];
+
+      // Apply search term filter
+      if (searchTerm) {
+        filtered = filtered.filter(u =>
+          u.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.guruName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.iskconCenter?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
       }
 
-      const results = await searchUsers(searchTerm, {
-        onlineOnly: filters.onlineOnly,
-        guruName: filters.guruName || undefined,
-        iskconCenter: filters.iskconCenter || undefined,
-      });
+      // Apply online filter
+      if (filters.onlineOnly) {
+        filtered = filtered.filter(u => u.isOnline);
+      }
 
-      // Exclude current user
-      setFilteredUsers(results.filter(u => u.uid !== user?.uid));
+      // Apply guru filter
+      if (filters.guruName && filters.guruName !== 'All') {
+        filtered = filtered.filter(u => u.guruName === filters.guruName);
+      }
+
+      // Apply ISKCON center filter
+      if (filters.iskconCenter && filters.iskconCenter !== 'All') {
+        if (filters.iskconCenter === 'Not Specified') {
+          filtered = filtered.filter(u => !u.iskconCenter || u.iskconCenter === '' || u.iskconCenter.toLowerCase() === 'n/a');
+        } else {
+          filtered = filtered.filter(u => u.iskconCenter === filters.iskconCenter);
+        }
+      }
+
+      setFilteredUsers(filtered);
     };
 
     applyFilters();
-  }, [searchTerm, filters, users, user]);
+  }, [searchTerm, filters, users]);
 
   const handleStartChat = async (otherUserId: string) => {
     if (!user) return;
@@ -69,12 +88,13 @@ const Community: React.FC = () => {
       navigate(`/chat/${chatId}`);
     } catch (error) {
       console.error('Error creating chat:', error);
-      alert('Failed to start chat. Please try again.');
+      alert('Unable to start chat. Please make sure you have completed your profile settings.');
     }
   };
 
-  const uniqueGurus = Array.from(new Set(users.map(u => u.guruName))).filter(Boolean);
-  const uniqueCenters = Array.from(new Set(users.map(u => u.iskconCenter))).filter(Boolean);
+  const uniqueGurus = Array.from(new Set(users.map(u => u.guruName))).filter(Boolean).filter((g): g is string => typeof g === 'string' && g.toLowerCase() !== 'n/a');
+  const uniqueCenters = Array.from(new Set(users.map(u => u.iskconCenter))).filter(Boolean).filter((c): c is string => typeof c === 'string' && c.toLowerCase() !== 'n/a');
+  const hasUsersWithoutCenter = users.some(u => !u.iskconCenter || u.iskconCenter === '' || u.iskconCenter.toLowerCase() === 'n/a');
 
   const getOnlineCount = () => filteredUsers.filter(u => u.isOnline).length;
   const getTimeAgo = (timestamp: number) => {
@@ -97,7 +117,7 @@ const Community: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto animate-fadeIn">
+    <div className="min-h-full space-y-6 max-w-6xl mx-auto animate-fadeIn">
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
         <div className="flex items-center justify-between">
@@ -170,7 +190,7 @@ const Community: React.FC = () => {
                 onChange={(e) => setFilters({ ...filters, guruName: e.target.value })}
                 className="p-4 border-2 border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-semibold"
               >
-                <option value="">All Spiritual Guides</option>
+                <option value="All">All Spiritual Guides</option>
                 {uniqueGurus.map(guru => (
                   <option key={guru} value={guru}>{guru}</option>
                 ))}
@@ -182,17 +202,20 @@ const Community: React.FC = () => {
                 onChange={(e) => setFilters({ ...filters, iskconCenter: e.target.value })}
                 className="p-4 border-2 border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-semibold"
               >
-                <option value="">All ISKCON Centers</option>
+                <option value="All">All ISKCON Centers</option>
                 {uniqueCenters.map(center => (
                   <option key={center} value={center}>{center}</option>
                 ))}
+                {hasUsersWithoutCenter && (
+                  <option value="Not Specified">Not Specified</option>
+                )}
               </select>
             </div>
 
             {/* Clear Filters */}
-            {(filters.onlineOnly || filters.guruName || filters.iskconCenter) && (
+            {(filters.onlineOnly || (filters.guruName && filters.guruName !== 'All') || (filters.iskconCenter && filters.iskconCenter !== 'All')) && (
               <button
-                onClick={() => setFilters({ onlineOnly: false, guruName: '', iskconCenter: '' })}
+                onClick={() => setFilters({ onlineOnly: false, guruName: 'All', iskconCenter: 'All' })}
                 className="text-orange-600 hover:text-orange-700 font-semibold text-sm transition-colors"
               >
                 Clear all filters
@@ -225,12 +248,12 @@ const Community: React.FC = () => {
                         {profile.photoURL ? (
                           <img
                             src={profile.photoURL}
-                            alt={profile.userName}
+                            alt={profile.userName || 'User'}
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
                           <span className="text-2xl font-bold text-orange-600">
-                            {profile.userName.charAt(0).toUpperCase()}
+                            {profile.userName?.charAt(0)?.toUpperCase() || '?'}
                           </span>
                         )}
                       </div>
@@ -242,7 +265,7 @@ const Community: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">{profile.userName}</h3>
+                      <h3 className="text-xl font-bold text-white">{profile.userName || 'Unknown User'}</h3>
                       <p className="text-orange-100 text-sm font-medium flex items-center gap-1">
                         {profile.isOnline ? (
                           <>
@@ -267,14 +290,14 @@ const Community: React.FC = () => {
                   <p className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">
                     Spiritual Guide
                   </p>
-                  <p className="text-base font-semibold text-stone-900">{profile.guruName}</p>
+                  <p className="text-base font-semibold text-stone-900">{profile.guruName && profile.guruName.toLowerCase() !== 'n/a' ? profile.guruName : 'N/A'}</p>
                 </div>
 
                 <div>
                   <p className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">
                     ISKCON Center
                   </p>
-                  <p className="text-base font-semibold text-stone-900">{profile.iskconCenter}</p>
+                  <p className="text-base font-semibold text-stone-900">{profile.iskconCenter && profile.iskconCenter.toLowerCase() !== 'n/a' ? profile.iskconCenter : 'N/A'}</p>
                 </div>
 
                 {profile.bio && (

@@ -106,7 +106,7 @@ const QuestionsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto animate-fadeIn">
+    <div className="min-h-full space-y-6 max-w-6xl mx-auto animate-fadeIn">
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
         <div className="flex items-center justify-between">
@@ -244,7 +244,7 @@ const QuestionsPage: React.FC = () => {
                   <p className="text-stone-700 mb-3 line-clamp-2">{question.content}</p>
 
                   {/* Tags */}
-                  {question.tags.length > 0 && (
+                  {question.tags && question.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
                       {question.tags.map((tag, idx) => (
                         <span

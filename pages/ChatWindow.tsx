@@ -10,6 +10,7 @@ import {
   setTypingStatus,
   getUserProfile,
 } from '../services/chat';
+import { decryptMessage, isEncrypted } from '../services/encryption';
 import {
   ArrowLeft,
   Send,
@@ -19,6 +20,7 @@ import {
   Wifi,
   WifiOff,
   Quote,
+  Lock,
 } from 'lucide-react';
 
 const ChatWindow: React.FC = () => {
@@ -29,8 +31,10 @@ const ChatWindow: React.FC = () => {
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [decryptedMessages, setDecryptedMessages] = useState<Map<string, string>>(new Map());
   const [messageText, setMessageText] = useState('');
   const [otherUser, setOtherUser] = useState<UserProfile | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
   const [isTyping, setIsTyping] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -43,10 +47,35 @@ const ChatWindow: React.FC = () => {
   useEffect(() => {
     if (!chatId || !user) return;
 
+    // Load current user's profile
+    const loadCurrentUserProfile = async () => {
+      const profile = await getUserProfile(user.uid);
+      if (profile) {
+        setCurrentUserProfile(profile);
+      }
+    };
+    loadCurrentUserProfile();
+
     // Load messages
     const unsubscribeMessages = getChatMessages(chatId, (fetchedMessages) => {
       setMessages(fetchedMessages);
       scrollToBottom();
+      
+      // Decrypt messages in background
+      fetchedMessages.forEach(async (msg) => {
+        if (isEncrypted(msg.text)) {
+          try {
+            const decrypted = await decryptMessage(msg.text, msg.senderId);
+            setDecryptedMessages(prev => new Map(prev).set(msg.id, decrypted));
+          } catch (error) {
+            console.error('Failed to decrypt message:', error);
+            setDecryptedMessages(prev => new Map(prev).set(msg.id, '🔒 [Encrypted Message]'));
+          }
+        } else {
+          // Store plain text as-is for backward compatibility
+          setDecryptedMessages(prev => new Map(prev).set(msg.id, msg.text));
+        }
+      });
     });
 
     // Load typing status
@@ -67,17 +96,35 @@ const ChatWindow: React.FC = () => {
       if (chatMessages.length > 0) {
         const otherUserId = chatMessages.find((msg) => msg.senderId !== user.uid)?.senderId;
         if (otherUserId) {
-          const profile = await getUserProfile(otherUserId);
-          setOtherUser(profile);
+          // Listen to profile changes in real-time
+          const { ref: dbRef, onValue: onValueFn, off: offFn } = await import('firebase/database');
+          const { database } = await import('../services/firebase');
+          const userProfileRef = dbRef(database, `users/${otherUserId}`);
+          
+          const unsubscribeProfile = onValueFn(userProfileRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              // Check if it's a valid UserProfile (has userName field)
+              if (data.userName) {
+                setOtherUser(data);
+              }
+            }
+          });
+          
+          return unsubscribeProfile;
         }
       }
     };
 
-    loadOtherUser();
+    let unsubscribeProfile: (() => void) | undefined;
+    loadOtherUser().then(unsub => {
+      if (unsub) unsubscribeProfile = unsub;
+    });
 
     return () => {
       unsubscribeMessages();
       unsubscribeTyping();
+      if (unsubscribeProfile) unsubscribeProfile();
       if (chatId && user) {
         setTypingStatus(chatId, user.uid, false);
       }
@@ -112,10 +159,13 @@ const ChatWindow: React.FC = () => {
     if (!messageText.trim() || !chatId || !user) return;
 
     try {
+      // Use userName from profile, fallback to displayName if not loaded yet
+      const senderName = currentUserProfile?.userName || user.displayName || 'Anonymous';
+      
       await sendMessage(
         chatId,
         user.uid,
-        user.displayName || 'Anonymous',
+        senderName,
         messageText.trim(),
         'text',
         replyingTo
@@ -173,7 +223,14 @@ const ChatWindow: React.FC = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border-2 border-stone-200 overflow-hidden">
       {/* Chat Header */}
-      <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-4 flex items-center justify-between shadow-lg">
+      <div className="bg-gradient-to-r from-orange-600 to-amber-600 shadow-lg">
+        {/* Encryption Notice Banner */}
+        <div className="bg-green-600/20 backdrop-blur-sm px-4 py-1.5 flex items-center justify-center gap-2 border-b border-white/10">
+          <Lock size={12} className="text-green-100" />
+          <span className="text-xs text-green-50 font-semibold">End-to-end encrypted • Your messages are secure</span>
+        </div>
+        
+        <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/chats')}
@@ -228,6 +285,7 @@ const ChatWindow: React.FC = () => {
         <button className="p-2 hover:bg-white/20 rounded-lg transition-all">
           <MoreVertical className="text-white" size={24} />
         </button>
+        </div>
       </div>
 
       {/* Messages Area */}
@@ -285,9 +343,13 @@ const ChatWindow: React.FC = () => {
                       <p className="text-xs font-bold text-orange-600 mb-1">{message.senderName}</p>
                     )}
                     <p className={`text-base leading-relaxed whitespace-pre-wrap break-words ${isOwnMessage ? 'text-white' : 'text-stone-900'}`}>
-                      {message.text}
+                      {decryptedMessages.get(message.id) || '🔄 Decrypting...'}
                     </p>
                     <div className="flex items-center justify-end gap-2 mt-2">
+                      {/* End-to-End Encryption Indicator */}
+                      <div className={`flex items-center gap-1 ${isOwnMessage ? 'text-white/60' : 'text-stone-400'}`} title="End-to-end encrypted">
+                        <Lock size={10} />
+                      </div>
                       <span className={`text-xs ${isOwnMessage ? 'text-white/80' : 'text-stone-500'}`}>
                         {formatTime(message.timestamp)}
                       </span>

@@ -1,22 +1,36 @@
-# 🙏 Sadhana Lifeforce
+# 🙏 Sadhana Sanga
 
 **A spiritual productivity tracker for ISKCON devotees**
 
-Track your daily sadhana practice, spiritual metrics, and personal development with real-time cloud sync.
+Track your daily sadhana practice, spiritual metrics, and personal development with real-time cloud sync and comprehensive admin management.
 
 ---
 
 ## ✨ Features
 
+### For Devotees:
 - 📅 **Daily Planning** - Set commitments and track completion
 - ⏰ **Timeline Management** - Hour-by-hour activity tracking
 - 📊 **Spiritual Metrics** - Chanting rounds, study hours, sleep, mood, and more
 - 📝 **Reflections** - Daily self-reflection and improvement planning
 - 📈 **Analytics** - Visual insights and progress trends
+- 📖 **Devotional Journal** - Personal spiritual journal with reflections
+- 💬 **Community Features** - Connect with fellow devotees
+- ❓ **Q&A Forum** - Ask and answer spiritual questions
 - ☁️ **Cloud Sync** - Firebase Realtime Database integration
 - 🎨 **Customizable** - Personalize quotes, center name, spiritual guide
 - 🌐 **Multi-language** - English, Hindi, Telugu support
 - 🎯 **Guided Tour** - Interactive walkthrough for new users
+- 👤 **Guest Mode** - Try features before signing in (limited access)
+
+### For Administrators:
+- 📊 **Analytics Dashboard** - Visual insights with charts (activity trends, center distribution, engagement levels)
+- 👥 **User Management** - Advanced filtering, bulk actions, CSV export
+- 🛡️ **Admin Management** - Grant/revoke admin privileges, role management
+- 🔍 **Content Moderation** - Review questions, answers, and flagged content
+- 🖥️ **System Health** - Monitor performance, database size, active sessions
+- 📢 **Broadcast Announcements** - Send messages to all users
+- 🔐 **Super Admin** - Protected super admin with full privileges
 
 ---
 
@@ -57,6 +71,9 @@ Track your daily sadhana practice, spiritual metrics, and personal development w
    VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
    VITE_FIREBASE_APP_ID=your_app_id_here
    VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id_here
+   
+   # Admin Panel Security (IMPORTANT!)
+   VITE_ADMIN_PANEL_PASSWORD=Hare Krishna
    ```
 
 4. **Configure Firebase**
@@ -81,7 +98,17 @@ Track your daily sadhana practice, spiritual metrics, and personal development w
 - ✅ All Firebase credentials are stored in environment variables
 - ✅ Database rules ensure user data isolation
 - ✅ Google OAuth for secure authentication
+- ✅ **Admin panel password protected** (Default: "Hare Krishna")
+- ✅ Privacy-enhanced admin actions (hidden in dropdown menus)
+- ✅ Audit trail for all admin activities
 - ✅ No secrets committed to repository
+
+### Admin Panel Access
+To access the admin panel (`/admin`), you need:
+1. Admin privileges (granted by super admin)
+2. Password: **"Hare Krishna"** (can be changed in `.env`)
+
+The password is required on **every access** for maximum security.
 
 ---
 

@@ -59,7 +59,7 @@ const AskQuestionPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto animate-fadeIn">
+    <div className="min-h-full max-w-4xl mx-auto animate-fadeIn">
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400 mb-6">
         <div className="flex items-center gap-4">

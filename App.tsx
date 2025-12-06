@@ -14,6 +14,11 @@ import ChatWindow from './pages/ChatWindow';
 import QuestionsPage from './pages/QuestionsPage';
 import AskQuestionPage from './pages/AskQuestionPage';
 import QuestionDetailPage from './pages/QuestionDetailPage';
+import AdminPanel from './pages/AdminPanel';
+import ChantingCounter from './pages/ChantingCounter';
+import SlokasLibrary from './pages/SlokasLibrary';
+import FestivalsPage from './pages/FestivalsPage';
+import FestivalDetailPage from './pages/FestivalDetailPage';
 import Login from './components/Login';
 import OnboardingModal from './components/OnboardingModal';
 import LoadingScreen from './components/LoadingScreen';
@@ -46,6 +51,16 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return <>{children}</>;
 };
 
+// Catch-all redirect based on auth status
+const DefaultRedirect: React.FC = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return <LoadingScreen />;
+  
+  // If logged in, go to dashboard; otherwise go to login
+  return <Navigate to={user ? "/" : "/login"} replace />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -59,7 +74,7 @@ function App() {
 }
 
 function AppContent() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -111,6 +126,11 @@ function AppContent() {
     }
   };
 
+  // Show loading screen while authentication is being checked
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <>
       <Layout>
@@ -130,8 +150,14 @@ function AppContent() {
           <Route path="/questions" element={<PrivateRoute><QuestionsPage /></PrivateRoute>} />
           <Route path="/questions/ask" element={<PrivateRoute><AskQuestionPage /></PrivateRoute>} />
           <Route path="/questions/:questionId" element={<PrivateRoute><QuestionDetailPage /></PrivateRoute>} />
+          <Route path="/chanting" element={<PrivateRoute><ChantingCounter /></PrivateRoute>} />
+          <Route path="/slokas" element={<PrivateRoute><SlokasLibrary /></PrivateRoute>} />
+          <Route path="/festivals" element={<PrivateRoute><FestivalsPage /></PrivateRoute>} />
+          <Route path="/festival/:festivalId" element={<PrivateRoute><FestivalDetailPage /></PrivateRoute>} />
+          <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
           
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Catch-all: redirect to dashboard if logged in, login if not */}
+          <Route path="*" element={<DefaultRedirect />} />
         </Routes>
       </Layout>
 

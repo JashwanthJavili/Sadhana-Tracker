@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
 import { UserSettings, Quote } from '../types';
-import { Save, Plus, Trash2, User, Wrench } from 'lucide-react';
+import { Save, Plus, Trash2, User, Wrench, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
+import { createUserProfile } from '../services/chat';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
@@ -14,6 +16,11 @@ const Settings: React.FC = () => {
   const [newFieldValue, setNewFieldValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedSettings, setEditedSettings] = useState<UserSettings | null>(null);
+  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
+  
+  // Admin email - only this user has admin privileges
+  const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
     const fetch = async () => {
@@ -57,7 +64,25 @@ const Settings: React.FC = () => {
     if (editedSettings && user) {
       try {
         setSaveStatus('saving');
+        
+        // Save settings to database
         await saveSettings(user.uid, editedSettings);
+        
+        // Update chat profile with new settings
+        if (editedSettings.userName && editedSettings.guruName && editedSettings.iskconCenter) {
+          const profileData: any = {
+            userName: editedSettings.userName,
+            guruName: editedSettings.guruName,
+            iskconCenter: editedSettings.iskconCenter,
+          };
+          
+          if (user.photoURL) profileData.photoURL = user.photoURL;
+          if (editedSettings.customFields?.bio) profileData.bio = editedSettings.customFields.bio;
+          
+          await createUserProfile(user.uid, profileData);
+          console.log('✅ Chat profile updated with new settings');
+        }
+        
         setSettings(editedSettings);
         setSaveStatus('saved');
         setIsEditing(false);
@@ -75,7 +100,30 @@ const Settings: React.FC = () => {
     setIsEditing(false);
   };
 
+  const handleMigrateProfiles = async () => {
+    // Admin-only feature
+    if (!isAdmin) {
+      alert('⛔ Access Denied: Only the admin can perform this action.');
+      return;
+    }
+    
+    if (!confirm('This will create chat profiles for all existing users from their settings. Continue?')) {
+      return;
+    }
 
+    try {
+      setMigrationStatus('running');
+      const result = await migrateAllUserProfiles();
+      setMigrationStatus('success');
+      alert(`✅ Migration complete!\n${result.migratedCount} profiles created\n${result.skippedCount} skipped\n${result.errorCount} errors`);
+      setTimeout(() => setMigrationStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Migration error:', error);
+      setMigrationStatus('error');
+      alert('❌ Migration failed. Check console for details.');
+      setTimeout(() => setMigrationStatus('idle'), 3000);
+    }
+  };
 
   const addQuote = () => {
     if (settings && newQuoteText && newQuoteSource) {
@@ -258,6 +306,47 @@ const Settings: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Admin Tools Section - Only visible to admin */}
+      {isAdmin && (
+        <section className="bg-gradient-to-br from-white to-indigo-50 rounded-2xl shadow-xl border-3 border-indigo-300 p-8">
+          <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-xl shadow-lg">
+              <Users className="text-white" size={28}/>
+            </div>
+            Admin Tools
+            <span className="ml-auto text-sm bg-red-600 text-white px-3 py-1 rounded-full">Admin Only</span>
+          </h3>
+          
+          <div className="space-y-4">
+            <div className="bg-indigo-100 border-2 border-indigo-300 rounded-xl p-6">
+              <h4 className="text-lg font-bold text-indigo-900 mb-2">Migrate User Profiles</h4>
+              <p className="text-indigo-800 mb-4">
+                Create chat profiles for all existing users from their settings data. This will make all users visible in the Community page.
+              </p>
+              <button
+                onClick={handleMigrateProfiles}
+                disabled={migrationStatus === 'running'}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+                  migrationStatus === 'running' 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : migrationStatus === 'success'
+                    ? 'bg-green-600 text-white'
+                    : migrationStatus === 'error'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                }`}
+              >
+                <Users size={20} />
+                {migrationStatus === 'running' ? 'Migrating...' : 
+                 migrationStatus === 'success' ? '✅ Complete!' :
+                 migrationStatus === 'error' ? '❌ Failed' :
+                 'Migrate All Users'}
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Quotes Section */}
       <section className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-xl border-3 border-green-300 p-8">

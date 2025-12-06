@@ -1,24 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle, HelpCircle as QuestionIcon } from 'lucide-react';
-import { getSettings, trackUsage, shouldShowFeedback } from '../services/storage';
+import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle, HelpCircle as QuestionIcon, Shield, Lock, Flame, BookText, Calendar } from 'lucide-react';
+import { getSettings, trackUsage } from '../services/storage';
 import { getTotalUnreadCount } from '../services/chat';
 import { UserSettings } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import InteractiveTour from './InteractiveTour';
-import FeedbackPrompt from './FeedbackPrompt';
 import { useSyncChatProfile } from '../hooks/useSyncChatProfile';
+
+// @ts-ignore
+import iskconLogo from '../utils/Images/Iscon_LOgo-removebg-preview.png';
+
+const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isNewUser } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [showTour, setShowTour] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,23 +34,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       if (user) {
         const data = await getSettings(user.uid);
         setSettings(data);
-      }
-    };
-    fetchSettings();
-  }, [location.pathname, user]);
-
-  useEffect(() => {
-    const checkFeedback = async () => {
-      if (user) {
-        await trackUsage(user.uid);
-        const shouldShow = await shouldShowFeedback(user.uid);
-        if (shouldShow) {
-          setTimeout(() => setShowFeedback(true), 5000); // Show after 5 seconds
+        
+        // Auto-show tour only for new users who have completed profile setup
+        // Check if user has filled userName, guruName, and iskconCenter
+        const hasCompletedProfile = data?.userName && data?.guruName && data?.iskconCenter;
+        const shouldShowTour = isNewUser && !data?.tourCompleted && hasCompletedProfile;
+        
+        if (shouldShowTour) {
+          setTimeout(() => setShowTour(true), 1000);
         }
       }
     };
-    checkFeedback();
-  }, [user]);
+    fetchSettings();
+  }, [location.pathname, user, isNewUser]);
 
   // Load unread messages count
   useEffect(() => {
@@ -74,19 +73,34 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     navigate('/');
   };
 
+  const handleTourComplete = async () => {
+    setShowTour(false);
+    if (user && settings) {
+      // Mark tour as completed
+      const { saveSettings } = await import('../services/storage');
+      await saveSettings(user.uid, { ...settings, tourCompleted: true });
+    }
+  };
+
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+  const isGuest = user?.uid === 'guest';
+  
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard', tourAttr: 'dashboard' },
-    { to: '/planner', icon: PenTool, label: 'Daily Planner', tourAttr: 'planner' },
-    { to: '/analytics', icon: BarChart2, label: 'Analytics', tourAttr: 'analytics' },
-    { to: '/journal', icon: Heart, label: 'Devotional Journal', tourAttr: 'journal' },
-    { to: '/history', icon: BookOpen, label: 'History', tourAttr: 'history' },
-    { to: '/community', icon: Users, label: 'Community', tourAttr: 'community' },
-    { to: '/chats', icon: MessageCircle, label: 'Messages', tourAttr: 'messages' },
-    { to: '/questions', icon: QuestionIcon, label: 'Q&A Forum', tourAttr: 'questions' },
-    { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings' },
-    { to: '/about', icon: Info, label: 'About' },
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', tourAttr: 'dashboard', guestAllowed: true },
+    { to: '/planner', icon: PenTool, label: 'Daily Planner', tourAttr: 'planner', guestAllowed: true },
+    { to: '/analytics', icon: BarChart2, label: 'Analytics', tourAttr: 'analytics', guestAllowed: true },
+    { to: '/chanting', icon: Flame, label: 'Japa Counter', tourAttr: 'chanting', guestAllowed: true },
+    { to: '/slokas', icon: BookText, label: 'Slokas Library', tourAttr: 'slokas', guestAllowed: true },
+    { to: '/festivals', icon: Calendar, label: 'Festivals', tourAttr: 'festivals', guestAllowed: true },
+    { to: '/journal', icon: Heart, label: 'Devotional Journal', tourAttr: 'journal', guestAllowed: false, locked: isGuest },
+    { to: '/history', icon: BookOpen, label: 'History', tourAttr: 'history', guestAllowed: true },
+    { to: '/community', icon: Users, label: 'Community', tourAttr: 'community', guestAllowed: false, locked: isGuest },
+    { to: '/chats', icon: MessageCircle, label: 'Messages', tourAttr: 'messages', guestAllowed: false, locked: isGuest },
+    { to: '/questions', icon: QuestionIcon, label: 'Q&A Forum', tourAttr: 'questions', guestAllowed: false, locked: isGuest },
+    ...(user?.email === ADMIN_EMAIL ? [{ to: '/admin', icon: Shield, label: 'Admin Panel', tourAttr: 'admin', guestAllowed: false }] : []),
+    { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings', guestAllowed: true },
+    { to: '/about', icon: Info, label: 'About', guestAllowed: true },
   ];
 
   if (!user) return <>{children}</>;
@@ -101,16 +115,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         />
       )}
       {/* Mobile Header */}
-      <div className="md:hidden bg-orange-700 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-           <svg className="h-8 w-8 text-orange-200 fill-current" viewBox="0 0 24 24">
-             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/> 
-           </svg>
-          <span className="font-serif font-bold text-lg">Sadhana</span>
+      <div className="md:hidden bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <img 
+            src={iskconLogo} 
+            alt="ISKCON Logo" 
+            className="h-10 w-10 object-contain bg-white/90 rounded-lg p-1"
+          />
+          <span className="font-serif font-bold text-xl">Sadhana Sanga</span>
         </div>
         <button 
           onClick={toggleSidebar}
-          className="p-2 hover:bg-orange-600 rounded-lg transition-colors active:scale-95"
+          className="p-2 hover:bg-white/20 rounded-lg transition-colors active:scale-95"
           aria-label="Toggle menu"
         >
           {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
@@ -119,48 +135,74 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-stone-900 text-stone-100 transform transition-transform duration-300 ease-in-out flex flex-col
+        fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-stone-900 via-stone-900 to-stone-950 text-stone-100 transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl
         md:relative md:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Branding Area */}
-        <div className="p-6 border-b border-stone-700 flex flex-col items-center text-center gap-4">
-           <div className="text-orange-500">
-             <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-               <path d="M12,2C9,2,2,8,2,12c0,3.5,2.5,8,10,10c7.5-2,10-6.5,10-10C22,8,15,2,12,2z M12,20c-5,0-8-3-8-8c0-3,4-8,8-8s8,5,8,8 C20,17,17,20,12,20z M12,6c-1.5,0-3,1.5-3,3s1.5,3,3,3s3-1.5,3-3S13.5,6,12,6z"/>
-             </svg>
-           </div>
+        <div className="p-6 border-b border-stone-700/50 flex flex-col items-center text-center gap-4 bg-gradient-to-br from-orange-900/20 to-transparent">
+          {/* ISKCON Logo */}
+          <div className="bg-white/95 p-3 rounded-2xl shadow-xl ring-2 ring-orange-500/30">
+            <img 
+              src={iskconLogo} 
+              alt="ISKCON Logo" 
+              className="w-16 h-16 object-contain"
+            />
+          </div>
           
           <div>
-            <h1 className="font-serif font-bold text-xl text-orange-50">{settings?.iskconCenter || 'Sadhana Lifeforce'}</h1>
-            {settings?.guruName && <p className="text-xs text-stone-400 mt-1">Guided by {settings.guruName}</p>}
+            <h1 className="font-serif font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-200 to-orange-300">
+              Sadhana Sanga
+            </h1>
+            {settings?.iskconCenter && settings.iskconCenter.toLowerCase() !== 'n/a' && (
+              <p className="text-xs text-orange-300/80 mt-1 font-semibold">{settings.iskconCenter}</p>
+            )}
+            {settings?.guruName && settings.guruName.toLowerCase() !== 'n/a' && (
+              <p className="text-xs text-stone-400 mt-0.5">Guided by {settings.guruName}</p>
+            )}
           </div>
         </div>
 
         <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={() => setIsSidebarOpen(false)}
-              data-tour={item.tourAttr}
-              className={({ isActive }) => `
-                flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
-                ${isActive 
-                  ? 'bg-orange-700 text-white shadow-lg' 
-                  : 'text-stone-300 hover:bg-stone-800 hover:text-white'}
-              `}
-            >
-              <item.icon size={20} />
-              <span className="font-medium">{item.label}</span>
-              {item.to === '/chats' && unreadCount > 0 && (
-                <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const isLocked = item.locked === true;
+            const NavComponent = isLocked ? 'div' : NavLink;
+            
+            return (
+              <NavComponent
+                key={item.to}
+                {...(!isLocked && {
+                  to: item.to,
+                  onClick: () => setIsSidebarOpen(false)
+                })}
+                data-tour={item.tourAttr}
+                className={isLocked 
+                  ? 'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative text-stone-500 cursor-not-allowed opacity-60'
+                  : ({ isActive }: any) => `
+                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
+                    ${isActive 
+                      ? 'bg-orange-700 text-white shadow-lg' 
+                      : 'text-stone-300 hover:bg-stone-800 hover:text-white'}
+                  `
+                }
+              >
+                <item.icon size={20} />
+                <span className="font-medium">{item.label}</span>
+                {isLocked && (
+                  <Lock size={16} className="ml-auto text-orange-500" title="Sign in to unlock" />
+                )}
+                {/* Unread badge for Messages */}
+                {item.to === '/chats' && unreadCount > 0 && !isLocked && (
+                  <span className="ml-auto bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold min-w-[20px] text-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </NavComponent>
+            );
+          })}
         </nav>
+
+        {/* Footer section */}
 
         {/* User Profile & Logout */}
         <div className="p-4 border-t border-stone-800 bg-stone-900 space-y-2">
@@ -187,12 +229,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center gap-3 mb-4 px-2">
             <img 
               src={user.photoURL || ''} 
-              alt={user.displayName || 'User'} 
+              alt={settings?.userName || user.displayName || 'User'} 
               className="w-8 h-8 rounded-full bg-stone-700"
             />
             <div className="overflow-hidden">
-              <p className="text-sm font-medium truncate">{user.displayName}</p>
-              <p className="text-xs text-stone-500 truncate">{user.email}</p>
+              <p className="text-sm font-medium truncate">{settings?.userName || user.displayName || 'Devotee'}</p>
+              <p className="text-xs text-stone-500 truncate">{user.uid === 'guest' ? 'Guest Mode' : 'Signed In'}</p>
             </div>
           </div>
           <button 
@@ -206,17 +248,39 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto h-screen relative bg-stone-50">
-        <div className="max-w-7xl mx-auto p-4 md:p-8 pb-24">
-           {children}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-stone-50">
+        {/* Guest Mode Banner */}
+        {isGuest && (
+          <div className="sticky top-0 z-30 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 text-white px-4 py-3 shadow-lg">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Lock size={20} className="flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-bold">Guest Demo Mode</p>
+                  <p className="text-xs text-orange-100">
+                    Sign in to unlock: Devotional Journal, Community, Messages, Q&A Forum
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="bg-white text-orange-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-colors whitespace-nowrap"
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex-1 overflow-y-auto bg-stone-50" style={{ overscrollBehavior: 'none' }}>
+          <div className="max-w-7xl mx-auto p-4 md:p-8 pb-24">
+            {children}
+          </div>
         </div>
       </main>
 
       {/* Interactive Tour */}
-      {showTour && <InteractiveTour onComplete={() => setShowTour(false)} />}
-      
-      {/* Feedback Prompt */}
-      {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
+      {showTour && <InteractiveTour onComplete={handleTourComplete} />}
     </div>
   );
 };

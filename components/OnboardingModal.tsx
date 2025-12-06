@@ -10,7 +10,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
   const [step, setStep] = useState(1);
   const [userName, setUserName] = useState('');
   const [guruName, setGuruName] = useState('');
-  const [hasIskconConnection, setHasIskconConnection] = useState<boolean | null>(null);
   const [iskconCenter, setIskconCenter] = useState('');
 
   console.log('OnboardingModal render - isOpen:', isOpen);
@@ -22,13 +21,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
       setStep(2);
     } else if (step === 2 && guruName.trim()) {
       setStep(3);
-    } else if (step === 3 && hasIskconConnection !== null) {
-      if (hasIskconConnection) {
-        setStep(4);
-      } else {
-        setIskconCenter('Not connected to any ISKCON center');
-        handleComplete();
-      }
+    } else if (step === 3 && iskconCenter.trim()) {
+      handleComplete();
     }
   };
 
@@ -39,8 +33,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
   const canProceed = () => {
     if (step === 1) return userName.trim().length > 0;
     if (step === 2) return guruName.trim().length > 0;
-    if (step === 3) return hasIskconConnection !== null;
-    if (step === 4) return iskconCenter.trim().length > 0;
+    if (step === 3) return iskconCenter.trim().length > 0;
     return false;
   };
 
@@ -105,8 +98,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
           <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">
             {step === 1 && 'Welcome to Sadhana Lifeforce!'}
             {step === 2 && 'Who is your spiritual guide?'}
-            {step === 3 && 'Are you connected to ISKCON?'}
-            {step === 4 && 'Which ISKCON center?'}
+            {step === 3 && 'Your ISKCON Center'}
           </h2>
           {step === 1 && (
             <p className="text-stone-500">Let's personalize your spiritual journey</p>
@@ -115,7 +107,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
 
         {/* Step Indicator */}
         <div className="flex justify-center gap-2">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div
               key={s}
               className={`h-2 w-12 rounded-full transition-colors ${
@@ -148,12 +140,15 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
                 Who is your spiritual guide?
+                <span className="block text-xs text-stone-500 font-normal mt-1">
+                  (From whom you are learning about God. If none, enter N/A)
+                </span>
               </label>
               <input
                 type="text"
                 value={guruName}
                 onChange={(e) => setGuruName(e.target.value)}
-                placeholder="e.g. HG Pranavananda Das Prabhu"
+                placeholder="e.g. HG Pranavananda Das Prabhu or N/A"
                 className="w-full p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-lg"
                 autoFocus
                 onKeyPress={(e) => e.key === 'Enter' && canProceed() && handleNext()}
@@ -162,53 +157,18 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
           )}
 
           {step === 3 && (
-            <div className="space-y-4">
-              <label className="block text-base font-medium text-stone-700 mb-4 text-center">
-                Are you connected to any ISKCON center?
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setHasIskconConnection(true)}
-                  className={`p-6 rounded-xl border-3 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 ${
-                    hasIskconConnection === true
-                      ? 'border-orange-600 bg-gradient-to-br from-orange-100 to-amber-100 ring-4 ring-orange-200'
-                      : 'border-stone-300 hover:border-orange-400 bg-white hover:bg-orange-50'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">🙏</div>
-                    <div className="font-bold text-lg">Yes</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHasIskconConnection(false)}
-                  className={`p-6 rounded-xl border-3 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 ${
-                    hasIskconConnection === false
-                      ? 'border-orange-600 bg-gradient-to-br from-orange-100 to-amber-100 ring-4 ring-orange-200'
-                      : 'border-stone-300 hover:border-orange-400 bg-white hover:bg-orange-50'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📿</div>
-                    <div className="font-bold text-lg">No</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
                 Which ISKCON center do you associate with?
+                <span className="block text-xs text-stone-500 font-normal mt-1">
+                  (Your local ISKCON temple. If not connected, enter N/A)
+                </span>
               </label>
               <input
                 type="text"
                 value={iskconCenter}
                 onChange={(e) => setIskconCenter(e.target.value)}
-                placeholder="e.g. ISKCON Hyderabad"
+                placeholder="e.g. ISKCON Hyderabad or N/A"
                 className="w-full p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-lg"
                 autoFocus
                 onKeyPress={(e) => e.key === 'Enter' && canProceed() && handleComplete()}
@@ -230,11 +190,11 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
           )}
           <button
             type="button"
-            onClick={step === 3 ? handleComplete : handleNext}
+            onClick={handleNext}
             disabled={!canProceed()}
             className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
           >
-            {step === 4 ? 'Get Started!' : step === 3 && hasIskconConnection === false ? 'Get Started!' : 'Next'}
+            {step === 3 ? 'Get Started!' : 'Next'}
           </button>
         </div>
       </div>

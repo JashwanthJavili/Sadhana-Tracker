@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
   if (loading) return <LoadingScreen />;
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="min-h-full space-y-8 animate-fadeIn">
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-700 to-orange-900 rounded-2xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden transform transition-all duration-300 hover:shadow-2xl">
         {/* Decorative Background Pattern */}

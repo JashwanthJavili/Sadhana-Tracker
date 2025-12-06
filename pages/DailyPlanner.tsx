@@ -71,7 +71,7 @@ const DailyPlanner: React.FC = () => {
   const completedCommitmentsCount = entry.commitments.filter(c => c.done).length;
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-full space-y-8">
       {/* Header & Date Picker */}
       <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-6 bg-gradient-to-r from-white to-orange-50 p-7 rounded-2xl shadow-xl border-2 border-orange-200">
         <div>

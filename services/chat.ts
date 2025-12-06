@@ -1,6 +1,7 @@
 import { ref, push, set, get, onValue, off, update, query, orderByChild, serverTimestamp, onDisconnect, remove } from 'firebase/database';
 import { database } from './firebase';
 import { UserProfile, Chat, ChatMessage, TypingStatus } from '../types/chat';
+import { encryptMessage, decryptMessage, isEncrypted } from './encryption';
 
 // ============= USER PROFILES & PRESENCE =============
 
@@ -14,7 +15,8 @@ export const createUserProfile = async (uid: string, profile: Omit<UserProfile, 
       joinedDate: Date.now(),
     };
     
-    await set(ref(database, `users/${uid}`), userProfile);
+    // Use update() instead of set() to preserve child nodes (entries, settings, journal, usage)
+    await update(ref(database, `users/${uid}`), userProfile);
     await setUserOnlineStatus(uid, true);
   } catch (error) {
     console.error('Error creating user profile:', error);
@@ -29,7 +31,14 @@ export const updateUserProfile = async (uid: string, updates: Partial<UserProfil
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   try {
     const snapshot = await get(ref(database, `users/${uid}`));
-    return snapshot.exists() ? snapshot.val() : null;
+    if (!snapshot.exists()) return null;
+    
+    const data = snapshot.val();
+    // Check if it's a valid UserProfile (has userName field)
+    // This prevents returning objects with only child nodes (entries, settings, etc.)
+    if (!data.userName) return null;
+    
+    return data;
   } catch (error) {
     console.error('Error fetching user profile:', error);
     return null;
@@ -42,7 +51,25 @@ export const getAllUsers = (callback: (users: UserProfile[]) => void) => {
   onValue(usersRef, (snapshot) => {
     const users: UserProfile[] = [];
     snapshot.forEach((childSnapshot) => {
-      users.push(childSnapshot.val());
+      const data = childSnapshot.val();
+      
+      // Only include users with a valid chat profile (has userName)
+      // Ignore objects that only have child nodes (entries, settings, journal, usage)
+      if (data.userName && data.guruName && data.iskconCenter) {
+        // Extract only the UserProfile fields, excluding child nodes
+        const userProfile: UserProfile = {
+          uid: data.uid,
+          userName: data.userName,
+          guruName: data.guruName,
+          iskconCenter: data.iskconCenter,
+          photoURL: data.photoURL,
+          bio: data.bio,
+          isOnline: data.isOnline,
+          lastSeen: data.lastSeen,
+          joinedDate: data.joinedDate,
+        };
+        users.push(userProfile);
+      }
     });
     callback(users);
   }, (error) => {
@@ -174,16 +201,19 @@ export const sendMessage = async (
   const messagesRef = ref(database, `messages/${chatId}`);
   const newMessageRef = push(messagesRef);
   
+  // Encrypt the message text before storing
+  const encryptedText = await encryptMessage(text, senderId);
+  
   const message: ChatMessage = {
     id: newMessageRef.key!,
     chatId,
     senderId,
     senderName,
-    text,
+    text: encryptedText, // Store encrypted text
     timestamp: Date.now(),
     read: false,
     type,
-    replyTo,
+    ...(replyTo && { replyTo }), // Only include replyTo if it exists
   };
   
   await set(newMessageRef, message);
@@ -196,7 +226,7 @@ export const sendMessage = async (
     const chat = chatSnapshot.val() as Chat;
     const updates: any = {
       lastMessage: {
-        text: text.substring(0, 100),
+        text: '[Encrypted Message]', // Don't expose encrypted content in preview
         timestamp: Date.now(),
         senderId,
       },
@@ -310,14 +340,32 @@ export const searchUsers = async (
   
   const users: UserProfile[] = [];
   snapshot.forEach((childSnapshot) => {
-    users.push(childSnapshot.val());
+    const data = childSnapshot.val();
+    
+    // Only include users with valid chat profiles (has userName)
+    // This matches the validation in getAllUsers
+    if (data.userName && data.guruName && data.iskconCenter) {
+      // Extract only the UserProfile fields, excluding child nodes
+      const userProfile: UserProfile = {
+        uid: data.uid,
+        userName: data.userName,
+        guruName: data.guruName,
+        iskconCenter: data.iskconCenter,
+        photoURL: data.photoURL,
+        bio: data.bio,
+        isOnline: data.isOnline,
+        lastSeen: data.lastSeen,
+        joinedDate: data.joinedDate,
+      };
+      users.push(userProfile);
+    }
   });
   
   return users.filter((user) => {
     const matchesSearch = !searchTerm || 
-      user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.guruName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.iskconCenter.toLowerCase().includes(searchTerm.toLowerCase());
+      user.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.guruName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.iskconCenter?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesGuru = !filters?.guruName || user.guruName === filters.guruName;
     const matchesCenter = !filters?.iskconCenter || user.iskconCenter === filters.iskconCenter;

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Chat, UserProfile } from '../types/chat';
 import { getUserChats, getTotalUnreadCount } from '../services/chat';
-import { MessageCircle, Search, Users, Wifi, WifiOff } from 'lucide-react';
+import { MessageCircle, Search, Users, Wifi, WifiOff, Filter, X } from 'lucide-react';
 
 const ChatsList: React.FC = () => {
   const { user } = useAuth();
@@ -12,6 +12,11 @@ const ChatsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    iskconCenter: 'All',
+    guruName: 'All',
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -48,23 +53,53 @@ const ChatsList: React.FC = () => {
   }, [user]);
 
   const filteredChats = chats.filter((chat) => {
-    if (!searchTerm) return true;
-
     const otherParticipant = chat.participants.find((p) => p !== user?.uid);
     if (!otherParticipant) return false;
 
     const otherUser = chat.participantDetails[otherParticipant];
-    return (
+    
+    // Search term filter
+    const matchesSearch = !searchTerm || 
       otherUser.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       otherUser.guruName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      otherUser.iskconCenter.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      otherUser.iskconCenter.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // ISKCON center filter
+    const matchesCenter = filters.iskconCenter === 'All' || 
+      (filters.iskconCenter === 'Not Specified' && (!otherUser.iskconCenter || otherUser.iskconCenter === '' || otherUser.iskconCenter.toLowerCase() === 'n/a')) ||
+      otherUser.iskconCenter === filters.iskconCenter;
+    
+    // Guru name filter
+    const matchesGuru = filters.guruName === 'All' || 
+      otherUser.guruName === filters.guruName;
+    
+    return matchesSearch && matchesCenter && matchesGuru;
   });
 
   const getOtherParticipant = (chat: Chat) => {
     const otherParticipantId = chat.participants.find((p) => p !== user?.uid);
     return otherParticipantId ? chat.participantDetails[otherParticipantId] : null;
   };
+
+  // Get unique ISKCON centers and gurus from chats
+  const uniqueCenters = Array.from(new Set(
+    chats.map(chat => {
+      const otherUser = getOtherParticipant(chat);
+      return otherUser?.iskconCenter;
+    }).filter(Boolean).filter((c): c is string => typeof c === 'string' && c.toLowerCase() !== 'n/a')
+  ));
+
+  const uniqueGurus = Array.from(new Set(
+    chats.map(chat => {
+      const otherUser = getOtherParticipant(chat);
+      return otherUser?.guruName;
+    }).filter(Boolean).filter((g): g is string => typeof g === 'string' && g.toLowerCase() !== 'n/a')
+  ));
+
+  const hasChatsWithoutCenter = chats.some(chat => {
+    const otherUser = getOtherParticipant(chat);
+    return !otherUser?.iskconCenter || otherUser.iskconCenter === '' || otherUser.iskconCenter.toLowerCase() === 'n/a';
+  });
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -93,7 +128,7 @@ const ChatsList: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn">
+    <div className="min-h-full space-y-6 max-w-5xl mx-auto animate-fadeIn">
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
         <div className="flex items-center justify-between">
@@ -109,26 +144,94 @@ const ChatsList: React.FC = () => {
               {totalUnread > 0 && ` • ${totalUnread} unread`}
             </p>
           </div>
-          <button
-            onClick={() => navigate('/community')}
-            className="flex items-center gap-2 px-6 py-3 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all shadow-lg transform hover:scale-105 active:scale-95"
-          >
-            <Users size={20} />
-            Find Devotees
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 active:scale-95 ${
+                showFilters ? 'bg-white text-orange-600' : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+            >
+              <Filter size={20} />
+              Filters
+            </button>
+            <button
+              onClick={() => navigate('/community')}
+              className="flex items-center gap-2 px-6 py-3 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all shadow-lg transform hover:scale-105 active:scale-95"
+            >
+              <Users size={20} />
+              Find Devotees
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400" size={24} />
-        <input
-          type="text"
-          placeholder="Search conversations..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-14 pr-4 py-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none text-base font-semibold shadow-md"
-        />
+      {/* Search and Filters */}
+      <div className="space-y-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400" size={24} />
+          <input
+            type="text"
+            placeholder="Search conversations..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-14 pr-4 py-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none text-base font-semibold shadow-md"
+          />
+        </div>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <div className="bg-white rounded-xl shadow-lg border-2 border-stone-200 p-6 space-y-4 animate-slideDown">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-stone-900">Filter Conversations</h3>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Spiritual Guide Filter */}
+              <select
+                value={filters.guruName}
+                onChange={(e) => setFilters({ ...filters, guruName: e.target.value })}
+                className="p-4 border-2 border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-semibold"
+              >
+                <option value="All">All Spiritual Guides</option>
+                {uniqueGurus.map(guru => (
+                  <option key={guru} value={guru}>{guru}</option>
+                ))}
+              </select>
+
+              {/* ISKCON Center Filter */}
+              <select
+                value={filters.iskconCenter}
+                onChange={(e) => setFilters({ ...filters, iskconCenter: e.target.value })}
+                className="p-4 border-2 border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-semibold"
+              >
+                <option value="All">All ISKCON Centers</option>
+                {uniqueCenters.map(center => (
+                  <option key={center} value={center}>{center}</option>
+                ))}
+                {hasChatsWithoutCenter && (
+                  <option value="Not Specified">Not Specified</option>
+                )}
+              </select>
+            </div>
+
+            {/* Clear Filters */}
+            {((filters.guruName && filters.guruName !== 'All') || (filters.iskconCenter && filters.iskconCenter !== 'All')) && (
+              <button
+                onClick={() => setFilters({ guruName: 'All', iskconCenter: 'All' })}
+                className="text-orange-600 hover:text-orange-700 font-semibold text-sm transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Chats List */}
@@ -202,14 +305,14 @@ const ChatsList: React.FC = () => {
                     </div>
 
                     <p className="text-sm text-stone-600 mb-1">
-                      {otherUser.guruName} • {otherUser.iskconCenter}
+                      {otherUser.guruName && otherUser.guruName.toLowerCase() !== 'n/a' ? otherUser.guruName : 'N/A'} • {otherUser.iskconCenter && otherUser.iskconCenter.toLowerCase() !== 'n/a' ? otherUser.iskconCenter : 'N/A'}
                     </p>
 
                     <div className="flex items-center justify-between">
                       {chat.lastMessage ? (
                         <p className={`text-sm truncate flex-1 ${isUnread ? 'font-bold text-stone-900' : 'text-stone-500'}`}>
                           {chat.lastMessage.senderId === user?.uid && 'You: '}
-                          {chat.lastMessage.text}
+                          {chat.lastMessage.text === '[Encrypted Message]' ? '🔒 Encrypted Message' : chat.lastMessage.text}
                         </p>
                       ) : (
                         <p className="text-sm text-stone-400 italic">No messages yet</p>

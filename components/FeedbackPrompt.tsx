@@ -21,7 +21,7 @@ const FeedbackPrompt: React.FC<FeedbackPromptProps> = ({ onClose }) => {
     en: {
       title: 'Share Your Experience 🙏',
       subtitle: 'Your feedback helps us serve devotees better',
-      question: 'How has Sadhana Lifeforce helped your spiritual journey?',
+      question: 'How has Sadhana Sanga helped your spiritual journey?',
       ratingLabel: 'Rate your experience:',
       submitButton: 'Share Feedback',
       laterButton: 'Maybe Later',
@@ -52,26 +52,21 @@ const FeedbackPrompt: React.FC<FeedbackPromptProps> = ({ onClose }) => {
 
   const handleSubmit = async () => {
     if (rating > 0) {
-      // Open Zoho feedback form in new tab with rating pre-filled
-      const feedbackUrl = `https://forms.zohopublic.in/javiljashwanth/form/SadhanaLifeforceFeedback/formperma/c0zW95QAfiHZ-eqPJPLbnBhH7DNdPb5nPNMwbA9AJoM?Rating=${rating}`;
-      window.open(feedbackUrl, '_blank');
-      
-      // Mark feedback as shown
+      // Save rating to database
       if (user) {
-        await markFeedbackShown(user.id);
+        await markFeedbackShown(user.id, rating);
       }
       
-      setSubmitted(true);
-      setTimeout(() => {
-        onClose();
-      }, 3000);
+      // Open Zoho feedback form in new tab with rating pre-filled
+      const feedbackUrl = `https://forms.zohopublic.in/jashwanthjashu684gm1/form/SadhanaTracerFeedbackForm/formperma/KOoeajQ20c3B6YQ6Bmmy76hxc3xkOC9-BAc-Lu7GEjU?Rating=${rating}`;
+      window.open(feedbackUrl, '_blank');
+      
+      // Close the modal immediately after opening the form
+      onClose();
     }
   };
 
-  const handleLater = async () => {
-    if (user) {
-      await markFeedbackShown(user.id);
-    }
+  const handleLater = () => {
     onClose();
   };
 

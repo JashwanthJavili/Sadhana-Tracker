@@ -37,7 +37,7 @@ const Analytics: React.FC = () => {
   }));
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-full space-y-8">
       <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 mb-8 shadow-2xl border-2 border-orange-400">
         <h2 className="text-4xl font-serif font-bold text-white mb-2">Performance Analytics</h2>
         <p className="text-orange-100 text-lg font-medium">Visualize your spiritual and material progress over time.</p>

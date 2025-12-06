@@ -66,6 +66,7 @@ export interface UserSettings {
   themeColor: 'orange' | 'blue' | 'rose';
   language: 'en' | 'hi' | 'te';
   isFirstTime: boolean;
+  tourCompleted?: boolean;
   customFields?: { [key: string]: string };
 }
 
@@ -106,12 +107,13 @@ export const DEFAULT_QUOTES: Quote[] = [
 ];
 
 export const INITIAL_SETTINGS: UserSettings = {
-  userName: 'Bhakta',
-  guruName: 'HG Pranavananda Das Prabhu',
-  iskconCenter: 'Local Center',
+  userName: '',
+  guruName: '',
+  iskconCenter: '',
   customQuotes: DEFAULT_QUOTES,
   themeColor: 'orange',
   language: 'en',
   isFirstTime: true,
+  tourCompleted: false,
   customFields: {},
 };

@@ -164,7 +164,7 @@ const QuestionDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto animate-fadeIn space-y-6">
+    <div className="min-h-full max-w-5xl mx-auto animate-fadeIn space-y-6">
       {/* Back Button */}
       <button
         onClick={() => navigate('/questions')}
@@ -205,7 +205,7 @@ const QuestionDetailPage: React.FC = () => {
             <p className="text-stone-700 text-lg leading-relaxed mb-6 whitespace-pre-wrap">{question.content}</p>
 
             {/* Tags */}
-            {question.tags.length > 0 && (
+            {question.tags && question.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {question.tags.map((tag, idx) => (
                   <span
@@ -262,14 +262,14 @@ const QuestionDetailPage: React.FC = () => {
                   <button
                     onClick={() => handleUpvoteAnswer(answer.id)}
                     className={`p-2 rounded-lg transition-all ${
-                      user && answer.upvotes.includes(user.uid)
+                      user && answer.upvotes?.includes(user.uid)
                         ? 'bg-orange-600 text-white'
                         : 'bg-white text-stone-600 hover:bg-orange-50 border border-stone-200'
                     }`}
                   >
                     <ThumbsUp size={18} />
                   </button>
-                  <span className="font-bold text-lg">{answer.upvotes.length}</span>
+                  <span className="font-bold text-lg">{answer.upvotes?.length || 0}</span>
                   {answer.isAccepted && (
                     <CheckCircle2 className="text-green-600" size={24} />
                   )}
