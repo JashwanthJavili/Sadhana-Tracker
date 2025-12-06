@@ -81,8 +81,10 @@ function AppContent() {
         iskconCenter: data.iskconCenter,
         language: 'en', // Default to English
         isFirstTime: false,
+        showTour: true, // Enable tour for new users
       });
       setShowOnboarding(false);
+      // Tour will be shown automatically by InteractiveTour component
     }
   };
 

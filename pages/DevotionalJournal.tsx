@@ -187,7 +187,7 @@ const DevotionalJournal: React.FC = () => {
               <label className="block text-base font-bold text-stone-800 mb-3">
                 {language === 'en' ? 'How are you feeling?' : language === 'hi' ? 'आप कैसा महसूस कर रहे हैं?' : 'మీరు ఎలా అనుభూతి చెందుతున్నారు?'}
               </label>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {(Object.keys(moodEmojis) as Array<keyof typeof moodEmojis>).map((mood) => (
                   <button
                     key={mood}

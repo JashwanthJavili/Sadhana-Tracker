@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
 import { UserSettings, Quote } from '../types';
-import { Save, Plus, Trash2, User, Globe, Wrench } from 'lucide-react';
+import { Save, Plus, Trash2, User, Wrench } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Settings: React.FC = () => {
@@ -12,6 +12,8 @@ const Settings: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldValue, setNewFieldValue] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedSettings, setEditedSettings] = useState<UserSettings | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -44,6 +46,33 @@ const Settings: React.FC = () => {
         setSaveStatus('idle');
       }
     }
+  };
+
+  const handleEdit = () => {
+    setEditedSettings({ ...settings! });
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editedSettings && user) {
+      try {
+        setSaveStatus('saving');
+        await saveSettings(user.uid, editedSettings);
+        setSettings(editedSettings);
+        setSaveStatus('saved');
+        setIsEditing(false);
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('Failed to save settings. Please try again.');
+        setSaveStatus('idle');
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedSettings(null);
+    setIsEditing(false);
   };
 
 
@@ -112,48 +141,86 @@ const Settings: React.FC = () => {
             </h2>
             <p className="text-orange-100 text-lg font-medium">Personalize your spiritual workspace</p>
           </div>
-          <button
-            onClick={handleSave}
-            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 min-h-[58px] ${
-              saveStatus === 'saved' 
-                ? 'bg-green-600 text-white hover:bg-green-700' 
-                : 'bg-white text-orange-700 hover:bg-orange-50'
-            }`}
-          >
-            <Save size={24} />
-            {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
-          </button>
         </div>
       </div>
 
       {/* Identity Section */}
       <section className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl border-3 border-blue-300 p-8">
-        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
-            <User className="text-white" size={28}/>
-          </div>
-          Identity & Center
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
-            <input
-              type="text"
-              value={settings.userName}
-              onChange={(e) => setSettings({ ...settings, userName: e.target.value })}
-              className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
-            />
-          </div>
-          <div>
-            <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
-            <input
-              type="text"
-              value={settings.iskconCenter}
-              onChange={(e) => setSettings({ ...settings, iskconCenter: e.target.value })}
-              className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
-            />
-          </div>
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-2xl font-bold text-stone-900 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+              <User className="text-white" size={28}/>
+            </div>
+            Identity & Center
+          </h3>
+          {!isEditing && (
+            <button
+              onClick={handleEdit}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+            >
+              <Wrench size={20} />
+              Edit
+            </button>
+          )}
         </div>
+        {isEditing ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
+              <input
+                type="text"
+                value={editedSettings?.userName || ''}
+                onChange={(e) => setEditedSettings({ ...editedSettings!, userName: e.target.value })}
+                className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
+              <input
+                type="text"
+                value={editedSettings?.iskconCenter || ''}
+                onChange={(e) => setEditedSettings({ ...editedSettings!, iskconCenter: e.target.value })}
+                className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
+              <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                {settings.userName || 'Not set'}
+              </div>
+            </div>
+            <div>
+              <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
+              <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                {settings.iskconCenter || 'Not set'}
+              </div>
+            </div>
+          </div>
+        )}
+        {isEditing && (
+          <div className="flex gap-4 mt-6">
+            <button
+              onClick={handleSaveEdit}
+              className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 ${
+                saveStatus === 'saved'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+              }`}
+            >
+              <Save size={24} />
+              {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-xl transform hover:scale-105 active:scale-95"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Spiritual Guide Section */}
@@ -165,16 +232,25 @@ const Settings: React.FC = () => {
           Spiritual Guide
         </h3>
         <div className="space-y-6">
-          <div>
-            <label className="block text-base font-bold text-stone-800 mb-3">Guided By</label>
-            <input
-              type="text"
-              value={settings.guruName}
-              onChange={(e) => setSettings({ ...settings, guruName: e.target.value })}
-              className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 outline-none text-base font-semibold shadow-md hover:border-purple-300 transition-all"
-              placeholder="e.g. HG Pranavanand Das Prabhu"
-            />
-          </div>
+          {isEditing ? (
+            <div>
+              <label className="block text-base font-bold text-stone-800 mb-3">Guided By</label>
+              <input
+                type="text"
+                value={editedSettings?.guruName || ''}
+                onChange={(e) => setEditedSettings({ ...editedSettings!, guruName: e.target.value })}
+                className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 outline-none text-base font-semibold shadow-md hover:border-purple-300 transition-all"
+                placeholder="e.g. HG Pranavanand Das Prabhu"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-base font-bold text-stone-800 mb-3">Guided By</label>
+              <div className="w-full p-4 bg-white border-3 border-purple-200 rounded-xl text-base font-semibold shadow-md">
+                {settings.guruName || 'Not set'}
+              </div>
+            </div>
+          )}
           <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-6 rounded-2xl shadow-md border-2 border-orange-300">
             <p className="text-base text-orange-900 italic font-serif font-semibold leading-relaxed">
               "By the mercy of the spiritual master one receives the benediction of Krishna."
@@ -234,37 +310,7 @@ const Settings: React.FC = () => {
         </div>
       </section>
 
-      {/* Language Preference */}
-      <section className="bg-gradient-to-br from-white to-amber-50 rounded-2xl shadow-xl border-3 border-amber-300 p-8">
-        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-xl shadow-lg">
-            <Globe className="text-white" size={28}/>
-          </div>
-          Language Preference
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[
-            { code: 'en' as const, name: 'English', native: 'English' },
-            { code: 'hi' as const, name: 'Hindi', native: 'हिंदी' },
-            { code: 'te' as const, name: 'Telugu', native: 'తెలుగు' }
-          ].map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => setSettings({ ...settings!, language: lang.code })}
-              className={`p-6 rounded-xl border-3 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 ${
-                settings.language === lang.code
-                  ? 'border-orange-600 bg-gradient-to-br from-orange-100 to-amber-100 text-orange-900 ring-4 ring-orange-200'
-                  : 'border-stone-300 hover:border-orange-400 bg-white hover:bg-orange-50'
-              }`}
-            >
-              <div className="text-center">
-                <div className="font-bold text-xl mb-1">{lang.name}</div>
-                <div className="text-base text-stone-600 font-semibold">{lang.native}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
+
 
       {/* Custom Fields */}
       <section className="bg-gradient-to-br from-white to-indigo-50 rounded-2xl shadow-xl border-3 border-indigo-300 p-8">
