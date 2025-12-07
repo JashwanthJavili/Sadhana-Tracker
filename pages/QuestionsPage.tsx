@@ -106,42 +106,43 @@ const QuestionsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full space-y-6 max-w-6xl mx-auto animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-orange-400">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h2 className="text-4xl font-serif font-bold text-white mb-2 flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <HelpCircle className="text-white" size={36} />
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+              <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl">
+                <HelpCircle className="text-white" size={24} />
               </div>
               Community Q&A
             </h2>
-            <p className="text-orange-100 text-lg font-medium">
+            <p className="text-orange-100 text-sm sm:text-base md:text-lg font-medium">
               Ask questions, share knowledge, help fellow devotees
             </p>
           </div>
           <button
             onClick={() => navigate('/questions/ask')}
-            className="flex items-center gap-2 px-6 py-3 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all shadow-lg transform hover:scale-105 active:scale-95"
+            className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-orange-600 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:bg-orange-50 transition-all shadow-lg transform hover:scale-105 active:scale-95 whitespace-nowrap"
           >
-            <Plus size={20} />
-            Ask Question
+            <Plus size={16} className="sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Ask Question</span>
+            <span className="sm:hidden">Ask</span>
           </button>
         </div>
       </div>
 
       {/* Search & Filters */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400" size={24} />
+          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-stone-400" size={20} />
           <input
             type="text"
-            placeholder="Search questions by title, content, tags, or author..."
+            placeholder="Search questions by title, content, tags..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-4 py-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none text-base font-semibold shadow-md"
+            className="w-full pl-11 sm:pl-14 pr-3 sm:pr-4 py-2.5 sm:py-3 border-2 sm:border-3 border-stone-300 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none text-sm sm:text-base font-semibold shadow-md"
           />
         </div>
 
@@ -206,14 +207,14 @@ const QuestionsPage: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredQuestions.map((question) => (
             <div
               key={question.id}
               onClick={() => navigate(`/questions/${question.id}`)}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer border-2 border-stone-200 hover:border-orange-300 p-6 transform hover:scale-[1.01]"
+              className="bg-white rounded-xl border border-stone-200 shadow-md hover:shadow-xl transition-all cursor-pointer hover:border-orange-300 overflow-hidden transform hover:scale-[1.01]"
             >
-              <div className="flex gap-4">
+              <div className="flex gap-4 p-4 sm:p-6">
                 {/* Voting Section */}
                 <div className="flex flex-col items-center gap-2">
                   <button

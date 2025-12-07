@@ -175,7 +175,7 @@ const QuestionDetailPage: React.FC = () => {
       </button>
 
       {/* Question Card */}
-      <div className="bg-white rounded-xl shadow-lg border-2 border-stone-200 p-8">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 p-4 sm:p-6">
         <div className="flex gap-6">
           {/* Voting */}
           <div className="flex flex-col items-center gap-3">

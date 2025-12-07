@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "buildDate": "2025-12-08",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-12-08",
+      "changes": [
+        "Gender-based respectful addressing system (Prabhuji/Mataji)",
+        "Onboarding flow with gender selection",
+        "Auto-redirect to dashboard after signup",
+        "Gender field in Settings page",
+        "Version tracking system",
+        "UI consistency improvements across all pages",
+        "Compact design matching Mantras page",
+        "Mobile-responsive improvements"
+      ]
+    }
+  ]
+}

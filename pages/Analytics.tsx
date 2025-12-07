@@ -36,16 +36,16 @@ const Analytics: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-full space-y-4 sm:space-y-6 md:space-y-8 px-3 sm:px-4">
-      <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 shadow-lg sm:shadow-xl md:shadow-2xl border-2 border-orange-400">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white mb-2">Performance Analytics</h2>
-        <p className="text-orange-100 text-sm sm:text-base md:text-lg font-medium">Visualize your spiritual progress.</p>
+    <div className="space-y-6 sm:space-y-8 px-3 sm:px-4">
+      <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-orange-400">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mb-1 sm:mb-2">Performance Analytics</h2>
+        <p className="text-orange-100 text-xs sm:text-sm md:text-base font-medium">Visualize your spiritual progress.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Discipline vs Mood */}
-        <div className="group bg-gradient-to-br from-white to-blue-50 p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border-2 sm:border-3 border-blue-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="group bg-gradient-to-br from-white to-blue-50 p-4 sm:p-6 rounded-xl border border-blue-300 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
           <h3 className="font-bold text-base sm:text-lg md:text-xl text-stone-900 mb-4 sm:mb-6 flex items-center gap-2">
             <span className="inline-block w-3 h-3 sm:w-4 sm:h-4 bg-blue-600 rounded-full"></span>
             Discipline vs. Mood
@@ -69,7 +69,7 @@ const Analytics: React.FC = () => {
         </div>
 
         {/* Chanting Consistency */}
-        <div className="group bg-gradient-to-br from-white to-orange-50 p-8 rounded-2xl shadow-xl border-3 border-orange-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="group bg-gradient-to-br from-white to-orange-50 p-4 sm:p-6 rounded-xl border shadow-md hover:shadow-xl border-orange-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
           <h3 className="font-bold text-xl text-stone-900 mb-6 flex items-center gap-2">
             <span className="inline-block w-4 h-4 bg-orange-600 rounded-full"></span>
             Chanting Consistency (Rounds)
@@ -95,7 +95,7 @@ const Analytics: React.FC = () => {
         </div>
 
         {/* Sleep vs Energy */}
-        <div className="group bg-gradient-to-br from-white to-indigo-50 p-8 rounded-2xl shadow-xl border-3 border-indigo-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="group bg-gradient-to-br from-white to-indigo-50 p-4 sm:p-6 rounded-xl border shadow-md hover:shadow-xl border-indigo-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
           <h3 className="font-bold text-xl text-stone-900 mb-6 flex items-center gap-2">
             <span className="inline-block w-4 h-4 bg-indigo-600 rounded-full"></span>
             Sleep Duration & Energy Levels
@@ -117,7 +117,7 @@ const Analytics: React.FC = () => {
         </div>
 
         {/* Phone Usage */}
-        <div className="group bg-gradient-to-br from-white to-red-50 p-8 rounded-2xl shadow-xl border-3 border-red-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="group bg-gradient-to-br from-white to-red-50 p-4 sm:p-6 rounded-xl border shadow-md hover:shadow-xl border-red-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
           <h3 className="font-bold text-xl text-stone-900 mb-6 flex items-center gap-2">
             <span className="inline-block w-4 h-4 bg-red-600 rounded-full"></span>
             Phone Usage (Minutes)

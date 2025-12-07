@@ -60,6 +60,7 @@ export interface Quote {
 
 export interface UserSettings {
   userName: string;
+  gender: 'male' | 'female';
   guruName: string;
   iskconCenter: string;
   themeColor: 'orange' | 'blue' | 'rose';
@@ -106,6 +107,7 @@ export const DEFAULT_QUOTES: Quote[] = [
 
 export const DEFAULT_SETTINGS: UserSettings = {
   userName: 'Devotee',
+  gender: 'male',
   guruName: '',
   iskconCenter: '',
   themeColor: 'orange',

@@ -199,50 +199,50 @@ const Settings: React.FC = () => {
     }
   };
 
-  if (!settings) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div><p className="text-stone-600 font-medium text-lg">Loading settings...</p></div></div>;
+  if (!settings) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-12 h-12 border-3 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-3"></div><p className="text-stone-600 font-medium text-sm sm:text-base">Loading settings...</p></div></div>;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn">
-      <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-700 rounded-2xl p-6 shadow-2xl border-2 border-indigo-400">
+    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto animate-fadeIn">
+      <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg sm:shadow-xl border-2 border-indigo-400">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-1 flex items-center gap-3">
-              <Wrench className="text-white" size={32} />
-              Application Settings
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 flex items-center gap-2">
+              <Wrench className="text-white" size={20} />
+              Settings
             </h2>
-            <p className="text-indigo-100 font-medium">Configure your spiritual practice workspace</p>
+            <p className="text-indigo-100 text-xs sm:text-sm">Configure your spiritual practice</p>
           </div>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold shadow-lg transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-bold shadow-lg transition-all disabled:opacity-50"
           >
-            <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
-            Refresh
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       </div>
 
       {/* Profile Section */}
-      <section className="bg-white rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
+      <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
         <button
           onClick={() => toggleSection('profile')}
-          className="w-full flex justify-between items-center p-6 hover:bg-stone-50 transition-colors"
+          className="w-full flex justify-between items-center p-4 sm:p-5 hover:bg-stone-50 transition-colors"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg">
-              <User className="text-white" size={24}/>
+              <User className="text-white" size={18}/>
             </div>
             <div className="text-left">
-              <h3 className="text-xl font-bold text-stone-900">Profile Information</h3>
-              <p className="text-sm text-stone-600">Personal details and spiritual identity</p>
+              <h3 className="text-base sm:text-lg font-bold text-stone-900">Profile Information</h3>
+              <p className="text-xs sm:text-sm text-stone-600">Personal details</p>
             </div>
           </div>
-          {expandedSections.has('profile') ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
+          {expandedSections.has('profile') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
         </button>
         
         {expandedSections.has('profile') && (
-          <div className="p-6 border-t border-stone-200 bg-stone-50">
+          <div className="p-4 sm:p-5 border-t border-stone-200 bg-stone-50">
             {!isEditing && (
               <button
                 onClick={handleEdit}
@@ -253,7 +253,7 @@ const Settings: React.FC = () => {
               </button>
             )}
             {isEditing ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
                   <input
@@ -272,9 +272,34 @@ const Settings: React.FC = () => {
                     className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
                   />
                 </div>
+                <div>
+                  <label className="block text-base font-bold text-stone-800 mb-3">Gender</label>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setEditedSettings({ ...editedSettings!, gender: 'male' })}
+                      className={`flex-1 p-4 rounded-xl font-bold text-base transition-all shadow-md ${
+                        editedSettings?.gender === 'male'
+                          ? 'bg-blue-600 text-white border-3 border-blue-700'
+                          : 'bg-white text-stone-700 border-3 border-stone-300 hover:border-blue-300'
+                      }`}
+                    >
+                      👨 Male (Prabhuji)
+                    </button>
+                    <button
+                      onClick={() => setEditedSettings({ ...editedSettings!, gender: 'female' })}
+                      className={`flex-1 p-4 rounded-xl font-bold text-base transition-all shadow-md ${
+                        editedSettings?.gender === 'female'
+                          ? 'bg-pink-600 text-white border-3 border-pink-700'
+                          : 'bg-white text-stone-700 border-3 border-stone-300 hover:border-pink-300'
+                      }`}
+                    >
+                      👩 Female (Mataji)
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
                   <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
@@ -285,6 +310,12 @@ const Settings: React.FC = () => {
                   <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
                   <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
                     {settings.iskconCenter || 'Not set'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-base font-bold text-stone-800 mb-3">Gender</label>
+                  <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                    {settings.gender === 'male' ? '👨 Male (Prabhuji)' : settings.gender === 'female' ? '👩 Female (Mataji)' : 'Not set'}
                   </div>
                 </div>
               </div>
@@ -299,12 +330,12 @@ const Settings: React.FC = () => {
                       : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
                   }`}
                 >
-                  <Save size={24} />
-                  {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
+                  <Save size={18} />
+                  {saveStatus === 'saved' ? 'Saved!' : 'Save'}
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-xl transform hover:scale-105 active:scale-95"
+                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg font-bold text-sm bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-lg transform hover:scale-105 active:scale-95"
                 >
                   Cancel
                 </button>
@@ -315,35 +346,35 @@ const Settings: React.FC = () => {
       </section>
 
       {/* Spiritual Guide Section */}
-      <section className="bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-xl border-3 border-purple-300 p-8">
-        <h3 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg">
-            <User className="text-white" size={28}/>
+      <section className="bg-gradient-to-br from-white to-purple-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-purple-300 p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-2 rounded-lg shadow-lg">
+            <User className="text-white" size={18}/>
           </div>
           Spiritual Guide
         </h3>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {isEditing ? (
             <div>
-              <label className="block text-base font-bold text-stone-800 mb-3">Guided By</label>
+              <label className="block text-sm font-bold text-stone-800 mb-2">Guided By</label>
               <input
                 type="text"
                 value={editedSettings?.guruName || ''}
                 onChange={(e) => setEditedSettings({ ...editedSettings!, guruName: e.target.value })}
-                className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 outline-none text-base font-semibold shadow-md hover:border-purple-300 transition-all"
+                className="w-full p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-500 outline-none text-sm font-medium shadow-sm hover:border-purple-300 transition-all"
                 placeholder="e.g. HG Pranavanand Das Prabhu"
               />
             </div>
           ) : (
             <div>
-              <label className="block text-base font-bold text-stone-800 mb-3">Guided By</label>
-              <div className="w-full p-4 bg-white border-3 border-purple-200 rounded-xl text-base font-semibold shadow-md">
+              <label className="block text-sm font-bold text-stone-800 mb-2">Guided By</label>
+              <div className="w-full p-3 bg-white border-2 border-purple-200 rounded-lg text-sm font-medium shadow-sm">
                 {settings.guruName || 'Not set'}
               </div>
             </div>
           )}
-          <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-6 rounded-2xl shadow-md border-2 border-orange-300">
-            <p className="text-base text-orange-900 italic font-serif font-semibold leading-relaxed">
+          <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-4 rounded-lg shadow-sm border-2 border-orange-300">
+            <p className="text-xs sm:text-sm text-orange-900 italic font-serif font-medium leading-relaxed">
               "By the mercy of the spiritual master one receives the benediction of Krishna."
             </p>
           </div>
@@ -351,10 +382,10 @@ const Settings: React.FC = () => {
       </section>
 
       {/* Privacy & Data Control Section */}
-      <section className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-xl border-3 border-green-300 p-8">
-        <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-xl shadow-lg">
-            <Shield className="text-white" size={28}/>
+      <section className="bg-gradient-to-br from-white to-green-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-green-300 p-4 sm:p-6">
+        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
+            <Shield className="text-white" size={20}/>
           </div>
           Privacy & Data Control
         </h3>
@@ -533,10 +564,10 @@ const Settings: React.FC = () => {
 
       {/* Admin Tools Section - Only visible to admin */}
       {isAdmin && (
-        <section className="bg-gradient-to-br from-white to-indigo-50 rounded-2xl shadow-xl border-3 border-indigo-300 p-8">
-          <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-xl shadow-lg">
-              <Users className="text-white" size={28}/>
+        <section className="bg-gradient-to-br from-white to-indigo-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-indigo-300 p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
+              <Users className="text-white" size={20}/>
             </div>
             Admin Tools
             <span className="ml-auto text-sm bg-red-600 text-white px-3 py-1 rounded-full">Admin Only</span>
@@ -573,7 +604,7 @@ const Settings: React.FC = () => {
       )}
 
       {/* Danger Zone - Clear All Data */}
-      <section className="bg-gradient-to-br from-white to-red-50 rounded-2xl shadow-xl border-3 border-red-300 p-8">
+      <section className="bg-gradient-to-br from-white to-red-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-red-300 p-4 sm:p-6">
         <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
           <div className="bg-gradient-to-br from-red-500 to-red-700 p-3 rounded-xl shadow-lg">
             <Trash2 className="text-white" size={28}/>

@@ -254,15 +254,15 @@ const SlokasLibrary: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600 rounded-2xl p-6 sm:p-8 shadow-2xl border-2 border-purple-300">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">Mantras & Kirtans</h1>
-        <p className="text-purple-100 text-sm sm:text-base md:text-lg">Sacred Collection of Devotional Chants and Prayers</p>
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-purple-300">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2">Mantras & Kirtans</h1>
+        <p className="text-purple-100 text-xs sm:text-sm md:text-base">Sacred Collection of Devotional Chants and Prayers</p>
       </div>
 
       {/* Search & Add */}
-      <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200">
+      <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border-2 border-purple-200">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400" size={20} />

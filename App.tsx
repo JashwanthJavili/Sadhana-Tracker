@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './components/Login';
 import OnboardingModal from './components/OnboardingModal';
+import GenderSelectionModal from './components/GenderSelectionModal';
 import FeedbackPrompt from './components/FeedbackPrompt';
 import LoadingScreen from './components/LoadingScreen';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -87,6 +88,7 @@ function App() {
 function AppContent() {
   const { user, loading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showGenderSelection, setShowGenderSelection] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
 
   // CRITICAL: Clear localStorage immediately for authenticated users
@@ -120,7 +122,12 @@ function AppContent() {
         const settings = await getSettings(user.uid);
         console.log('User settings:', settings);
         console.log('Is first time?', settings.isFirstTime);
-        if (settings.isFirstTime) {
+        
+        // Check if user needs to select gender (existing users without gender)
+        if (!settings.isFirstTime && !settings.gender) {
+          console.log('Showing gender selection modal for existing user');
+          setShowGenderSelection(true);
+        } else if (settings.isFirstTime) {
           console.log('Showing onboarding modal');
           setShowOnboarding(true);
         }
@@ -179,12 +186,13 @@ function AppContent() {
     }
   };
 
-  const handleOnboardingComplete = async (data: { userName: string; guruName: string; iskconCenter: string }) => {
+  const handleOnboardingComplete = async (data: { userName: string; gender: 'male' | 'female'; guruName: string; iskconCenter: string }) => {
     if (user) {
       const settings = await getSettings(user.uid);
       await saveSettings(user.uid, {
         ...settings,
         userName: data.userName,
+        gender: data.gender,
         guruName: data.guruName,
         iskconCenter: data.iskconCenter,
         language: 'en', // Default to English
@@ -209,8 +217,27 @@ function AppContent() {
       
       setShowOnboarding(false);
       
-      // SMART UPDATE: Trigger context refresh without page reload
-      console.log('✅ Onboarding complete - updating app state');
+      // SMART UPDATE: Trigger context refresh and navigate to dashboard
+      console.log('✅ Onboarding complete - updating app state and navigating to dashboard');
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('userDataUpdated'));
+        window.location.href = '/'; // Navigate to dashboard
+      }, 300);
+    }
+  };
+
+  const handleGenderSelection = async (gender: 'male' | 'female') => {
+    if (user) {
+      const settings = await getSettings(user.uid);
+      await saveSettings(user.uid, {
+        ...settings,
+        gender: gender,
+      });
+      
+      setShowGenderSelection(false);
+      
+      // SMART UPDATE: Trigger context refresh
+      console.log('✅ Gender updated - updating app state');
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('userDataUpdated'));
       }, 300);
@@ -255,6 +282,7 @@ function AppContent() {
       </Layout>
 
       <OnboardingModal isOpen={showOnboarding} onComplete={handleOnboardingComplete} />
+      <GenderSelectionModal isOpen={showGenderSelection} onComplete={handleGenderSelection} />
       
       {/* Feedback Prompt - Shows after 2+ days */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}

@@ -132,10 +132,10 @@ const FestivalDetailPage: React.FC = () => {
       </button>
 
       {/* Festival Header */}
-      <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-2xl p-8 shadow-2xl border-2 border-purple-300 text-white">
-        <div className="flex justify-between items-start mb-4">
+      <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-purple-300 text-white">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0 mb-3 sm:mb-4">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold mb-3">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3">
               {translatedContent.name || festival.name}
             </h1>
             <p className="text-purple-100 text-lg flex items-center gap-2 mb-2">
@@ -219,7 +219,7 @@ const FestivalDetailPage: React.FC = () => {
 
       {/* Full Description */}
       {festival.fullDescription && (
-        <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-purple-200">
+        <div className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-purple-200">
           <h2 className="text-2xl font-bold text-stone-800 mb-4 flex items-center gap-3">
             <BookOpen className="text-purple-600" size={28} />
             About This Festival
@@ -232,7 +232,7 @@ const FestivalDetailPage: React.FC = () => {
 
       {/* Spiritual Significance */}
       {festival.significance && (
-        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-8 shadow-xl border-2 border-yellow-300">
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-yellow-300">
           <h2 className="text-2xl font-bold text-orange-900 mb-4 flex items-center gap-3">
             <Star className="text-yellow-600" size={28} />
             Spiritual Significance
@@ -245,7 +245,7 @@ const FestivalDetailPage: React.FC = () => {
 
       {/* Offerings */}
       {festival.offerings && festival.offerings.length > 0 && (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 shadow-xl border-2 border-green-300">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-green-300">
           <h2 className="text-2xl font-bold text-green-900 mb-4 flex items-center gap-3">
             <Flower2 className="text-green-600" size={28} />
             Traditional Offerings
@@ -263,7 +263,7 @@ const FestivalDetailPage: React.FC = () => {
 
       {/* Observances */}
       {festival.observances && festival.observances.length > 0 && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-xl border-2 border-blue-300">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-blue-300">
           <h2 className="text-2xl font-bold text-blue-900 mb-4 flex items-center gap-3">
             <Calendar className="text-blue-600" size={28} />
             How to Observe

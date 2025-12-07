@@ -211,33 +211,34 @@ const FestivalsPage: React.FC = () => {
   const pastFestivals = filteredFestivals.filter(f => new Date(f.date) < new Date());
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-2xl p-8 shadow-2xl border-2 border-purple-300">
-        <div className="flex justify-between items-center">
+      <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-purple-300">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-              <Calendar size={40} />
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-2 flex items-center gap-2">
+              <Calendar size={20} />
               Vaishnava Festivals Calendar
             </h1>
-            <p className="text-purple-100 text-lg">
+            <p className="text-purple-100 text-xs sm:text-sm md:text-base">
               Sacred celebrations and appearance days of the Supreme Lord and His devotees
             </p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-xl font-bold hover:bg-purple-50 transition-all shadow-lg"
+            className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-purple-600 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:bg-purple-50 transition-all shadow-lg whitespace-nowrap"
           >
-            <Plus size={20} />
-            Add Festival
+            <Plus size={16} className="sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Add Festival</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-stone-200">
-        <div className="flex items-center gap-3">
-          <Search className="text-stone-400" size={24} />
+      <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-lg border-2 border-stone-200">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Search className="text-stone-400" size={20} />
           <input
             type="text"
             placeholder="Search festivals by name, date, or description..."
@@ -251,7 +252,7 @@ const FestivalsPage: React.FC = () => {
       {/* Add Festival Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-stone-800">Add New Festival</h2>
               <button onClick={() => setShowAddModal(false)}>
@@ -350,16 +351,16 @@ const FestivalsPage: React.FC = () => {
       {/* Upcoming Festivals */}
       {upcomingFestivals.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold text-stone-800 mb-4">Upcoming Festivals</h2>
-          <div className="grid gap-6">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-800 mb-4 sm:mb-6">Upcoming Festivals</h2>
+          <div className="space-y-6">
             {upcomingFestivals.map((festival) => (
               <div
                 key={festival.id}
-                className="bg-white hover-lift rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-200 shadow-md hover:shadow-xl transition-all"
+                className="bg-white hover-lift rounded-xl border border-purple-200 shadow-md hover:shadow-xl transition-all overflow-hidden"
               >
                 {/* Festival Header */}
-                <div className="mb-4">
-                  <h3 className="text-xl sm:text-2xl font-bold text-purple-900 mb-2">
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-2xl font-bold text-purple-900 mb-2">
                     {translations[festival.id] ? translations[festival.id].name : festival.name}
                   </h3>
                   <p className="text-sm sm:text-base text-purple-700 font-semibold mb-3">
@@ -375,8 +376,9 @@ const FestivalsPage: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Always Visible Controls */}
-                <div className="flex flex-wrap items-center gap-2 mb-4">
+                {/* Controls Section */}
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -491,6 +493,7 @@ const FestivalsPage: React.FC = () => {
                 <div className="flex items-center gap-2 text-sm text-stone-600">
                   <Users size={16} />
                   <span>Added by {festival.addedByName}</span>
+                </div>
                 </div>
               </div>
             ))}

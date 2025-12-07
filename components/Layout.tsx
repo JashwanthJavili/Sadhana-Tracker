@@ -7,8 +7,10 @@ import { UserSettings } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserData } from '../contexts/UserDataContext';
 import InteractiveTour from './InteractiveTour';
+import GuidedTour from './GuidedTour';
 import FeedbackPrompt from './FeedbackPrompt';
 import { useSyncChatProfile } from '../hooks/useSyncChatProfile';
+import { getGreeting } from '../utils/honorific';
 
 // @ts-ignore
 import iskconLogo from '../utils/Images/Iscon_LOgo-removebg-preview.png';
@@ -120,14 +122,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         const data = await getSettings(user.uid);
         setSettings(data);
         
+        // TOUR DISABLED FOR MAINTENANCE
         // Auto-show tour only for new users who have completed profile setup
-        // Check if user has filled userName, guruName, and iskconCenter
-        const hasCompletedProfile = data?.userName && data?.guruName && data?.iskconCenter;
-        const shouldShowTour = isNewUser && !data?.tourCompleted && hasCompletedProfile;
-        
-        if (shouldShowTour) {
-          setTimeout(() => setShowTour(true), 1000);
-        }
+        // const hasCompletedProfile = data?.userName && data?.guruName && data?.iskconCenter;
+        // const shouldShowTour = isNewUser && !data?.tourCompleted && hasCompletedProfile;
+        // if (shouldShowTour) {
+        //   setTimeout(() => setShowTour(true), 1000);
+        // }
       }
     };
     fetchSettings();
@@ -234,21 +235,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         />
       )}
       {/* Mobile Header */}
-      <div className="md:hidden bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
-        <div className="flex items-center gap-3">
+      <div className="md:hidden bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-4 shadow-lg sticky top-0 z-40">
+        <button 
+          onClick={toggleSidebar}
+          className="w-full flex items-center gap-3 hover:bg-white/10 rounded-lg p-2 -m-2 transition-all active:scale-95"
+          aria-label="Toggle navigation menu"
+          data-tour="navigation-toggle"
+        >
           <img 
             src={iskconLogo} 
             alt="ISKCON Logo" 
-            className="h-10 w-10 object-contain bg-white/90 rounded-lg p-1"
+            className="h-10 w-10 object-contain bg-white/90 rounded-lg p-1 flex-shrink-0"
           />
-          <span className="font-serif font-bold text-xl">Sadhana Sanga</span>
-        </div>
-        <button 
-          onClick={toggleSidebar}
-          className="p-2 hover:bg-white/20 rounded-lg transition-colors active:scale-95"
-          aria-label="Toggle menu"
-        >
-          {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
+          <span className="font-serif font-bold text-xl flex-1 text-left">Sadhana Sanga</span>
+          <div className="text-white/80 flex-shrink-0">
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </div>
         </button>
       </div>
 
@@ -357,25 +359,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           })}
         </nav>
 
+        {/* Install App Button - Top of Navigation */}
+        {showInstallButton && (
+          <div className="p-3 border-b border-stone-800">
+            <button
+              onClick={handleInstallClick}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2.5 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl active:scale-95 text-sm"
+            >
+              <Download size={16} />
+              <span>Install App</span>
+            </button>
+          </div>
+        )}
+
         {/* Footer section */}
 
         {/* User Profile & Logout */}
         <div className="p-4 border-t border-stone-800 bg-stone-900 space-y-2">
-          {/* Install App Button */}
-          {showInstallButton && (
-            <button
-              onClick={handleInstallClick}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl mb-3 active:scale-95"
-            >
-              <Download size={18} />
-              <span>Install App</span>
-            </button>
-          )}
           
           {/* Help & Feedback Buttons */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="grid responsive-grid-2 gap-2 mb-3">
             <button
-              onClick={() => setShowTour(true)}
+              onClick={() => {
+                alert('🚧 Tour Feature\n\nThe interactive tour is currently under maintenance.\n\nWe\'re working on improving your experience!\n\nCheck back soon. 🙏');
+              }}
               className="flex items-center justify-center gap-1 text-xs text-stone-400 hover:text-orange-400 hover:bg-stone-800 px-2 py-2 rounded-lg transition-colors"
             >
               <HelpCircle size={14} />
@@ -397,7 +404,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               className="w-8 h-8 rounded-full bg-stone-700"
             />
             <div className="overflow-hidden">
-              <p className="text-sm font-medium truncate">{settings?.userName || user.displayName || 'Devotee'}</p>
+              <p className="text-sm font-medium truncate">{settings?.userName && settings?.gender ? getGreeting(settings.userName, settings.gender) : (settings?.userName || 'Devotee')}</p>
               <p className="text-xs text-stone-500 truncate">{user.uid === 'guest' ? 'Guest Mode' : 'Signed In'}</p>
             </div>
           </div>
@@ -446,10 +453,51 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
 
       {/* Interactive Tour */}
-      {showTour && <InteractiveTour onComplete={handleTourComplete} />}
+      {showTour && <GuidedTour isOpen={showTour} onClose={handleTourComplete} />}
 
       {/* Feedback Modal */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
+
+      {/* Floating WhatsApp-style Message Icon - Always Visible */}
+      {!isGuest && location.pathname !== '/chats' && !location.pathname.startsWith('/chat/') && (
+        <button
+          onClick={() => navigate('/chats')}
+          className={`fixed bottom-6 right-6 z-50 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 hover:scale-110 active:scale-95 flex items-center gap-3 group ${
+            unreadCount > 0 ? 'px-5 py-4' : 'p-4'
+          }`}
+          style={unreadCount > 0 ? {
+            animation: 'bounce-gentle 2s ease-in-out infinite'
+          } : undefined}
+          aria-label={unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : 'Messages'}
+        >
+          <div className="relative">
+            <MessageCircle size={24} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 ring-2 ring-white shadow-lg animate-pulse">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </div>
+          {unreadCount > 0 && (
+            <span className="font-semibold text-sm whitespace-nowrap">
+              {unreadCount === 1 ? '1 Unread Message' : `${unreadCount} Unread Messages`}
+            </span>
+          )}
+          
+          {unreadCount > 0 && (
+            <style>{`
+              @keyframes bounce-gentle {
+                0%, 100% {
+                  transform: translateY(0);
+                }
+                50% {
+                  transform: translateY(-8px);
+                }
+              }
+            `}</style>
+          )}
+        </button>
+      )}
     </div>
   );
 };

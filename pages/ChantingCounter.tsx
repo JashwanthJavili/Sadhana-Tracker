@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ref, get, set, update, push } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import { db } from '../services/firebase';
 import { useToast } from '../contexts/ToastContext';
-import { Clock, RotateCcw, TrendingUp, Calendar, ChevronDown, X, Plus, Minus, Play, Pause, History as HistoryIcon } from 'lucide-react';
+import { Clock, RotateCcw, Calendar, X, Plus, Minus, Play, Pause, History as HistoryIcon, Award, CheckCircle, Flame, Sparkles, HelpCircle, Info } from 'lucide-react';
 
 interface ChantingSession {
   id: string;
@@ -30,7 +30,7 @@ export default function ChantingCounter() {
   const { user } = useAuth();
   const { showSuccess, showWarning } = useToast();
   
-  // Core state
+  // Core state - Start rounds at 0, beads at 0 (000:000 format)
   const [currentBead, setCurrentBead] = useState(0);
   const [currentRound, setCurrentRound] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -39,6 +39,10 @@ export default function ChantingCounter() {
   
   // Settings
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
+  // Inline guide panel (shows explanation beside the counter)
+  const [showInlineGuide, setShowInlineGuide] = useState(false);
+  const [guideLanguage, setGuideLanguage] = useState<'en' | 'hi' | 'te'>('en');
   const [targetRounds, setTargetRounds] = useState(16);
   const [targetBeads, setTargetBeads] = useState(BEADS_PER_ROUND);
   const [autoLapEnabled, setAutoLapEnabled] = useState(true);
@@ -48,8 +52,11 @@ export default function ChantingCounter() {
   const [showHistory, setShowHistory] = useState(false);
   const [stats, setStats] = useState<ChantingStats | null>(null);
   
-  // Long press detection
+  // Long press and double click detection
   const timerPressRef = useRef<NodeJS.Timeout | null>(null);
+  const beadsPressRef = useRef<NodeJS.Timeout | null>(null);
+  const timerClickRef = useRef<number>(0);
+  const beadsClickRef = useRef<number>(0);
   const [isLongPress, setIsLongPress] = useState(false);
 
   // Load sessions and stats
@@ -76,22 +83,6 @@ export default function ChantingCounter() {
       if (interval) clearInterval(interval);
     };
   }, [isRunning]);
-
-  // Auto-increment bead when timer starts (optional auto-counting)
-  useEffect(() => {
-    let autoInterval: NodeJS.Timeout | null = null;
-    
-    if (isRunning && autoLapEnabled) {
-      // Auto increment every 5 seconds (adjustable)
-      autoInterval = setInterval(() => {
-        handleBeadIncrement();
-      }, 5000);
-    }
-    
-    return () => {
-      if (autoInterval) clearInterval(autoInterval);
-    };
-  }, [isRunning, autoLapEnabled, currentBead, currentRound]);
 
   const loadSessions = async () => {
     if (!user || user.uid === 'guest') return;
@@ -137,11 +128,15 @@ export default function ChantingCounter() {
     const newBead = currentBead + 1;
     
     if (newBead >= targetBeads) {
-      // Round completed
+      // Round completed (108 beads done)
       const newRound = currentRound + 1;
       setCurrentRound(newRound);
-      setCurrentBead(0);
+      setCurrentBead(0); // Reset to bead 0 for next round
       playRoundCompleteSound();
+      
+      if (newRound >= targetRounds && autoLapEnabled) {
+        showSuccess('Target rounds completed! 🎉');
+      }
     } else {
       setCurrentBead(newBead);
     }
@@ -169,26 +164,37 @@ export default function ChantingCounter() {
     }
   };
 
-  // Timer tap: Start/Pause toggle
-  const handleTimerTap = () => {
-    if (isLongPress) return; // Don't toggle if long press was detected
+  // Timer click: Start/Pause, Double-click: Reset
+  const handleTimerClick = () => {
+    const now = Date.now();
     
-    if (!isRunning && !sessionStartTime) {
-      // First start
-      setSessionStartTime(Date.now());
-      setIsRunning(true);
+    if (now - timerClickRef.current < 300) {
+      // Double click detected
+      handleTimerReset();
+      timerClickRef.current = 0;
     } else {
-      // Toggle pause/resume
-      setIsRunning(!isRunning);
+      // Single click: Start/Pause
+      timerClickRef.current = now;
+      setTimeout(() => {
+        if (timerClickRef.current === now) {
+          // It was a single click
+          if (!isRunning && !sessionStartTime) {
+            setSessionStartTime(Date.now());
+            setIsRunning(true);
+          } else {
+            setIsRunning(!isRunning);
+          }
+        }
+      }, 300);
     }
   };
 
-  // Timer long press: Reset
+  // Timer long press (mobile): Reset
   const handleTimerLongPressStart = () => {
     timerPressRef.current = setTimeout(() => {
       setIsLongPress(true);
       handleTimerReset();
-    }, 800); // 800ms for long press
+    }, 600);
   };
 
   const handleTimerLongPressEnd = () => {
@@ -202,12 +208,47 @@ export default function ChantingCounter() {
     setIsRunning(false);
     setTimerSeconds(0);
     setSessionStartTime(null);
-    showSuccess('Timer reset');
+    showSuccess('⏱️ Timer reset');
   };
 
-  // Beads tap: Open settings modal
-  const handleBeadsTap = () => {
-    setShowSettingsModal(true);
+  // Beads click: Configure, Double-click: Reset
+  const handleBeadsClick = () => {
+    const now = Date.now();
+    
+    if (now - beadsClickRef.current < 300) {
+      // Double click detected
+      handleBeadsReset();
+      beadsClickRef.current = 0;
+    } else {
+      // Single click: Open settings
+      beadsClickRef.current = now;
+      setTimeout(() => {
+        if (beadsClickRef.current === now) {
+          setShowSettingsModal(true);
+        }
+      }, 300);
+    }
+  };
+
+  // Beads long press (mobile): Reset
+  const handleBeadsLongPressStart = () => {
+    beadsPressRef.current = setTimeout(() => {
+      setIsLongPress(true);
+      handleBeadsReset();
+    }, 600);
+  };
+
+  const handleBeadsLongPressEnd = () => {
+    if (beadsPressRef.current) {
+      clearTimeout(beadsPressRef.current);
+    }
+    setTimeout(() => setIsLongPress(false), 100);
+  };
+
+  const handleBeadsReset = () => {
+    setCurrentBead(0);
+    setCurrentRound(0);
+    showSuccess('📿 Counter reset to 000:000');
   };
 
   const handleSaveSettings = () => {
@@ -219,7 +260,7 @@ export default function ChantingCounter() {
     setCurrentBead(0);
     setCurrentRound(0);
     setShowSettingsModal(false);
-    showSuccess('Counter reset');
+    showSuccess('Counter reset to 000:000');
   };
 
   const handleSaveSession = async () => {
@@ -261,7 +302,7 @@ export default function ChantingCounter() {
       const statsRef = ref(db, `users/${user.uid}/chantingStats`);
       await set(statsRef, newStats);
 
-      showSuccess('Session saved successfully!');
+      showSuccess('Session saved successfully! 🙏');
       loadSessions();
       loadStats();
       
@@ -285,7 +326,7 @@ export default function ChantingCounter() {
   };
 
   const formatBeadCount = (): string => {
-    return `${(currentBead + 1).toString().padStart(3, '0')}:${targetBeads.toString().padStart(3, '0')}`;
+    return `${currentRound.toString().padStart(3, '0')}:${currentBead.toString().padStart(3, '0')}`;
   };
 
   const getCompletionPercentage = (session: ChantingSession): number => {
@@ -295,207 +336,322 @@ export default function ChantingCounter() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold">Japa Counter</h1>
+      <div className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-orange-300">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="text-white animate-pulse" size={32} />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white flex items-center gap-2">
+                  📿 Japa Counter
+                </h1>
+                <button
+                  onClick={() => setShowGuideModal(true)}
+                  className="p-1.5 bg-white/20 hover:bg-white/30 rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-110 active:scale-95"
+                  title="How to Use"
+                >
+                  <HelpCircle className="text-white" size={20} />
+                </button>
+              </div>
+              <p className="text-white/90 text-sm sm:text-base mt-1">Hare Krishna Maha Mantra</p>
+            </div>
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="p-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 sm:p-3 bg-white/20 hover:bg-white/30 rounded-lg transition-all shadow-lg"
+              title="View History"
             >
-              <HistoryIcon size={20} />
+              <HistoryIcon className="text-white" size={20} />
             </button>
             <button
               onClick={handleSaveSession}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg font-semibold transition-colors"
+              className="px-4 py-2 sm:px-6 sm:py-3 bg-white text-orange-600 hover:bg-orange-50 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
             >
-              Save
+              Save Session
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Counter */}
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      {/* Main Counter Section */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
         {/* Beads Display */}
         <div 
-          onClick={handleBeadsTap}
-          className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 text-center cursor-pointer hover:bg-gray-800/70 transition-all border border-gray-700 active:scale-95"
+          onClick={handleBeadsClick}
+          onTouchStart={handleBeadsLongPressStart}
+          onTouchEnd={handleBeadsLongPressEnd}
+          className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-6 lg:p-8 shadow-xl border-2 border-orange-200 cursor-pointer hover:border-orange-400 hover:shadow-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
         >
-          <div className="text-sm text-gray-400 mb-2 font-medium">BEADS</div>
-          <div className="text-6xl font-bold tracking-wider font-mono">
-            {formatBeadCount()}
+          <div className="text-center">
+            <div className="text-xs sm:text-sm lg:text-base font-semibold text-orange-600 mb-2 sm:mb-3 flex items-center justify-center gap-1 sm:gap-2">
+              📿 <span className="hidden sm:inline">BEADS</span>
+            </div>
+            <div className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-stone-800 tracking-wider font-mono">
+              {formatBeadCount()}
+            </div>
+            <p className="text-[0.65rem] sm:text-xs text-stone-500 mt-2 sm:mt-3">Rounds : Current Bead</p>
           </div>
-          <div className="text-sm text-gray-400 mt-2">Tap to configure</div>
         </div>
 
         {/* Timer Display */}
         <div 
-          onMouseDown={handleTimerLongPressStart}
-          onMouseUp={handleTimerLongPressEnd}
-          onMouseLeave={handleTimerLongPressEnd}
+          onClick={handleTimerClick}
           onTouchStart={handleTimerLongPressStart}
           onTouchEnd={handleTimerLongPressEnd}
-          onClick={handleTimerTap}
-          className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 text-center cursor-pointer hover:bg-gray-800/70 transition-all border border-gray-700 active:scale-95"
+          className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-6 lg:p-8 shadow-xl border-2 border-orange-200 cursor-pointer hover:border-orange-400 hover:shadow-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
         >
-          <div className="text-sm text-gray-400 mb-2 font-medium">TIMER</div>
-          <div className="text-6xl font-bold tracking-wider font-mono">
-            {formatTimer(timerSeconds)}
-          </div>
-          <div className="text-sm text-gray-400 mt-2 flex items-center justify-center gap-2">
-            {isRunning ? (
-              <><Pause size={14} /> Tap to pause • Long press to reset</>
-            ) : (
-              <><Play size={14} /> Tap to start • Long press to reset</>
-            )}
+          <div className="text-center">
+            <div className="text-xs sm:text-sm lg:text-base font-semibold text-orange-600 mb-2 sm:mb-3 flex items-center justify-center gap-1 sm:gap-2">
+              <Clock size={14} className="sm:w-[18px] sm:h-[18px]" /> <span className="hidden sm:inline">TIMER</span>
+            </div>
+            <div className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-stone-800 tracking-wider font-mono">
+              {formatTimer(timerSeconds)}
+            </div>
+            <p className="text-[0.65rem] sm:text-xs text-stone-500 mt-2 sm:mt-3">{isRunning ? 'Running...' : 'Ready'}</p>
           </div>
         </div>
+      </div>
 
-        {/* Rounds Display */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Rounds Completed</div>
-              <div className="text-4xl font-bold">{currentRound}/{targetRounds}</div>
-            </div>
-            <div className="w-24 h-24">
-              <svg className="transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="#374151"
-                  strokeWidth="10"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="#f97316"
-                  strokeWidth="10"
-                  strokeDasharray={`${(currentRound / targetRounds) * 283} 283`}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
+      {/* Usage Instructions - Collapsible */}
+      <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 overflow-hidden">
+        <button
+          onClick={() => setShowInlineGuide(!showInlineGuide)}
+          className="w-full p-4 sm:p-6 flex items-center justify-between hover:bg-orange-100/50 transition-all"
+        >
+          <h3 className="text-sm sm:text-base font-bold text-orange-600">How to Use</h3>
+          <div className={`transform transition-transform ${showInlineGuide ? 'rotate-180' : ''}`}>
+            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
-        </div>
-
-        {/* Quick Stats */}
-        {stats && (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 text-center">
-              <div className="text-2xl font-bold text-orange-500">{stats.totalRounds}</div>
-              <div className="text-xs text-gray-400 mt-1">Total Rounds</div>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 text-center">
-              <div className="text-2xl font-bold text-orange-500">{stats.totalBeads}</div>
-              <div className="text-xs text-gray-400 mt-1">Total Beads</div>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 text-center">
-              <div className="text-2xl font-bold text-orange-500">{Math.floor(stats.totalTime / 60)}m</div>
-              <div className="text-xs text-gray-400 mt-1">Total Time</div>
+        </button>
+        
+        {showInlineGuide && (
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg p-3 border border-orange-200">
+                <p className="text-xs sm:text-sm font-semibold text-stone-700 mb-2">📿 BEADS Counter:</p>
+                <ul className="text-xs text-stone-600 space-y-1">
+                  <li>• <strong>Web:</strong> Click = Configure • 2× Click = Reset</li>
+                  <li>• <strong>Mobile:</strong> Tap = Configure • Long press = Reset</li>
+                </ul>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-orange-200">
+                <p className="text-xs sm:text-sm font-semibold text-stone-700 mb-2">⏱️ TIMER:</p>
+                <ul className="text-xs text-stone-600 space-y-1">
+                  <li>• <strong>Web:</strong> Click = Start/Pause • 2× Click = Reset</li>
+                  <li>• <strong>Mobile:</strong> Tap = Start/Pause • Long press = Reset</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}
+      </div>
 
-        {/* Chanting Inspiration */}
-        <div className="bg-gradient-to-br from-orange-900/30 to-amber-900/30 backdrop-blur-sm rounded-2xl p-6 border border-orange-800/50">
-          <h3 className="text-lg font-bold mb-2 text-orange-300">Chanting Inspiration</h3>
-          <p className="text-sm text-gray-300 italic mb-3">
-            "Associating With The Supreme Lord Directly"
-          </p>
-          <p className="text-xs text-gray-400 leading-relaxed">
-            By chanting the holy names, you are directly associating with the Supreme Lord Krishna. 
-            Each round brings you closer to spiritual perfection and purifies your consciousness.
-          </p>
+      {/* Tap Button to Increment Beads */}
+      <div className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-xl border-2 border-orange-200">
+        <div className="flex flex-col items-center gap-6">
+          <button
+            onClick={handleBeadIncrement}
+            className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-full shadow-2xl transform transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center border-4 sm:border-6 border-orange-300 relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <span className="text-7xl sm:text-8xl md:text-9xl font-bold relative z-10">{currentBead}</span>
+            <span className="text-sm sm:text-base font-medium mt-2 relative z-10 opacity-90">Tap to Count</span>
+          </button>
+          <div className="text-center">
+            <p className="text-stone-700 text-base sm:text-lg font-semibold mb-1">
+              {targetBeads - currentBead} beads remaining
+            </p>
+            <p className="text-stone-500 text-sm">in this round</p>
+          </div>
         </div>
+      </div>
+
+      {/* Rounds Progress */}
+      <div className="bg-white rounded-xl sm:rounded-2xl p-6 shadow-xl border-2 border-orange-200">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+          <div className="text-center sm:text-left">
+            <div className="text-sm font-semibold text-orange-600 mb-2 flex items-center gap-2 justify-center sm:justify-start">
+              <RotateCcw size={18} /> Rounds Progress
+            </div>
+            <div className="text-4xl sm:text-5xl md:text-6xl font-bold text-stone-800">
+              {currentRound} <span className="text-stone-400">/</span> {targetRounds}
+            </div>
+          </div>
+          <div className="w-32 h-32 sm:w-36 sm:h-36 relative">
+            <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="#fed7aa"
+                strokeWidth="10"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="10"
+                strokeDasharray={`${(currentRound / targetRounds) * 283} 283`}
+                strokeLinecap="round"
+                className="transition-all duration-500"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-2xl font-bold text-orange-600">
+                {Math.round((currentRound / targetRounds) * 100)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      {stats && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-5 sm:p-6 border-2 border-orange-200 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+            <Award className="mx-auto text-orange-600 mb-3" size={28} />
+            <div className="text-3xl sm:text-4xl font-bold text-orange-600">{stats.totalRounds}</div>
+            <div className="text-xs sm:text-sm text-stone-600 mt-2 font-medium">Total Rounds</div>
+          </div>
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-5 sm:p-6 border-2 border-orange-200 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+            <CheckCircle className="mx-auto text-orange-600 mb-3" size={28} />
+            <div className="text-3xl sm:text-4xl font-bold text-orange-600">{stats.totalBeads.toLocaleString()}</div>
+            <div className="text-xs sm:text-sm text-stone-600 mt-2 font-medium">Total Beads</div>
+          </div>
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-5 sm:p-6 border-2 border-orange-200 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+            <Flame className="mx-auto text-orange-600 mb-3" size={28} />
+            <div className="text-3xl sm:text-4xl font-bold text-orange-600">{Math.floor(stats.totalTime / 60)}m</div>
+            <div className="text-xs sm:text-sm text-stone-600 mt-2 font-medium">Total Time</div>
+          </div>
+        </div>
+      )}
+
+      {/* Chanting Inspiration */}
+      <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-xl text-white border-2 border-orange-300">
+        <h3 className="text-lg sm:text-xl font-bold mb-3 flex items-center gap-2">
+          ✨ Chanting Inspiration
+        </h3>
+        <p className="text-sm sm:text-base italic mb-3 font-medium opacity-95">
+          "Associating With The Supreme Lord Directly"
+        </p>
+        <p className="text-xs sm:text-sm leading-relaxed opacity-90">
+          By chanting the holy names, you are directly associating with the Supreme Lord Krishna. 
+          Each round brings you closer to spiritual perfection and purifies your consciousness. 
+          The Hare Krishna mantra is the greatest benediction for humanity. Stay consistent and experience divine transformation!
+        </p>
       </div>
 
       {/* Settings Modal */}
       {showSettingsModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl max-w-md w-full border border-gray-700">
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-xl font-bold">Settings</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-8 sm:pt-16 animate-fade-in overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border-2 border-orange-200 animate-scale-in">
+            <div className="flex items-center justify-between p-6 border-b-2 border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50">
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-800 flex items-center gap-2">
+                ⚙️ Settings
+              </h2>
               <button
                 onClick={() => setShowSettingsModal(false)}
-                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
               >
-                <X size={20} />
+                <X size={24} className="text-stone-600" />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Rounds Setting */}
+              {/* Completed Rounds Setting */}
               <div>
-                <label className="block text-sm text-gray-400 mb-3 font-medium">ROUNDS</label>
-                <div className="flex items-center justify-between bg-gray-900 rounded-xl p-4 border border-gray-700">
+                <label className="block text-sm font-bold text-stone-700 mb-3">COMPLETED ROUNDS</label>
+                <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
                   <button
-                    onClick={() => setTargetRounds(Math.max(1, targetRounds - 1))}
-                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                    onClick={() => setCurrentRound(Math.max(0, currentRound - 1))}
+                    className="p-3 bg-white hover:bg-orange-50 rounded-lg transition-colors shadow-md border-2 border-orange-300"
                   >
-                    <Minus size={20} />
+                    <Minus size={20} className="text-orange-600" />
                   </button>
-                  <span className="text-3xl font-bold">{targetRounds}</span>
+                  <span className="text-4xl font-bold text-orange-600">{currentRound}</span>
                   <button
-                    onClick={() => setTargetRounds(targetRounds + 1)}
-                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                    onClick={() => setCurrentRound(currentRound + 1)}
+                    className="p-3 bg-white hover:bg-orange-50 rounded-lg transition-colors shadow-md border-2 border-orange-300"
                   >
-                    <Plus size={20} />
+                    <Plus size={20} className="text-orange-600" />
                   </button>
                 </div>
               </div>
 
-              {/* Beads Setting */}
+              {/* Current Bead Position Setting with Scrollable Picker */}
               <div>
-                <label className="block text-sm text-gray-400 mb-3 font-medium">BEADS PER ROUND</label>
-                <div className="flex items-center justify-between bg-gray-900 rounded-xl p-4 border border-gray-700">
-                  <button
-                    onClick={() => setTargetBeads(Math.max(1, targetBeads - 1))}
-                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                  >
-                    <Minus size={20} />
-                  </button>
-                  <span className="text-3xl font-bold">{targetBeads}</span>
-                  <button
-                    onClick={() => setTargetBeads(targetBeads + 1)}
-                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                  >
-                    <Plus size={20} />
-                  </button>
+                <label className="block text-sm font-bold text-stone-700 mb-3">CURRENT BEAD POSITION (0-107)</label>
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
+                  <div className="flex items-center justify-center gap-4 mb-4">
+                    <button
+                      onClick={() => setCurrentBead(Math.max(0, currentBead - 1))}
+                      className="p-3 bg-white hover:bg-orange-50 rounded-lg transition-colors shadow-md border-2 border-orange-300"
+                    >
+                      <Minus size={20} className="text-orange-600" />
+                    </button>
+                    <span className="text-4xl font-bold text-orange-600 min-w-[100px] text-center">{currentBead}</span>
+                    <button
+                      onClick={() => setCurrentBead(Math.min(107, currentBead + 1))}
+                      className="p-3 bg-white hover:bg-orange-50 rounded-lg transition-colors shadow-md border-2 border-orange-300"
+                    >
+                      <Plus size={20} className="text-orange-600" />
+                    </button>
+                  </div>
+                  
+                  {/* Scrollable Number Picker */}
+                  <div className="relative">
+                    <div className="flex overflow-x-auto gap-2 py-4 px-2 bg-white rounded-lg border-2 border-orange-300 scrollbar-thin scrollbar-thumb-orange-400 scrollbar-track-orange-100" style={{ scrollbarWidth: 'thin' }}>
+                      {Array.from({ length: 108 }, (_, i) => i).map((num) => (
+                        <button
+                          key={num}
+                          onClick={() => setCurrentBead(num)}
+                          className={`flex-shrink-0 w-12 h-12 rounded-lg font-bold transition-all ${
+                            currentBead === num
+                              ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg scale-110'
+                              : 'bg-orange-100 text-stone-700 hover:bg-orange-200'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-stone-500 mt-2 text-center">Scroll horizontally to select bead position (0-107)</p>
+                  </div>
                 </div>
               </div>
 
               {/* Auto Lap Toggle */}
-              <div className="flex items-center justify-between bg-gray-900 rounded-xl p-4 border border-gray-700">
-                <span className="text-sm font-medium">Auto lap on round finish</span>
+              <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
+                <span className="text-sm font-bold text-stone-700">Auto lap on round finish</span>
                 <button
                   onClick={() => setAutoLapEnabled(!autoLapEnabled)}
-                  className={`w-14 h-8 rounded-full transition-colors ${autoLapEnabled ? 'bg-orange-600' : 'bg-gray-700'}`}
+                  className={`relative w-16 h-8 rounded-full transition-colors shadow-inner ${autoLapEnabled ? 'bg-orange-600' : 'bg-stone-300'}`}
                 >
-                  <div className={`w-6 h-6 bg-white rounded-full transition-transform ${autoLapEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
+                  <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${autoLapEnabled ? 'translate-x-8' : 'translate-x-0'}`} />
                 </button>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3 pt-4">
+              <div className="grid responsive-grid-2 gap-3 pt-4">
                 <button
                   onClick={handleResetSettings}
-                  className="py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-colors"
+                  className="py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all shadow-md border-2 border-stone-300 transform hover:scale-105 active:scale-95"
                 >
-                  RESET
+                  RESET TO 0
                 </button>
                 <button
                   onClick={handleSaveSettings}
-                  className="py-3 bg-orange-600 hover:bg-orange-700 rounded-xl font-semibold transition-colors"
+                  className="py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl font-bold transition-all shadow-md transform hover:scale-105 active:scale-95"
                 >
-                  SET
+                  DONE
                 </button>
               </div>
             </div>
@@ -503,25 +659,303 @@ export default function ChantingCounter() {
         </div>
       )}
 
-      {/* History Panel */}
-      {showHistory && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden border border-gray-700">
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-xl font-bold">Session History</h2>
+      {/* Usage Guide Modal */}
+      {showGuideModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl border-2 border-orange-200 animate-scale-in">
+            <div className="flex items-center justify-between p-6 border-b-2 border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50">
+              <div className="flex items-center gap-3">
+                <Info className="text-orange-600" size={28} />
+                <h2 className="text-xl sm:text-2xl font-bold text-stone-800">How to Use Japa Counter</h2>
+              </div>
               <button
-                onClick={() => setShowHistory(false)}
-                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                onClick={() => setShowGuideModal(false)}
+                className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
               >
-                <X size={20} />
+                <X size={24} className="text-stone-600" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-100px)]">
+            {/* Language Tabs */}
+            <div className="flex border-b-2 border-orange-100 bg-orange-50">
+              <button
+                onClick={() => setGuideLanguage('en')}
+                className={`flex-1 py-3 px-4 font-bold transition-colors ${
+                  guideLanguage === 'en'
+                    ? 'bg-white text-orange-600 border-b-4 border-orange-600'
+                    : 'text-stone-600 hover:bg-orange-100'
+                }`}
+              >
+                🇬🇧 English
+              </button>
+              <button
+                onClick={() => setGuideLanguage('hi')}
+                className={`flex-1 py-3 px-4 font-bold transition-colors ${
+                  guideLanguage === 'hi'
+                    ? 'bg-white text-orange-600 border-b-4 border-orange-600'
+                    : 'text-stone-600 hover:bg-orange-100'
+                }`}
+              >
+                🇮🇳 हिंदी
+              </button>
+              <button
+                onClick={() => setGuideLanguage('te')}
+                className={`flex-1 py-3 px-4 font-bold transition-colors ${
+                  guideLanguage === 'te'
+                    ? 'bg-white text-orange-600 border-b-4 border-orange-600'
+                    : 'text-stone-600 hover:bg-orange-100'
+                }`}
+              >
+                🇮🇳 తెలుగు
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-180px)] space-y-6">
+              {guideLanguage === 'en' && (
+                <>
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      📿 BEADS Counter
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>Web (Desktop):</strong> Click once to open settings and configure your position. Double-click to reset beads to 0 and rounds to 0.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>Mobile (Touch):</strong> Tap once to open settings. Long press to reset beads to 0 and rounds to 0.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>Settings:</strong> Set completed rounds (0+) and current bead position (0-107). Scroll through bead numbers for quick selection.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>Display Format:</strong> Shows as 000:000 (Rounds:Beads). Example: 002:025 means 2 complete rounds, currently at bead 25.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      ⏱️ TIMER
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>Web (Desktop):</strong> Click once to start/pause timer. Double-click to reset timer to 00:00:00.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>Mobile (Touch):</strong> Tap once to start/pause timer. Long press to reset timer to 00:00:00.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      🎯 TAP BUTTON
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span>Tap the large circular button in the center to increment bead count.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span>When you complete 108 beads, it automatically increases round count and resets beads to 0.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span>The display shows remaining beads in the current round.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200">
+                    <h3 className="text-lg font-bold text-green-600 mb-3 flex items-center gap-2">
+                      💾 Saving Sessions
+                    </h3>
+                    <p className="text-stone-700">
+                      Click "Save Session" button to save your chanting progress to history. View your past sessions and track your spiritual journey over time!
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {guideLanguage === 'hi' && (
+                <>
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      📿 मनके काउंटर
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>वेब (डेस्कटॉप):</strong> सेटिंग खोलने और अपनी स्थिति कॉन्फ़िगर करने के लिए एक बार क्लिक करें। मनकों को 0 और राउंड को 0 पर रीसेट करने के लिए डबल-क्लिक करें।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>मोबाइल (टच):</strong> सेटिंग खोलने के लिए एक बार टैप करें। मनकों को 0 और राउंड को 0 पर रीसेट करने के लिए लंबा दबाएं।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>सेटिंग्स:</strong> पूर्ण राउंड (0+) और वर्तमान मनका स्थिति (0-107) सेट करें। त्वरित चयन के लिए मनका संख्याओं को स्क्रॉल करें।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>प्रदर्शन प्रारूप:</strong> 000:000 (राउंड:मनके) के रूप में दिखाता है। उदाहरण: 002:025 का मतलब 2 पूर्ण राउंड, वर्तमान में मनका 25 पर।</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      ⏱️ टाइमर
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>वेब (डेस्कटॉप):</strong> टाइमर शुरू/रोकने के लिए एक बार क्लिक करें। टाइमर को 00:00:00 पर रीसेट करने के लिए डबल-क्लिक करें।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>मोबाइल (टच):</strong> टाइमर शुरू/रोकने के लिए एक बार टैप करें। टाइमर को 00:00:00 पर रीसेट करने के लिए लंबा दबाएं।</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      🎯 टैप बटन
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span>मनका गिनती बढ़ाने के लिए केंद्र में बड़े गोलाकार बटन को टैप करें।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span>जब आप 108 मनके पूरे करते हैं, तो यह स्वचालित रूप से राउंड गिनती बढ़ाता है और मनकों को 0 पर रीसेट करता है।</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200">
+                    <h3 className="text-lg font-bold text-green-600 mb-3 flex items-center gap-2">
+                      💾 सत्र सहेजना
+                    </h3>
+                    <p className="text-stone-700">
+                      अपनी जप प्रगति को इतिहास में सहेजने के लिए "Save Session" बटन पर क्लिक करें। अपने पिछले सत्र देखें और समय के साथ अपनी आध्यात्मिक यात्रा को ट्रैक करें!
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {guideLanguage === 'te' && (
+                <>
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      📿 పూసల కౌంటర్
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>వెబ్ (డెస్క్‌టాప్):</strong> సెట్టింగ్‌లను తెరవడానికి మరియు మీ స్థానాన్ని కాన్ఫిగర్ చేయడానికి ఒకసారి క్లిక్ చేయండి। పూసలను 0కి మరియు రౌండ్‌లను 0కి రీసెట్ చేయడానికి డబుల్-క్లిక్ చేయండి।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>మొబైల్ (టచ్):</strong> సెట్టింగ్‌లను తెరవడానికి ఒకసారి టాప్ చేయండి। పూసలను 0కి మరియు రౌండ్‌లను 0కి రీసెట్ చేయడానికి ఎక్కువసేపు నొక్కి ఉంచండి।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>సెట్టింగ్‌లు:</strong> పూర్తయిన రౌండ్‌లు (0+) మరియు ప్రస్తుత పూస స్థానం (0-107) సెట్ చేయండి। త్వరిత ఎంపిక కోసం పూస సంఖ్యలను స్క్రోల్ చేయండి।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>ప్రదర్శన ఫార్మాట్:</strong> 000:000 (రౌండ్‌లు:పూసలు) గా చూపిస్తుంది। ఉదాహరణ: 002:025 అంటే 2 పూర్తి రౌండ్‌లు, ప్రస్తుతం 25వ పూసలో ఉన్నారు.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      ⏱️ టైమర్
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>వెబ్ (డెస్క్‌టాప్):</strong> టైమర్‌ను ప్రారంభించడానికి/పాజ్ చేయడానికి ఒకసారి క్లిక్ చేయండి। టైమర్‌ను 00:00:00కి రీసెట్ చేయడానికి డబుల్-క్లిక్ చేయండి।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span><strong>మొబైల్ (టచ్):</strong> టైమర్‌ను ప్రారంభించడానికి/పాజ్ చేయడానికి ఒకసారి టాప్ చేయండి। టైమర్‌ను 00:00:00కి రీసెట్ చేయడానికి ఎక్కువసేపు నొక్కి ఉంచండి।</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border-2 border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-600 mb-3 flex items-center gap-2">
+                      🎯 టాప్ బటన్
+                    </h3>
+                    <ul className="space-y-2 text-stone-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span>పూస లెక్కను పెంచడానికి మధ్యలో ఉన్న పెద్ద వృత్తాకార బటన్‌ను టాప్ చేయండి।</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">•</span>
+                        <span>మీరు 108 పూసలను పూర్తి చేసినప్పుడు, ఇది స్వయంచాలకంగా రౌండ్ లెక్కను పెంచుతుంది మరియు పూసలను 0కి రీసెట్ చేస్తుంది।</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200">
+                    <h3 className="text-lg font-bold text-green-600 mb-3 flex items-center gap-2">
+                      💾 సెషన్‌లను సేవ్ చేయడం
+                    </h3>
+                    <p className="text-stone-700">
+                      మీ జపం పురోగతిని చరిత్రలో సేవ్ చేయడానికి "Save Session" బటన్‌పై క్లిక్ చేయండి। మీ గత సెషన్‌లను చూడండి మరియు కాలక్రమేణా మీ ఆధ్యాత్మిక ప్రయాణాన్ని ట్రాక్ చేయండి!
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-4 border-t-2 border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 text-center">
+              <button
+                onClick={() => setShowGuideModal(false)}
+                className="px-8 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              >
+                {guideLanguage === 'en' ? 'Got It! 🙏' : guideLanguage === 'hi' ? 'समझ गया! 🙏' : 'అర్థమైంది! 🙏'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Panel */}
+      {showHistory && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl border-2 border-orange-200 animate-scale-in">
+            <div className="flex items-center justify-between p-6 border-b-2 border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50">
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-800 flex items-center gap-2">
+                📅 Session History
+              </h2>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
+              >
+                <X size={24} className="text-stone-600" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-100px)]">
               {sessions.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No sessions yet</p>
+                <div className="text-center py-16 text-stone-500">
+                  <Calendar size={64} className="mx-auto mb-4 opacity-30" />
+                  <p className="text-lg font-semibold mb-2">No sessions yet</p>
                   <p className="text-sm">Complete a round and save your session!</p>
                 </div>
               ) : (
@@ -529,35 +963,35 @@ export default function ChantingCounter() {
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="bg-gray-900/50 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-colors"
+                      className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 sm:p-5 border-2 border-orange-200 hover:border-orange-300 hover:shadow-lg transition-all"
                     >
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
                         <div className="flex items-center gap-4">
                           <div className="text-center">
-                            <div className="text-lg font-bold text-orange-500">{session.date}</div>
-                            <div className="text-xs text-gray-400">{session.startTime}</div>
+                            <div className="text-lg font-bold text-orange-600">{session.date}</div>
+                            <div className="text-xs text-stone-500">{session.startTime}</div>
                           </div>
-                          <div className="h-10 w-px bg-gray-700" />
+                          <div className="h-12 w-px bg-orange-300" />
                           <div>
-                            <div className="text-sm text-gray-400">Completed</div>
-                            <div className="text-lg font-bold">{session.rounds} rounds</div>
+                            <div className="text-sm text-stone-500">Completed</div>
+                            <div className="text-xl font-bold text-stone-800">{session.rounds} rounds</div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm text-gray-400">Duration</div>
-                          <div className="text-lg font-bold">{Math.floor(session.duration / 60)}m</div>
+                        <div className="text-left sm:text-right">
+                          <div className="text-sm text-stone-500">Duration</div>
+                          <div className="text-xl font-bold text-stone-800">{Math.floor(session.duration / 60)}m</div>
                         </div>
                       </div>
                       
                       {/* Progress Bar */}
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-700 rounded-full h-2">
+                        <div className="flex-1 bg-orange-200 rounded-full h-3 overflow-hidden">
                           <div
-                            className="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all"
+                            className="bg-gradient-to-r from-orange-500 to-amber-600 h-full rounded-full transition-all duration-500"
                             style={{ width: `${Math.min(getCompletionPercentage(session), 100)}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-400 font-medium min-w-[3rem] text-right">
+                        <span className="text-sm text-stone-600 font-bold min-w-[3.5rem] text-right">
                           {getCompletionPercentage(session)}%
                         </span>
                       </div>
@@ -569,6 +1003,23 @@ export default function ChantingCounter() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-in {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        .animate-scale-in {
+          animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+      `}</style>
     </div>
   );
 }

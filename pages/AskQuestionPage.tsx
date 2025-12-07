@@ -61,16 +61,16 @@ const AskQuestionPage: React.FC = () => {
   return (
     <div className="min-h-full max-w-4xl mx-auto animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400 mb-6">
-        <div className="flex items-center gap-4">
+      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-orange-400 mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={() => navigate('/questions')}
             className="p-2 hover:bg-white/20 rounded-lg transition-all"
           >
-            <ArrowLeft className="text-white" size={28} />
+            <ArrowLeft className="text-white" size={24} />
           </button>
           <div>
-            <h2 className="text-4xl font-serif font-bold text-white mb-2">Ask a Question</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mb-1 sm:mb-2">Ask a Question</h2>
             <p className="text-orange-100 text-lg font-medium">
               Share your question with the community and get helpful answers
             </p>
@@ -79,9 +79,9 @@ const AskQuestionPage: React.FC = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Title */}
-        <div className="bg-white rounded-xl shadow-lg border-2 border-stone-200 p-6">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 p-4 sm:p-5 md:p-6">
           <label className="block text-lg font-bold text-stone-900 mb-3">
             Question Title <span className="text-red-500">*</span>
           </label>

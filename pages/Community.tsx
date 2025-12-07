@@ -117,44 +117,44 @@ const Community: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full space-y-6 max-w-6xl mx-auto animate-fadeIn">
+    <div className="min-h-full space-y-4 sm:space-y-5 max-w-6xl mx-auto animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-orange-400">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-4xl font-serif font-bold text-white mb-2 flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <Users className="text-white" size={36} />
+            <h2 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-white mb-1 sm:mb-2 flex items-center gap-2">
+              <div className="bg-white/20 p-2 sm:p-2.5 rounded-lg sm:rounded-xl">
+                <Users className="text-white" size={24} />
               </div>
               Devotee Community
             </h2>
-            <p className="text-orange-100 text-lg font-medium">
+            <p className="text-orange-100 text-sm sm:text-base font-medium">
               Connect with {filteredUsers.length} fellow devotees • {getOnlineCount()} online
             </p>
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold transition-all shadow-lg transform hover:scale-105 active:scale-95 ${
               showFilters ? 'bg-white text-orange-600' : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
-            <Filter size={20} />
-            Filters
+            <Filter size={18} />
+            <span className="hidden sm:inline">Filters</span>
           </button>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400" size={24} />
+          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-stone-400" size={20} />
           <input
             type="text"
-            placeholder="Search by name, guru, or ISKCON center..."
+            placeholder="Search by name, guru, or center..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-4 py-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none text-base font-semibold shadow-md"
+            className="w-full pl-11 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border-2 border-stone-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-500 outline-none text-sm sm:text-base font-medium shadow-md"
           />
         </div>
 
@@ -227,95 +227,94 @@ const Community: React.FC = () => {
 
       {/* Users Grid */}
       {filteredUsers.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-stone-300">
-          <Users className="mx-auto mb-4 text-stone-400" size={64} />
-          <p className="text-stone-600 text-lg font-medium">No devotees found matching your filters</p>
-          <p className="text-stone-400 mt-2">Try adjusting your search or filters</p>
+        <div className="text-center py-12 sm:py-16 bg-white rounded-lg sm:rounded-xl border-2 border-dashed border-stone-300">
+          <Users className="mx-auto mb-3 sm:mb-4 text-stone-400" size={48} />
+          <p className="text-stone-600 text-base sm:text-lg font-medium">No devotees found matching your filters</p>
+          <p className="text-stone-400 text-sm mt-2">Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filteredUsers.map((profile) => (
             <div
               key={profile.uid}
-              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-stone-200 hover:border-orange-300 overflow-hidden group transform hover:scale-105"
+              className="bg-white rounded-xl border border-orange-200 shadow-md hover:shadow-xl transition-all duration-300 hover:border-orange-300 overflow-hidden group transform hover:scale-[1.02]"
             >
               {/* User Header */}
-              <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 relative">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        {profile.photoURL ? (
-                          <img
-                            src={profile.photoURL}
-                            alt={profile.userName || 'User'}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-2xl font-bold text-orange-600">
-                            {profile.userName?.charAt(0)?.toUpperCase() || '?'}
-                          </span>
-                        )}
-                      </div>
-                      {/* Online Indicator */}
-                      <div
-                        className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-3 border-white ${
-                          profile.isOnline ? 'bg-green-500' : 'bg-stone-400'
-                        }`}
-                      />
+              <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-4 sm:p-6 relative">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-md">
+                      {profile.photoURL ? (
+                        <img
+                          src={profile.photoURL}
+                          alt={profile.userName || 'User'}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg sm:text-xl font-bold text-orange-600">
+                          {profile.userName?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">{profile.userName || 'Unknown User'}</h3>
-                      <p className="text-orange-100 text-sm font-medium flex items-center gap-1">
-                        {profile.isOnline ? (
-                          <>
-                            <Wifi size={14} />
-                            Online
-                          </>
-                        ) : (
-                          <>
-                            <WifiOff size={14} />
-                            {getTimeAgo(profile.lastSeen)}
-                          </>
-                        )}
-                      </p>
-                    </div>
+                    {/* Online Indicator */}
+                    <div
+                      className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${
+                        profile.isOnline ? 'bg-green-500' : 'bg-stone-400'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-white truncate">{profile.userName || 'Unknown User'}</h3>
+                    <p className="text-orange-100 text-xs sm:text-sm font-medium flex items-center gap-1">
+                      {profile.isOnline ? (
+                        <>
+                          <Wifi size={12} />
+                          Online
+                        </>
+                      ) : (
+                        <>
+                          <WifiOff size={12} />
+                          {getTimeAgo(profile.lastSeen)}
+                        </>
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* User Details */}
-              <div className="p-6 space-y-3">
+              <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 <div>
-                  <p className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">
+                  <p className="text-[0.65rem] sm:text-xs font-bold text-stone-500 uppercase tracking-wide mb-0.5">
                     Spiritual Guide
                   </p>
-                  <p className="text-base font-semibold text-stone-900">{profile.guruName && profile.guruName.toLowerCase() !== 'n/a' ? profile.guruName : 'N/A'}</p>
+                  <p className="text-sm sm:text-base font-semibold text-stone-900 truncate">{profile.guruName && profile.guruName.toLowerCase() !== 'n/a' ? profile.guruName : 'N/A'}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">
+                  <p className="text-[0.65rem] sm:text-xs font-bold text-stone-500 uppercase tracking-wide mb-0.5">
                     ISKCON Center
                   </p>
-                  <p className="text-base font-semibold text-stone-900">{profile.iskconCenter && profile.iskconCenter.toLowerCase() !== 'n/a' ? profile.iskconCenter : 'N/A'}</p>
+                  <p className="text-sm sm:text-base font-semibold text-stone-900 truncate">{profile.iskconCenter && profile.iskconCenter.toLowerCase() !== 'n/a' ? profile.iskconCenter : 'N/A'}</p>
                 </div>
 
                 {profile.bio && (
                   <div>
-                    <p className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">
+                    <p className="text-[0.65rem] sm:text-xs font-bold text-stone-500 uppercase tracking-wide mb-0.5">
                       About
                     </p>
-                    <p className="text-sm text-stone-700 italic">{profile.bio}</p>
+                    <p className="text-xs sm:text-sm text-stone-700 italic line-clamp-2">{profile.bio}</p>
                   </div>
                 )}
 
                 {/* Chat Button */}
                 <button
                   onClick={() => handleStartChat(profile.uid)}
-                  className="w-full mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 px-4 rounded-lg font-bold hover:from-orange-700 hover:to-amber-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
+                  className="w-full mt-2 sm:mt-3 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-sm sm:text-base font-bold hover:from-orange-700 hover:to-amber-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
                 >
-                  <MessageCircle size={20} />
-                  Start Conversation
+                  <MessageCircle size={16} />
+                  <span className="hidden sm:inline">Start Conversation</span>
+                  <span className="sm:hidden">Chat</span>
                 </button>
               </div>
             </div>

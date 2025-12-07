@@ -128,35 +128,35 @@ const ChatsList: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full space-y-6 max-w-5xl mx-auto animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 max-w-5xl mx-auto animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-orange-400">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h2 className="text-4xl font-serif font-bold text-white mb-2 flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <MessageCircle className="text-white" size={36} />
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+              <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl">
+                <MessageCircle className="text-white" size={24} />
               </div>
               Messages
             </h2>
-            <p className="text-orange-100 text-lg font-medium">
+            <p className="text-orange-100 text-sm sm:text-base md:text-lg font-medium">
               {chats.length} conversation{chats.length !== 1 ? 's' : ''}
               {totalUnread > 0 && ` • ${totalUnread} unread`}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 active:scale-95 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold transition-all shadow-lg transform hover:scale-105 active:scale-95 ${
                 showFilters ? 'bg-white text-orange-600' : 'bg-white/20 text-white hover:bg-white/30'
               }`}
             >
-              <Filter size={20} />
-              Filters
+              <Filter size={16} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Filters</span>
             </button>
             <button
               onClick={() => navigate('/community')}
-              className="flex items-center gap-2 px-6 py-3 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all shadow-lg transform hover:scale-105 active:scale-95"
+              className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-orange-600 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:bg-orange-50 transition-all shadow-lg transform hover:scale-105 active:scale-95 whitespace-nowrap"
             >
               <Users size={20} />
               Find Devotees

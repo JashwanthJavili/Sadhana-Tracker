@@ -148,11 +148,11 @@ const DevotionalJournal: React.FC = () => {
   if (isWriting) {
     return (
       <div className="max-w-4xl mx-auto animate-fadeIn">
-        <div className="bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-2xl border-3 border-orange-300 p-8 space-y-8 transition-all duration-300">
+        <div className="bg-gradient-to-br from-white to-orange-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl border-2 sm:border-3 border-orange-300 p-4 sm:p-6 space-y-4 sm:space-y-6 transition-all duration-300">
           <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-serif font-bold text-stone-900 flex items-center gap-3">
-              <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-3 rounded-xl shadow-lg">
-                <Heart className="text-white" size={32} />
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-stone-900 flex items-center gap-2 sm:gap-3">
+              <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
+                <Heart className="text-white" size={20} />
               </div>
               {editingId ? (language === 'en' ? 'Edit Entry' : language === 'hi' ? 'प्रविष्टि संपादित करें' : 'ఎంట్రీని సవరించండి') : (language === 'en' ? 'New Journal Entry' : language === 'hi' ? 'नई डायरी प्रविष्टि' : 'క్రొత్త డైరీ ఎంట్రీ')}
             </h2>
@@ -165,7 +165,7 @@ const DevotionalJournal: React.FC = () => {
               }}
               className="text-stone-400 hover:text-red-600 transition-all transform hover:scale-110 active:scale-95 p-2 hover:bg-red-50 rounded-lg"
             >
-              <X size={28} />
+              <X size={24} />
             </button>
           </div>
 
@@ -283,20 +283,20 @@ const DevotionalJournal: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full max-w-6xl mx-auto space-y-8 animate-fadeIn">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto animate-fadeIn">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-orange-400">
         <div>
-          <h1 className="text-4xl font-serif font-bold text-white flex items-center gap-3">
-            <Heart className="text-yellow-200" size={40} />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white flex items-center gap-2 sm:gap-3">
+            <Heart className="text-yellow-200" size={24} />
             {language === 'en' ? 'Devotional Journal' : language === 'hi' ? 'भक्ति डायरी' : 'భక్తి డైరీ'}
           </h1>
-          <p className="text-orange-100 mt-2 text-lg font-medium">
+          <p className="text-orange-100 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg font-medium">
             {language === 'en' ? 'Record your inner devotional feelings and spiritual experiences' : language === 'hi' ? 'अपनी आंतरिक भक्ति भावनाओं और आध्यात्मिक अनुभवों को रिकॉर्ड करें' : 'మీ అంతర్గత భక్తి భావాలు మరియు ఆధ్యాత్మిక అనుభవాలను రికార్డ్ చేయండి'}
           </p>
         </div>
         <button
           onClick={() => setIsWriting(true)}
-          className="flex items-center gap-3 px-8 py-4 bg-white text-orange-700 rounded-xl font-bold text-lg hover:bg-orange-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 w-full sm:w-auto min-h-[58px]"
+          className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-white text-orange-700 rounded-lg sm:rounded-xl text-sm sm:text-base md:text-lg font-bold hover:bg-orange-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 w-full sm:w-auto whitespace-nowrap"
         >
           <Plus size={24} />
           {language === 'en' ? 'New Entry' : language === 'hi' ? 'नई प्रविष्टि' : 'క్రొత్త ఎంట్రీ'}
@@ -323,11 +323,11 @@ const DevotionalJournal: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid gap-6">
-          {entries.map((entry) => (
+        <div className="grid gap-3 sm:gap-4">
+          {entries.map(entry => (
             <div
               key={entry.id}
-              className="group bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-xl border-3 border-orange-200 p-8 hover:shadow-2xl transition-all duration-300 hover:border-orange-400 transform hover:scale-[1.02] hover:-translate-y-1"
+              className="group bg-gradient-to-br from-white to-orange-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-orange-200 p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 hover:border-orange-400 transform hover:scale-[1.02] hover:-translate-y-1"
             >
               <div className="flex justify-between items-start mb-6">
                 <div className="flex-1">

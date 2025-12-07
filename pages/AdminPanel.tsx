@@ -660,22 +660,22 @@ const AdminPanel: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full space-y-6 max-w-7xl mx-auto animate-fadeIn">
+    <div className="min-h-full space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-700 via-orange-600 to-red-700 rounded-2xl p-8 shadow-2xl border-2 border-red-400">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-red-700 via-orange-600 to-red-700 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-red-400">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-4xl font-serif font-bold text-white mb-2 flex items-center gap-3">
-              <Shield className="text-white" size={40} />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+              <Shield className="text-white" size={24} />
               Admin Control Panel
             </h1>
-            <p className="text-red-100 text-lg">Welcome, {user?.email}</p>
+            <p className="text-red-100 text-sm sm:text-base md:text-lg">Welcome, {user?.email}</p>
           </div>
           <button
             onClick={loadData}
-            className="flex items-center gap-2 px-6 py-3 bg-white text-red-700 rounded-xl font-bold hover:bg-red-50 transition-all shadow-lg"
+            className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-red-700 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:bg-red-50 transition-all shadow-lg whitespace-nowrap"
           >
-            <RefreshCw size={20} />
+            <RefreshCw size={16} className="sm:w-5 sm:h-5" />
             Refresh
           </button>
         </div>

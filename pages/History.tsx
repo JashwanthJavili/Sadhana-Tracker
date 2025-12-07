@@ -24,18 +24,18 @@ const History: React.FC = () => {
   if (loading) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div><p className="text-stone-600 font-medium text-lg">Loading history...</p></div></div>;
 
   return (
-    <div className="min-h-full space-y-8 animate-fadeIn">
-      <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="bg-white/20 p-3 rounded-xl">
-            <Calendar className="text-white" size={32} />
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+      <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-lg sm:rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-2xl border-2 border-orange-400">
+        <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+          <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl">
+            <Calendar className="text-white" size={24} />
           </div>
-          <h2 className="text-4xl font-serif font-bold text-white">Journal History</h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-white">Journal History</h2>
         </div>
-        <p className="text-orange-100 text-lg font-medium">Review your spiritual journey and track progress over time</p>
+        <p className="text-orange-100 text-sm sm:text-base md:text-lg font-medium">Review your spiritual journey and track progress over time</p>
       </div>
 
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-2xl shadow-2xl border-3 border-orange-200 overflow-hidden">
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl border-2 sm:border-3 border-orange-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gradient-to-r from-orange-100 via-amber-100 to-orange-100 border-b-3 border-orange-300">

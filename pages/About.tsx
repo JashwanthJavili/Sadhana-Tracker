@@ -2,6 +2,8 @@ import React from 'react';
 import { Heart, Code, Sparkles, ExternalLink, Book, Shield, Lock, Calendar } from 'lucide-react';
 
 // @ts-ignore
+import versionData from '../version.json';
+// @ts-ignore
 import guruMaharajImage from '../utils/Images/Guru_Maharaj_Feet.jpg';
 // @ts-ignore
 import guruImage from '../utils/Images/OIP.webp';
@@ -438,7 +440,8 @@ const About: React.FC = () => {
 
       {/* Version & Credits */}
       <div className="text-center text-stone-500 text-xs sm:text-sm space-y-1 pb-6 sm:pb-8 px-4">
-        <p>Sadhana Sanga v1.0.0</p>
+        <p className="font-bold text-base">Sadhana Sanga v{versionData.version}</p>
+        <p className="text-xs text-stone-400">Build Date: {versionData.buildDate}</p>
         <p>Made with ❤️ for the ISKCON community</p>
         <p className="italic text-xs">Hare Krishna Hare Krishna Krishna Krishna Hare Hare</p>
         <p className="italic text-xs">Hare Rama Hare Rama Rama Rama Hare Hare</p>

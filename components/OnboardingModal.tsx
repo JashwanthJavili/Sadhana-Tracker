@@ -3,12 +3,13 @@ import { X } from 'lucide-react';
 
 interface OnboardingModalProps {
   isOpen: boolean;
-  onComplete: (data: { userName: string; guruName: string; iskconCenter: string }) => void;
+  onComplete: (data: { userName: string; gender: 'male' | 'female'; guruName: string; iskconCenter: string }) => void;
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete }) => {
   const [step, setStep] = useState(1);
   const [userName, setUserName] = useState('');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [guruName, setGuruName] = useState('');
   const [iskconCenter, setIskconCenter] = useState('');
 
@@ -19,21 +20,24 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
   const handleNext = () => {
     if (step === 1 && userName.trim()) {
       setStep(2);
-    } else if (step === 2 && guruName.trim()) {
+    } else if (step === 2) {
       setStep(3);
-    } else if (step === 3 && iskconCenter.trim()) {
+    } else if (step === 3 && guruName.trim()) {
+      setStep(4);
+    } else if (step === 4 && iskconCenter.trim()) {
       handleComplete();
     }
   };
 
   const handleComplete = () => {
-    onComplete({ userName, guruName, iskconCenter });
+    onComplete({ userName, gender, guruName, iskconCenter });
   };
 
   const canProceed = () => {
     if (step === 1) return userName.trim().length > 0;
-    if (step === 2) return guruName.trim().length > 0;
-    if (step === 3) return iskconCenter.trim().length > 0;
+    if (step === 2) return true; // Gender is always selected
+    if (step === 3) return guruName.trim().length > 0;
+    if (step === 4) return iskconCenter.trim().length > 0;
     return false;
   };
 
@@ -97,8 +101,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
           </div>
           <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">
             {step === 1 && 'Welcome to Sadhana Lifeforce!'}
-            {step === 2 && 'Who is your spiritual guide?'}
-            {step === 3 && 'Your ISKCON Center'}
+            {step === 2 && 'How may we address you?'}
+            {step === 3 && 'Who is your spiritual guide?'}
+            {step === 4 && 'Your ISKCON Center'}
           </h2>
           {step === 1 && (
             <p className="text-stone-500">Let's personalize your spiritual journey</p>
@@ -107,10 +112,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
 
         {/* Step Indicator */}
         <div className="flex justify-center gap-2">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
-              className={`h-2 w-12 rounded-full transition-colors ${
+              className={`h-2 w-10 rounded-full transition-colors ${
                 s === step ? 'bg-orange-600' : s < step ? 'bg-orange-300' : 'bg-stone-200'
               }`}
             />
@@ -138,6 +143,43 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
 
           {step === 2 && (
             <div>
+              <label className="block text-sm font-medium text-stone-700 mb-3">
+                Please select your gender
+                <span className="block text-xs text-stone-500 font-normal mt-1">
+                  (So we can address you respectfully as Prabhuji or Mataji)
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => setGender('male')}
+                  className={`p-4 border-2 rounded-lg transition-all ${
+                    gender === 'male'
+                      ? 'border-orange-600 bg-orange-50 shadow-md'
+                      : 'border-stone-300 hover:border-orange-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">👨</div>
+                  <div className="font-semibold">Male</div>
+                  <div className="text-xs text-stone-500">Prabhuji</div>
+                </button>
+                <button
+                  onClick={() => setGender('female')}
+                  className={`p-4 border-2 rounded-lg transition-all ${
+                    gender === 'female'
+                      ? 'border-orange-600 bg-orange-50 shadow-md'
+                      : 'border-stone-300 hover:border-orange-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">👩</div>
+                  <div className="font-semibold">Female</div>
+                  <div className="text-xs text-stone-500">Mataji</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
                 Who is your spiritual guide?
                 <span className="block text-xs text-stone-500 font-normal mt-1">
@@ -156,7 +198,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
                 Which ISKCON center do you associate with?
@@ -194,7 +236,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
             disabled={!canProceed()}
             className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
           >
-            {step === 3 ? 'Get Started!' : 'Next'}
+            {step === 4 ? 'Get Started!' : 'Next'}
           </button>
         </div>
       </div>

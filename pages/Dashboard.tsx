@@ -7,6 +7,10 @@ import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserData } from '../contexts/UserDataContext';
 import LoadingScreen from '../components/LoadingScreen';
+import { getGreeting } from '../utils/honorific';
+
+// @ts-ignore
+import versionData from '../version.json';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -78,7 +82,7 @@ const Dashboard: React.FC = () => {
 
         <div className="relative z-10">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold mb-2">
-            Hare Krishna, {settings?.userName || user?.displayName?.split(' ')[0] || 'Devotee'}
+            Hare Krishna, {settings?.userName && settings?.gender ? getGreeting(settings.userName, settings.gender) : (settings?.userName || 'Devotee')}
           </h1>
           <p className="text-orange-100 text-xs sm:text-sm mb-1">
             {settings?.iskconCenter || 'Local Center'}
@@ -216,6 +220,11 @@ const Dashboard: React.FC = () => {
             ))
           )}
         </div>
+      </div>
+
+      {/* Version Footer */}
+      <div className="text-center text-stone-400 text-xs py-4">
+        <p>Sadhana Sanga v{versionData.version}</p>
       </div>
     </div>
   );
