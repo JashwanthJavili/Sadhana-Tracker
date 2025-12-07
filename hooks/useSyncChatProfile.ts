@@ -36,6 +36,7 @@ export const useSyncChatProfile = () => {
               userName: settings.userName,
               guruName: settings.guruName,
               iskconCenter: settings.iskconCenter,
+              email: user.email || '', // Store email from auth
             };
             
             if (user.photoURL) profileData.photoURL = user.photoURL;
@@ -73,6 +74,7 @@ export const useSyncChatProfile = () => {
               userName: settings.userName,
               guruName: settings.guruName,
               iskconCenter: settings.iskconCenter || '',
+              email: user.email || '', // Store email from auth
             };
             
             if (user.photoURL) profileData.photoURL = user.photoURL;
