@@ -6,12 +6,12 @@
 import { ref, get, set, update, remove, child, onValue, off, query, orderByChild, limitToLast, startAt, endAt } from 'firebase/database';
 import { db } from '../services/firebase';
 import { CacheWithExpiry, BatchQueue, retryWithBackoff } from './performance';
-import { DailyEntry, UserSettings, JournalEntry } from '../types';
+import { DailyEntry, UserSettings } from '../types';
 
 // Cache instances for different data types
 const entryCache = new CacheWithExpiry<DailyEntry>();
 const settingsCache = new CacheWithExpiry<UserSettings>();
-const journalCache = new CacheWithExpiry<JournalEntry[]>();
+const journalCache = new CacheWithExpiry<any>();
 
 // Batch queues for write operations
 const entryBatchQueue = new BatchQueue<{ userId: string; entry: DailyEntry }>(
