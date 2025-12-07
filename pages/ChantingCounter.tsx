@@ -1,173 +1,112 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
+import { ref, get, set, update, push } from 'firebase/database';
 import { db } from '../services/firebase';
-import { ref, set, get, push, update } from 'firebase/database';
-import { 
-  Trophy, 
-  TrendingUp, 
-  Flame, 
-  Calendar, 
-  RefreshCw,
-  Clock,
-  Target,
-  Award,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Settings as SettingsIcon,
-  X,
-  CheckCircle,
-  RotateCcw,
-  ChevronDown
-} from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import { Clock, RotateCcw, TrendingUp, Calendar, ChevronDown, X, Plus, Minus, Play, Pause, History as HistoryIcon } from 'lucide-react';
 
 interface ChantingSession {
   id: string;
-  count: number;
+  beads: number;
   rounds: number;
   date: string;
+  startTime: string;
+  completeTime: string;
   timestamp: number;
   duration: number;
-  mantraType?: string;
-  goal?: number;
-  completed?: boolean;
+  completed: boolean;
 }
 
 interface ChantingStats {
   totalRounds: number;
   totalBeads: number;
-  currentStreak: number;
-  bestStreak: number;
+  totalTime: number;
   sessions: ChantingSession[];
-  totalTimeSpent: number;
-  averageRoundsPerDay: number;
-  favoriteMantra?: string;
 }
 
-interface Goal {
-  id: string;
-  type: 'daily' | 'weekly' | 'monthly';
-  target: number;
-  current: number;
-  startDate: number;
-  endDate: number;
-}
+const BEADS_PER_ROUND = 108;
 
-const MANTRA_TYPES = [
-  { id: 'hare-krishna', name: 'Hare Krishna Maha Mantra', beads: 108 },
-  { id: 'gayatri', name: 'Gayatri Mantra', beads: 108 },
-  { id: 'maha-mrityunjaya', name: 'Maha Mrityunjaya Mantra', beads: 108 },
-  { id: 'om-namah-shivaya', name: 'Om Namah Shivaya', beads: 108 },
-  { id: 'custom', name: 'Custom Mantra', beads: 108 }
-];
-
-const ChantingCounter: React.FC = () => {
+export default function ChantingCounter() {
   const { user } = useAuth();
-  const { showSuccess, showError, showWarning } = useToast();
-  const [count, setCount] = useState(0);
-  const [rounds, setRounds] = useState(0);
-  const [stats, setStats] = useState<ChantingStats | null>(null);
+  const { showSuccess, showWarning } = useToast();
+  
+  // Core state
+  const [currentBead, setCurrentBead] = useState(0);
+  const [currentRound, setCurrentRound] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
-  const [isChanting, setIsChanting] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [pausedDuration, setPausedDuration] = useState(0);
-  const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
-  const [selectedMantra, setSelectedMantra] = useState(MANTRA_TYPES[0]);
-  const [customMantra, setCustomMantra] = useState('');
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [autoIncrement, setAutoIncrement] = useState(false);
-  const [incrementSpeed, setIncrementSpeed] = useState(3000);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showGoals, setShowGoals] = useState(false);
-  const [beadSize, setBeadSize] = useState('large');
-  const [theme, setTheme] = useState('orange');
-  const [milestones, setMilestones] = useState<number[]>([]);
-  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
-  const [milestoneRounds, setMilestoneRounds] = useState(0);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [sessionSummary, setSessionSummary] = useState<any>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [showResetBeadsConfirm, setShowResetBeadsConfirm] = useState(false);
-  const [showResetRoundsConfirm, setShowResetRoundsConfirm] = useState(false);
-  const [lastResetDate, setLastResetDate] = useState<string | null>(null);
-  const [showResetTimerConfirm, setShowResetTimerConfirm] = useState(false);
+  
+  // Settings
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [targetRounds, setTargetRounds] = useState(16);
+  const [targetBeads, setTargetBeads] = useState(BEADS_PER_ROUND);
+  const [autoLapEnabled, setAutoLapEnabled] = useState(true);
+  
+  // History
+  const [sessions, setSessions] = useState<ChantingSession[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [stats, setStats] = useState<ChantingStats | null>(null);
+  
+  // Long press detection
+  const timerPressRef = useRef<NodeJS.Timeout | null>(null);
+  const [isLongPress, setIsLongPress] = useState(false);
 
+  // Load sessions and stats
   useEffect(() => {
-    loadStats();
-    loadGoals();
-    loadUserPreferences();
-    checkDailyReset();
+    if (user && user.uid !== 'guest') {
+      loadSessions();
+      loadStats();
+    }
   }, [user]);
 
+  // Timer interval
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isChanting && !isPaused) {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isRunning) {
       interval = setInterval(() => {
-        setCurrentTime(getCurrentSessionTime());
+        setTimerSeconds(prev => prev + 1);
       }, 1000);
+    } else if (interval) {
+      clearInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [isChanting, isPaused, sessionStartTime, pausedDuration]);
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRunning]);
 
+  // Auto-increment bead when timer starts (optional auto-counting)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (autoIncrement && isChanting && !isPaused) {
-      interval = setInterval(() => {
-        handleBeadClick();
-      }, incrementSpeed);
+    let autoInterval: NodeJS.Timeout | null = null;
+    
+    if (isRunning && autoLapEnabled) {
+      // Auto increment every 5 seconds (adjustable)
+      autoInterval = setInterval(() => {
+        handleBeadIncrement();
+      }, 5000);
     }
-    return () => clearInterval(interval);
-  }, [autoIncrement, isChanting, isPaused, incrementSpeed, count]);
+    
+    return () => {
+      if (autoInterval) clearInterval(autoInterval);
+    };
+  }, [isRunning, autoLapEnabled, currentBead, currentRound]);
 
-  const loadUserPreferences = async () => {
+  const loadSessions = async () => {
     if (!user || user.uid === 'guest') return;
+
     try {
-      const prefsRef = ref(db, `users/${user.uid}/chantingPreferences`);
-      const snapshot = await get(prefsRef);
+      const sessionsRef = ref(db, `users/${user.uid}/chantingSessions`);
+      const snapshot = await get(sessionsRef);
+      
       if (snapshot.exists()) {
-        const prefs = snapshot.val();
-        setSoundEnabled(prefs.soundEnabled ?? true);
-        setBeadSize(prefs.beadSize || 'large');
-        setTheme(prefs.theme || 'orange');
-        setIncrementSpeed(prefs.incrementSpeed || 3000);
+        const sessionsData = snapshot.val();
+        const sessionsArray = Object.values(sessionsData) as ChantingSession[];
+        setSessions(sessionsArray.sort((a, b) => b.timestamp - a.timestamp).slice(0, 30));
       }
     } catch (error) {
-      console.error('Error loading preferences:', error);
-    }
-  };
-
-  const saveUserPreferences = async () => {
-    if (!user || user.uid === 'guest') return;
-    try {
-      await set(ref(db, `users/${user.uid}/chantingPreferences`), {
-        soundEnabled,
-        beadSize,
-        theme,
-        incrementSpeed
-      });
-      showSuccess('Preferences Saved', 'Your chanting settings have been updated');
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-    }
-  };
-
-  const loadGoals = async () => {
-    if (!user || user.uid === 'guest') return;
-    try {
-      const goalsRef = ref(db, `users/${user.uid}/chantingGoals`);
-      const snapshot = await get(goalsRef);
-      if (snapshot.exists()) {
-        const goalsData: Goal[] = [];
-        snapshot.forEach((child) => {
-          goalsData.push({ id: child.key!, ...child.val() });
-        });
-        setGoals(goalsData.filter(g => g.endDate > Date.now()));
-      }
-    } catch (error) {
-      console.error('Error loading goals:', error);
+      console.error('Error loading sessions:', error);
     }
   };
 
@@ -179,33 +118,36 @@ const ChantingCounter: React.FC = () => {
       const snapshot = await get(statsRef);
       
       if (snapshot.exists()) {
-        const statsData = snapshot.val();
-        setStats(statsData);
-        
-        const milestonesRef = ref(db, `users/${user.uid}/chantingMilestones`);
-        const milestonesSnapshot = await get(milestonesRef);
-        if (milestonesSnapshot.exists()) {
-          setMilestones(Object.values(milestonesSnapshot.val()));
-        }
+        setStats(snapshot.val());
       } else {
         const initialStats: ChantingStats = {
           totalRounds: 0,
           totalBeads: 0,
-          currentStreak: 0,
-          bestStreak: 0,
-          sessions: [],
-          totalTimeSpent: 0,
-          averageRoundsPerDay: 0
+          totalTime: 0,
+          sessions: []
         };
         setStats(initialStats);
       }
     } catch (error) {
-      console.error('Error loading chanting stats:', error);
+      console.error('Error loading stats:', error);
     }
   };
 
-  const playSound = () => {
-    if (!soundEnabled) return;
+  const handleBeadIncrement = () => {
+    const newBead = currentBead + 1;
+    
+    if (newBead >= targetBeads) {
+      // Round completed
+      const newRound = currentRound + 1;
+      setCurrentRound(newRound);
+      setCurrentBead(0);
+      playRoundCompleteSound();
+    } else {
+      setCurrentBead(newBead);
+    }
+  };
+
+  const playRoundCompleteSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -218,155 +160,66 @@ const ChantingCounter: React.FC = () => {
       oscillator.type = 'sine';
       
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      oscillator.stop(audioContext.currentTime + 0.4);
     } catch (error) {
       console.error('Error playing sound:', error);
     }
   };
 
-  const celebrateRoundCompletion = (roundNumber: number) => {
-    if (soundEnabled) {
-      try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const bellFrequency = 800; // Temple bell frequency
-        
-        // Ring bell the same number of times as rounds completed
-        for (let i = 0; i < roundNumber; i++) {
-          setTimeout(() => {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = bellFrequency;
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.4);
-          }, i * 600); // 600ms between each bell ring
-        }
-      } catch (error) {
-        console.error('Error playing celebration:', error);
-      }
-    }
+  // Timer tap: Start/Pause toggle
+  const handleTimerTap = () => {
+    if (isLongPress) return; // Don't toggle if long press was detected
     
-    if (navigator.vibrate) {
-      // Vibrate pattern: ring count times
-      const vibratePattern = [];
-      for (let i = 0; i < roundNumber; i++) {
-        vibratePattern.push(200, 400); // vibrate, pause
-      }
-      navigator.vibrate(vibratePattern);
-    }
-  };
-
-  const handleBeadClick = () => {
-    if (!isChanting) {
-      setIsChanting(true);
+    if (!isRunning && !sessionStartTime) {
+      // First start
       setSessionStartTime(Date.now());
-    }
-
-    if (isPaused) return;
-
-    playSound();
-
-    const newCount = count + 1;
-    setCount(newCount);
-
-    if (newCount === selectedMantra.beads) {
-      const newRounds = rounds + 1;
-      setRounds(newRounds);
-      setCount(0);
-      celebrateRoundCompletion(newRounds);
-      checkMilestones((stats?.totalRounds || 0) + newRounds);
-      updateGoalsProgress(1);
-    }
-  };
-
-  const checkMilestones = (totalRounds: number) => {
-    const milestoneValues = [10, 50, 100, 500, 1000, 5000, 10000];
-    
-    milestoneValues.forEach(milestone => {
-      if (totalRounds >= milestone && !milestones.includes(milestone)) {
-        setMilestones([...milestones, milestone]);
-        if (user && user.uid !== 'guest') {
-          set(ref(db, `users/${user.uid}/chantingMilestones/${milestone}`), milestone);
-        }
-        setMilestoneRounds(milestone);
-        setShowMilestoneModal(true);
-      }
-    });
-  };
-
-  const updateGoalsProgress = async (roundsCompleted: number) => {
-    if (!user || user.uid === 'guest') return;
-    
-    const updatedGoals = goals.map(goal => {
-      if (goal.endDate > Date.now()) {
-        return { ...goal, current: goal.current + roundsCompleted };
-      }
-      return goal;
-    });
-    
-    setGoals(updatedGoals);
-    
-    for (const goal of updatedGoals) {
-      await update(ref(db, `users/${user.uid}/chantingGoals/${goal.id}`), {
-        current: goal.current
-      });
-    }
-  };
-
-  const handlePauseResume = () => {
-    if (isPaused) {
-      const pauseDuration = Date.now() - (pauseStartTime || 0);
-      setPausedDuration(pausedDuration + pauseDuration);
-      setPauseStartTime(null);
-      setIsPaused(false);
+      setIsRunning(true);
     } else {
-      setPauseStartTime(Date.now());
-      setIsPaused(true);
+      // Toggle pause/resume
+      setIsRunning(!isRunning);
     }
   };
 
-  const handleReset = () => {
-    setShowResetBeadsConfirm(true);
+  // Timer long press: Reset
+  const handleTimerLongPressStart = () => {
+    timerPressRef.current = setTimeout(() => {
+      setIsLongPress(true);
+      handleTimerReset();
+    }, 800); // 800ms for long press
   };
 
-  const confirmResetBeads = () => {
-    setCount(0);
-    playSound();
-    setShowResetBeadsConfirm(false);
-    showSuccess('Beads counter reset successfully');
+  const handleTimerLongPressEnd = () => {
+    if (timerPressRef.current) {
+      clearTimeout(timerPressRef.current);
+    }
+    setTimeout(() => setIsLongPress(false), 100);
   };
 
-  const handleResetRounds = () => {
-    setShowResetRoundsConfirm(true);
+  const handleTimerReset = () => {
+    setIsRunning(false);
+    setTimerSeconds(0);
+    setSessionStartTime(null);
+    showSuccess('Timer reset');
   };
 
-  const confirmResetRounds = () => {
-    setRounds(0);
-    setShowResetRoundsConfirm(false);
-    showSuccess('Rounds counter reset successfully');
+  // Beads tap: Open settings modal
+  const handleBeadsTap = () => {
+    setShowSettingsModal(true);
   };
 
-  const handleResetTimer = () => {
-    setShowResetTimerConfirm(true);
+  const handleSaveSettings = () => {
+    setShowSettingsModal(false);
+    showSuccess('Settings saved');
   };
 
-  const confirmResetTimer = () => {
-    setSessionStartTime(Date.now());
-    setPausedDuration(0);
-    setCurrentTime(0);
-    setShowResetTimerConfirm(false);
-    showSuccess('Timer reset successfully');
+  const handleResetSettings = () => {
+    setCurrentBead(0);
+    setCurrentRound(0);
+    setShowSettingsModal(false);
+    showSuccess('Counter reset');
   };
 
   const handleSaveSession = async () => {
@@ -375,881 +228,347 @@ const ChantingCounter: React.FC = () => {
       return;
     }
 
-    if (rounds === 0 && count === 0) {
+    if (currentRound === 0 && currentBead === 0) {
       showWarning('No Activity', 'Please complete at least one bead before saving');
       return;
     }
 
     try {
-      const duration = sessionStartTime 
-        ? Math.floor((Date.now() - sessionStartTime - pausedDuration) / 1000) 
-        : 0;
-      
+      const now = new Date();
       const session: ChantingSession = {
         id: Date.now().toString(),
-        count: count,
-        rounds: rounds,
-        date: new Date().toLocaleDateString(),
+        beads: currentBead,
+        rounds: currentRound,
+        date: now.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }),
+        startTime: sessionStartTime ? new Date(sessionStartTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--',
+        completeTime: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
         timestamp: Date.now(),
-        duration: duration,
-        mantraType: selectedMantra.id === 'custom' ? customMantra : selectedMantra.name,
-        goal: rounds * selectedMantra.beads + count,
-        completed: count === 0
+        duration: timerSeconds,
+        completed: currentBead === 0 && currentRound > 0
       };
 
-      const sessionsRef = ref(db, `users/${user.uid}/chantingSessions`);
-      await push(sessionsRef, session);
+      const sessionsRef = ref(db, `users/${user.uid}/chantingSessions/${session.id}`);
+      await set(sessionsRef, session);
 
-      const updatedStats: ChantingStats = {
-        totalRounds: (stats?.totalRounds || 0) + rounds,
-        totalBeads: (stats?.totalBeads || 0) + (rounds * selectedMantra.beads) + count,
-        currentStreak: calculateStreak(),
-        bestStreak: stats?.bestStreak || 0,
-        sessions: [...(stats?.sessions || []), session],
-        totalTimeSpent: (stats?.totalTimeSpent || 0) + duration,
-        averageRoundsPerDay: calculateAverageRounds((stats?.totalRounds || 0) + rounds),
-        favoriteMantra: selectedMantra.id === 'custom' ? customMantra : selectedMantra.name
+      // Update stats
+      const newStats: ChantingStats = {
+        totalRounds: (stats?.totalRounds || 0) + currentRound,
+        totalBeads: (stats?.totalBeads || 0) + (currentRound * targetBeads) + currentBead,
+        totalTime: (stats?.totalTime || 0) + timerSeconds,
+        sessions: [...(stats?.sessions || []), session].slice(-30)
       };
 
-      if (updatedStats.currentStreak > updatedStats.bestStreak) {
-        updatedStats.bestStreak = updatedStats.currentStreak;
-      }
+      const statsRef = ref(db, `users/${user.uid}/chantingStats`);
+      await set(statsRef, newStats);
 
-      await set(ref(db, `users/${user.uid}/chantingStats`), updatedStats);
+      showSuccess('Session saved successfully!');
+      loadSessions();
+      loadStats();
       
-      setStats(updatedStats);
-      setSessionSummary({
-        rounds,
-        count,
-        duration,
-        totalRounds: updatedStats.totalRounds
-      });
-      setShowSaveModal(true);
-      
-      setCount(0);
-      setRounds(0);
-      setIsChanting(false);
+      // Reset for new session
+      setCurrentBead(0);
+      setCurrentRound(0);
+      setTimerSeconds(0);
+      setIsRunning(false);
       setSessionStartTime(null);
-      setPausedDuration(0);
     } catch (error) {
       console.error('Error saving session:', error);
-      showError('Save Failed', 'Unable to save session. Please try again');
+      showWarning('Error', 'Failed to save session');
     }
   };
 
-  const calculateAverageRounds = (totalRounds: number): number => {
-    if (!stats?.sessions || stats.sessions.length === 0) return totalRounds;
-    const firstSession = stats.sessions[0]?.timestamp || Date.now();
-    const daysSinceStart = Math.max(1, Math.floor((Date.now() - firstSession) / (1000 * 60 * 60 * 24)));
-    return Math.round(totalRounds / daysSinceStart * 10) / 10;
-  };
-
-  const calculateStreak = (): number => {
-    if (!stats?.sessions || stats.sessions.length === 0) return 1;
-
-    let streak = 1;
-    const sessions = [...stats.sessions].sort((a, b) => b.timestamp - a.timestamp);
-
-    for (let i = 0; i < sessions.length - 1; i++) {
-      const currentDate = new Date(sessions[i].timestamp).toDateString();
-      const prevDate = new Date(sessions[i + 1].timestamp);
-      prevDate.setDate(prevDate.getDate() - 1);
-      
-      if (currentDate === prevDate.toDateString()) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-
-    return streak;
-  };
-
-  const getRecentSessions = () => {
-    if (!stats?.sessions) return [];
-    return [...stats.sessions].sort((a, b) => b.timestamp - a.timestamp).slice(0, 10);
-  };
-
-  const checkDailyReset = async () => {
-    if (!user || user.uid === 'guest') return;
-
-    try {
-      const today = new Date().toDateString();
-      const resetRef = ref(db, `users/${user.uid}/chantingSettings/lastResetDate`);
-      const snapshot = await get(resetRef);
-      
-      if (snapshot.exists()) {
-        const lastReset = snapshot.val();
-        setLastResetDate(lastReset);
-        
-        // If it's a new day, auto-reset rounds
-        if (lastReset !== today) {
-          setRounds(0);
-          setCount(0);
-          await set(resetRef, today);
-          setLastResetDate(today);
-          showSuccess('Daily Reset', 'Rounds have been reset for the new day');
-        }
-      } else {
-        // First time setup
-        await set(resetRef, today);
-        setLastResetDate(today);
-      }
-
-      // Check and perform 30-day data cleanup
-      await performDataCleanup();
-    } catch (error) {
-      console.error('Error checking daily reset:', error);
-    }
-  };
-
-  const performDataCleanup = async () => {
-    if (!user || user.uid === 'guest') return;
-
-    try {
-      const statsRef = ref(db, `users/${user.uid}/chantingStats`);
-      const snapshot = await get(statsRef);
-      
-      if (snapshot.exists()) {
-        const statsData = snapshot.val();
-        const sessions = statsData.sessions || [];
-        
-        // Keep only last 30 days of sessions
-        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-        const recentSessions = sessions.filter((session: any) => session.timestamp > thirtyDaysAgo);
-        
-        // If cleanup happened, save updated data
-        if (recentSessions.length < sessions.length) {
-          await update(statsRef, {
-            sessions: recentSessions
-          });
-          console.log(`Cleaned up ${sessions.length - recentSessions.length} old sessions`);
-        }
-      }
-    } catch (error) {
-      console.error('Error performing data cleanup:', error);
-    }
-  };
-
-  const createGoal = async (type: 'daily' | 'weekly' | 'monthly', target: number) => {
-    if (!user || user.uid === 'guest') {
-      showWarning('Sign In Required', 'Please sign in to create chanting goals');
-      return;
-    }
-
-    const now = Date.now();
-    const endDate = type === 'daily' 
-      ? now + 24 * 60 * 60 * 1000
-      : type === 'weekly'
-      ? now + 7 * 24 * 60 * 60 * 1000
-      : now + 30 * 24 * 60 * 60 * 1000;
-
-    const goal: Goal = {
-      id: now.toString(),
-      type,
-      target,
-      current: 0,
-      startDate: now,
-      endDate
-    };
-
-    const goalsRef = ref(db, `users/${user.uid}/chantingGoals`);
-    await push(goalsRef, goal);
-    loadGoals();
-    showSuccess(`Goal created: ${target} rounds ${type}!`);
-  };
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+  const formatTimer = (seconds: number): string => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${secs}s`;
-    }
-    return `${minutes}m ${secs}s`;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getCurrentSessionTime = () => {
-    if (!sessionStartTime) return 0;
-    const elapsed = Date.now() - sessionStartTime - pausedDuration;
-    return Math.floor(elapsed / 1000);
+  const formatBeadCount = (): string => {
+    return `${(currentBead + 1).toString().padStart(3, '0')}:${targetBeads.toString().padStart(3, '0')}`;
   };
 
-  const themeColors = {
-    orange: { primary: 'from-orange-500 to-amber-600', secondary: 'from-orange-600 to-amber-700', bg: 'from-orange-50 to-amber-50', border: 'border-orange-300', text: 'text-orange-600' },
-    purple: { primary: 'from-purple-500 to-indigo-600', secondary: 'from-purple-600 to-indigo-700', bg: 'from-purple-50 to-indigo-50', border: 'border-purple-300', text: 'text-purple-600' },
-    green: { primary: 'from-green-500 to-emerald-600', secondary: 'from-green-600 to-emerald-700', bg: 'from-green-50 to-emerald-50', border: 'border-green-300', text: 'text-green-600' },
-    blue: { primary: 'from-blue-500 to-cyan-600', secondary: 'from-blue-600 to-cyan-700', bg: 'from-blue-50 to-cyan-50', border: 'border-blue-300', text: 'text-blue-600' }
+  const getCompletionPercentage = (session: ChantingSession): number => {
+    const total = targetRounds * targetBeads;
+    const completed = session.rounds * targetBeads + session.beads;
+    return Math.round((completed / total) * 100);
   };
-
-  const currentTheme = themeColors[theme as keyof typeof themeColors] || themeColors.orange;
-
-  const beadSizeClass = beadSize === 'small' ? 'w-48 h-48' : beadSize === 'medium' ? 'w-56 h-56' : 'w-64 h-64';
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 max-w-6xl mx-auto px-3 sm:px-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Header */}
-      <div className={`bg-gradient-to-r ${currentTheme.primary} rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl border-2 ${currentTheme.border}`}>
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">Japa Mala Counter</h1>
-            <p className="text-white text-opacity-90 text-sm sm:text-base md:text-lg">{selectedMantra.name}</p>
-          </div>
-          <div className="flex gap-2 sm:gap-3">
+      <div className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 px-4 py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <h1 className="text-xl font-bold">Japa Counter</h1>
+          <div className="flex gap-2">
             <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="p-2 sm:p-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg sm:rounded-xl transition-all"
+              onClick={() => setShowHistory(!showHistory)}
+              className="p-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <SettingsIcon className="text-white" size={20} />
+              <HistoryIcon size={20} />
             </button>
             <button
-              onClick={() => setShowGoals(!showGoals)}
-              className="p-2 sm:p-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg sm:rounded-xl transition-all"
+              onClick={handleSaveSession}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg font-semibold transition-colors"
             >
-              <Target className="text-white" size={20} />
+              Save
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* Control Panels - Settings & Goals */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-        {/* Settings Panel - Collapsible (Closed by default) */}
-        <details className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200">
-          <summary className="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer font-bold text-base sm:text-lg md:text-xl text-stone-800 hover:bg-stone-50 rounded-t-lg sm:rounded-t-xl flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <SettingsIcon size={24} />
-              Preferences
-            </span>
-            <ChevronDown size={20} className="transform transition-transform" />
-          </summary>
-          
-          <div className="px-6 pb-6 space-y-4 border-t-2 border-stone-100">
-            {/* Mantra Selection */}
-            <div>
-              <label className="block font-semibold mb-2 text-stone-700 text-sm">Mantra Type</label>
-              <select
-                value={selectedMantra.id}
-                onChange={(e) => setSelectedMantra(MANTRA_TYPES.find(m => m.id === e.target.value) || MANTRA_TYPES[0])}
-                className="w-full p-3 border-2 border-stone-300 rounded-lg focus:outline-none focus:border-orange-500 text-sm"
-              >
-                {MANTRA_TYPES.map(mantra => (
-                  <option key={mantra.id} value={mantra.id}>{mantra.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {selectedMantra.id === 'custom' && (
-              <div>
-                <label className="block font-semibold mb-2 text-stone-700 text-sm">Custom Mantra Name</label>
-                <input
-                  type="text"
-                  value={customMantra}
-                  onChange={(e) => setCustomMantra(e.target.value)}
-                  placeholder="Enter mantra name"
-                  className="w-full p-3 border-2 border-stone-300 rounded-lg focus:outline-none focus:border-orange-500 text-sm"
-                />
-              </div>
-            )}
-
-            {/* Compact Toggle Row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-stone-50 p-3 rounded-lg border-2 border-stone-200">
-                <label className="block text-xs font-semibold text-stone-600 mb-2">Sound</label>
-                <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  className={`w-full p-2 rounded-lg transition-all flex items-center justify-center gap-2 ${soundEnabled ? 'bg-green-500 text-white' : 'bg-stone-300 text-stone-600'}`}
-                >
-                  {soundEnabled ? <><Volume2 size={16} /> ON</> : <><VolumeX size={16} /> OFF</>}
-                </button>
-              </div>
-
-              <div className="bg-stone-50 p-3 rounded-lg border-2 border-stone-200">
-                <label className="block text-xs font-semibold text-stone-600 mb-2">Auto Count</label>
-                <button
-                  onClick={() => setAutoIncrement(!autoIncrement)}
-                  className={`w-full p-2 rounded-lg transition-all ${autoIncrement ? 'bg-green-500 text-white' : 'bg-stone-300 text-stone-600'}`}
-                >
-                  {autoIncrement ? 'ON' : 'OFF'}
-                </button>
-              </div>
-            </div>
-
-            {autoIncrement && (
-              <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
-                <label className="block text-xs font-semibold text-blue-700 mb-2">Speed: {incrementSpeed}ms</label>
-                <input
-                  type="range"
-                  min="1000"
-                  max="5000"
-                  step="500"
-                  value={incrementSpeed}
-                  onChange={(e) => setIncrementSpeed(parseInt(e.target.value))}
-                  className="w-full accent-blue-600"
-                />
-              </div>
-            )}
-
-            {/* Button Size */}
-            <div>
-              <label className="block font-semibold mb-2 text-stone-700 text-sm">Button Size</label>
-              <div className="grid grid-cols-3 gap-2">
-                {['small', 'medium', 'large'].map(size => (
-                  <button
-                    key={size}
-                    onClick={() => setBeadSize(size)}
-                    className={`py-2 rounded-lg transition-all text-sm font-semibold ${beadSize === size ? 'bg-orange-500 text-white shadow-lg' : 'bg-stone-200 text-stone-700 hover:bg-stone-300'}`}
-                  >
-                    {size.charAt(0).toUpperCase() + size.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Theme Selection */}
-            <div>
-              <label className="block font-semibold mb-2 text-stone-700 text-sm">Theme</label>
-              <div className="grid grid-cols-4 gap-2">
-                {Object.keys(themeColors).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setTheme(t)}
-                    className={`h-12 rounded-lg transition-all border-4 ${theme === t ? 'border-stone-800 scale-110' : 'border-stone-200 hover:border-stone-400'} bg-gradient-to-br ${themeColors[t as keyof typeof themeColors].primary}`}
-                    title={t}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <button
-              onClick={saveUserPreferences}
-              className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg"
-            >
-              Save Preferences
-            </button>
-          </div>
-        </details>
-
-        {/* Goals Panel - Collapsible (Closed by default) */}
-        <details className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200">
-          <summary className="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer font-bold text-base sm:text-lg md:text-xl text-stone-800 hover:bg-stone-50 rounded-t-lg sm:rounded-t-xl flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Target size={24} />
-              Goals
-            </span>
-            <ChevronDown size={20} className="transform transition-transform" />
-          </summary>
-          
-          <div className="px-6 pb-6 space-y-4 border-t-2 border-stone-100">
-            {/* Milestones */}
-            {milestones.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2 text-stone-700">
-                  <Award className="text-yellow-600" size={18} />
-                  Milestones Achieved
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {milestones.sort((a, b) => a - b).map(milestone => (
-                    <div key={milestone} className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg text-sm font-bold flex items-center gap-1.5">
-                      <Award size={14} />
-                      {milestone}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Active Goals */}
-            {goals.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-sm mb-3 text-stone-700">Active Goals</h4>
-                <div className="space-y-2">
-                  {goals.map(goal => (
-                    <div key={goal.id} className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border-2 border-blue-200">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-semibold text-sm text-stone-800 capitalize">{goal.type}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${goal.current >= goal.target ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'}`}>
-                          {goal.current}/{goal.target}
-                        </span>
-                      </div>
-                      <div className="w-full bg-stone-200 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-full rounded-full transition-all"
-                          style={{ width: `${Math.min((goal.current / goal.target) * 100, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Create Goal */}
-            <div>
-              <h4 className="font-semibold text-sm mb-3 text-stone-700">Create New Goal</h4>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => {
-                    const target = prompt('Enter daily rounds target:');
-                    if (target) createGoal('daily', parseInt(target));
-                  }}
-                  className="px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg text-sm font-semibold hover:from-green-600 hover:to-emerald-600 transition-all"
-                >
-                  Daily
-                </button>
-                <button
-                  onClick={() => {
-                    const target = prompt('Enter weekly rounds target:');
-                    if (target) createGoal('weekly', parseInt(target));
-                  }}
-                  className="px-3 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-cyan-600 transition-all"
-                >
-                  Weekly
-                </button>
-                <button
-                  onClick={() => {
-                    const target = prompt('Enter monthly rounds target:');
-                    if (target) createGoal('monthly', parseInt(target));
-                  }}
-                  className="px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-pink-600 transition-all"
-                >
-                  Monthly
-                </button>
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-        <div className={`bg-gradient-to-br ${currentTheme.bg} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border-2 ${currentTheme.border} shadow-md sm:shadow-lg`}>
-          <div className="flex items-center gap-2 mb-1 sm:mb-2">
-            <Trophy className={currentTheme.text} size={18} />
-            <h3 className="font-bold text-xs sm:text-sm md:text-base text-stone-800">Total Rounds</h3>
-          </div>
-          <p className={`text-2xl sm:text-3xl md:text-4xl font-bold ${currentTheme.text}`}>{stats?.totalRounds || 0}</p>
-          <p className="text-xs sm:text-sm text-stone-600 mt-0.5 sm:mt-1">Completed</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border-2 border-blue-300 shadow-md sm:shadow-lg">
-          <div className="flex items-center gap-2 mb-1 sm:mb-2">
-            <TrendingUp className="text-blue-600" size={18} />
-            <h3 className="font-bold text-xs sm:text-sm md:text-base text-stone-800">Total Beads</h3>
-          </div>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600">{stats?.totalBeads || 0}</p>
-          <p className="text-xs sm:text-sm text-stone-600 mt-0.5 sm:mt-1">Mantras chanted</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border-2 border-green-300 shadow-md sm:shadow-lg">
-          <div className="flex items-center gap-2 mb-1 sm:mb-2">
-            <Flame className="text-green-600" size={18} />
-            <h3 className="font-bold text-xs sm:text-sm md:text-base text-stone-800">Streak</h3>
-          </div>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600">{stats?.currentStreak || 0}</p>
-          <p className="text-xs sm:text-sm text-stone-600 mt-0.5 sm:mt-1">Days</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border-2 border-purple-300 shadow-md sm:shadow-lg">
-          <div className="flex items-center gap-2 mb-1 sm:mb-2">
-            <Clock className="text-purple-600" size={18} />
-            <h3 className="font-bold text-xs sm:text-sm md:text-base text-stone-800">Time</h3>
-          </div>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-purple-600">{Math.floor((stats?.totalTimeSpent || 0) / 60)}m</p>
-          <p className="text-xs sm:text-sm text-stone-600 mt-0.5 sm:mt-1">Chanting</p>
         </div>
       </div>
 
       {/* Main Counter */}
-      <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl border-2 border-stone-200">
-        {/* Session Header */}
-        <div className="text-center mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-800 mb-2 sm:mb-3">Current Session</h2>
-          
-          {/* Timer Display */}
-          {isChanting && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-xl">
-              <Clock size={20} className="text-purple-600" />
-              <span className="text-lg font-bold text-purple-700">{formatTime(currentTime)}</span>
-            </div>
-          )}
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        {/* Beads Display */}
+        <div 
+          onClick={handleBeadsTap}
+          className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 text-center cursor-pointer hover:bg-gray-800/70 transition-all border border-gray-700 active:scale-95"
+        >
+          <div className="text-sm text-gray-400 mb-2 font-medium">BEADS</div>
+          <div className="text-6xl font-bold tracking-wider font-mono">
+            {formatBeadCount()}
+          </div>
+          <div className="text-sm text-gray-400 mt-2">Tap to configure</div>
         </div>
 
-        {/* Counter Display */}
-        <div className="flex justify-center gap-3 sm:gap-6 md:gap-8 mb-4 sm:mb-6">
-          <div className="text-center">
-            <p className="text-xs text-stone-500 mb-1 sm:mb-2 uppercase tracking-wide">Rounds</p>
-            <p className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold ${currentTheme.text}`}>{rounds}</p>
+        {/* Timer Display */}
+        <div 
+          onMouseDown={handleTimerLongPressStart}
+          onMouseUp={handleTimerLongPressEnd}
+          onMouseLeave={handleTimerLongPressEnd}
+          onTouchStart={handleTimerLongPressStart}
+          onTouchEnd={handleTimerLongPressEnd}
+          onClick={handleTimerTap}
+          className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 text-center cursor-pointer hover:bg-gray-800/70 transition-all border border-gray-700 active:scale-95"
+        >
+          <div className="text-sm text-gray-400 mb-2 font-medium">TIMER</div>
+          <div className="text-6xl font-bold tracking-wider font-mono">
+            {formatTimer(timerSeconds)}
           </div>
-          <div className="flex items-center">
-            <div className="h-12 sm:h-16 md:h-20 w-0.5 sm:w-1 bg-stone-300 rounded-full"></div>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-stone-500 mb-1 sm:mb-2 uppercase tracking-wide">Beads</p>
-            <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-blue-600">{count}<span className="text-xl sm:text-2xl md:text-3xl text-stone-400">/{selectedMantra.beads}</span></p>
+          <div className="text-sm text-gray-400 mt-2 flex items-center justify-center gap-2">
+            {isRunning ? (
+              <><Pause size={14} /> Tap to pause • Long press to reset</>
+            ) : (
+              <><Play size={14} /> Tap to start • Long press to reset</>
+            )}
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-4 sm:mb-6">
-          <div className="relative w-full bg-stone-200 rounded-full h-3 sm:h-4 md:h-6 overflow-hidden">
-            <div 
-              className={`absolute top-0 left-0 bg-gradient-to-r ${currentTheme.primary} h-full transition-all duration-300 flex items-center justify-end pr-2`}
-              style={{ width: `${(count / selectedMantra.beads) * 100}%` }}
-            >
-              <span className="text-white text-xs font-bold hidden sm:inline">
-                {count > 0 && `${Math.round((count / selectedMantra.beads) * 100)}%`}
-              </span>
+        {/* Rounds Display */}
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-sm text-gray-400 mb-1">Rounds Completed</div>
+              <div className="text-4xl font-bold">{currentRound}/{targetRounds}</div>
+            </div>
+            <div className="w-24 h-24">
+              <svg className="transform -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="#374151"
+                  strokeWidth="10"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="#f97316"
+                  strokeWidth="10"
+                  strokeDasharray={`${(currentRound / targetRounds) * 283} 283`}
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
           </div>
-          <p className="text-xs text-center text-stone-500 mt-2">
-            {selectedMantra.beads - count} beads remaining
+        </div>
+
+        {/* Quick Stats */}
+        {stats && (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 text-center">
+              <div className="text-2xl font-bold text-orange-500">{stats.totalRounds}</div>
+              <div className="text-xs text-gray-400 mt-1">Total Rounds</div>
+            </div>
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 text-center">
+              <div className="text-2xl font-bold text-orange-500">{stats.totalBeads}</div>
+              <div className="text-xs text-gray-400 mt-1">Total Beads</div>
+            </div>
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 text-center">
+              <div className="text-2xl font-bold text-orange-500">{Math.floor(stats.totalTime / 60)}m</div>
+              <div className="text-xs text-gray-400 mt-1">Total Time</div>
+            </div>
+          </div>
+        )}
+
+        {/* Chanting Inspiration */}
+        <div className="bg-gradient-to-br from-orange-900/30 to-amber-900/30 backdrop-blur-sm rounded-2xl p-6 border border-orange-800/50">
+          <h3 className="text-lg font-bold mb-2 text-orange-300">Chanting Inspiration</h3>
+          <p className="text-sm text-gray-300 italic mb-3">
+            "Associating With The Supreme Lord Directly"
+          </p>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            By chanting the holy names, you are directly associating with the Supreme Lord Krishna. 
+            Each round brings you closer to spiritual perfection and purifies your consciousness.
           </p>
         </div>
+      </div>
 
-        {/* Main Counter Button */}
-        <div className="flex justify-center mb-6">
-          <button
-            onClick={handleBeadClick}
-            disabled={isPaused}
-            className={`${beadSizeClass} bg-gradient-to-br ${currentTheme.primary} hover:${currentTheme.secondary} text-white rounded-full shadow-2xl transform transition-all hover:scale-105 active:scale-95 flex items-center justify-center text-5xl sm:text-6xl md:text-7xl font-bold border-4 sm:border-6 md:border-8 ${currentTheme.border} ${isPaused ? 'opacity-50 cursor-not-allowed' : ''} touch-manipulation relative`}
-          >
-            <span>{count}</span>
-            {isPaused && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full">
-                <Pause size={48} className="text-white" />
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl max-w-md w-full border border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h2 className="text-xl font-bold">Settings</h2>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Rounds Setting */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-3 font-medium">ROUNDS</label>
+                <div className="flex items-center justify-between bg-gray-900 rounded-xl p-4 border border-gray-700">
+                  <button
+                    onClick={() => setTargetRounds(Math.max(1, targetRounds - 1))}
+                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  >
+                    <Minus size={20} />
+                  </button>
+                  <span className="text-3xl font-bold">{targetRounds}</span>
+                  <button
+                    onClick={() => setTargetRounds(targetRounds + 1)}
+                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
               </div>
-            )}
-          </button>
-        </div>
 
-        {/* Action Controls - Reorganized */}
-        <div className="space-y-4">
-          {/* Primary Actions */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-            {isChanting && (
-              <button
-                onClick={handlePauseResume}
-                className={`px-4 py-3 sm:py-4 ${isPaused ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' : 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'} text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base`}
-              >
-                {isPaused ? <><Play size={18} /> Resume</> : <><Pause size={18} /> Pause</>}
-              </button>
-            )}
-            <button
-              onClick={handleSaveSession}
-              className="px-4 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base col-span-2 sm:col-span-1"
-            >
-              <Award size={18} />
-              <span>Save Session</span>
-            </button>
-          </div>
+              {/* Beads Setting */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-3 font-medium">BEADS PER ROUND</label>
+                <div className="flex items-center justify-between bg-gray-900 rounded-xl p-4 border border-gray-700">
+                  <button
+                    onClick={() => setTargetBeads(Math.max(1, targetBeads - 1))}
+                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  >
+                    <Minus size={20} />
+                  </button>
+                  <span className="text-3xl font-bold">{targetBeads}</span>
+                  <button
+                    onClick={() => setTargetBeads(targetBeads + 1)}
+                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
+              </div>
 
-          {/* Secondary Actions - Collapsible */}
-          <details id="advancedControls" className="bg-stone-50 rounded-xl border-2 border-stone-200" open={isChanting}>
-            <summary className="px-4 py-3 cursor-pointer font-semibold text-stone-700 hover:text-stone-900 flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <SettingsIcon size={18} />
-                Advanced Controls
-              </span>
-              <ChevronDown size={18} className="transform transition-transform" />
-            </summary>
-            <div className="p-4 space-y-3 border-t-2 border-stone-200">
-              {/* Reset All Button */}
-              <button
-                onClick={() => {
-                  handleReset();
-                  handleResetRounds();
-                  if (isChanting) {
-                    handleResetTimer();
-                  }
-                }}
-                className="w-full px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
-              >
-                <RefreshCw size={18} />
-                <span>Reset Everything</span>
-              </button>
-              
-              {/* Individual Reset Buttons */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              <button
-                onClick={handleReset}
-                className="px-3 py-2 sm:px-4 sm:py-3 bg-stone-500 hover:bg-stone-600 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
-              >
-                <RefreshCw size={16} />
-                <span>Reset Beads</span>
-              </button>
-              <button
-                onClick={handleResetRounds}
-                className="px-3 py-2 sm:px-4 sm:py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
-              >
-                <RotateCcw size={16} />
-                <span>Reset Rounds</span>
-              </button>
-              {isChanting && (
+              {/* Auto Lap Toggle */}
+              <div className="flex items-center justify-between bg-gray-900 rounded-xl p-4 border border-gray-700">
+                <span className="text-sm font-medium">Auto lap on round finish</span>
                 <button
-                  onClick={handleResetTimer}
-                  className="px-3 py-2 sm:px-4 sm:py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2 text-xs sm:text-sm col-span-2"
+                  onClick={() => setAutoLapEnabled(!autoLapEnabled)}
+                  className={`w-14 h-8 rounded-full transition-colors ${autoLapEnabled ? 'bg-orange-600' : 'bg-gray-700'}`}
                 >
-                  <Clock size={16} />
-                  <span>Reset Timer</span>
+                  <div className={`w-6 h-6 bg-white rounded-full transition-transform ${autoLapEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
                 </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-4">
+                <button
+                  onClick={handleResetSettings}
+                  className="py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-colors"
+                >
+                  RESET
+                </button>
+                <button
+                  onClick={handleSaveSettings}
+                  className="py-3 bg-orange-600 hover:bg-orange-700 rounded-xl font-semibold transition-colors"
+                >
+                  SET
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Panel */}
+      {showHistory && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden border border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h2 className="text-xl font-bold">Session History</h2>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-100px)]">
+              {sessions.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>No sessions yet</p>
+                  <p className="text-sm">Complete a round and save your session!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="bg-gray-900/50 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-4">
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-orange-500">{session.date}</div>
+                            <div className="text-xs text-gray-400">{session.startTime}</div>
+                          </div>
+                          <div className="h-10 w-px bg-gray-700" />
+                          <div>
+                            <div className="text-sm text-gray-400">Completed</div>
+                            <div className="text-lg font-bold">{session.rounds} rounds</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-400">Duration</div>
+                          <div className="text-lg font-bold">{Math.floor(session.duration / 60)}m</div>
+                        </div>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all"
+                            style={{ width: `${Math.min(getCompletionPercentage(session), 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400 font-medium min-w-[3rem] text-right">
+                          {getCompletionPercentage(session)}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
-        </details>
-
-      {/* Recent Sessions */}
-      <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-stone-200">
-        <h3 className="text-2xl font-bold text-stone-800 mb-4 flex items-center gap-2">
-          <Calendar className={currentTheme.text} size={28} />
-          Recent Sessions
-        </h3>
-        
-        {getRecentSessions().length > 0 ? (
-          <div className="space-y-3">
-            {getRecentSessions().map((session, index) => (
-              <div key={session.id || index} className={`p-4 bg-gradient-to-r ${currentTheme.bg} rounded-lg border-2 ${currentTheme.border}`}>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-stone-800">
-                      {session.rounds} rounds {session.count > 0 && `+ ${session.count} beads`}
-                    </p>
-                    <p className="text-sm text-stone-600">
-                      {session.date} • Duration: {Math.floor(session.duration / 60)}m {session.duration % 60}s
-                    </p>
-                    {session.mantraType && (
-                      <p className="text-xs text-stone-500 mt-1">
-                        {session.mantraType}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-2xl font-bold ${currentTheme.text}`}>
-                      {session.rounds * (session.mantraType === 'Custom Mantra' ? selectedMantra.beads : 108) + session.count}
-                    </p>
-                    <p className="text-xs text-stone-500">mantras</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-stone-500">
-            <p>No sessions yet. Start chanting to track your progress!</p>
-          </div>
-        )}
-      </div>
-
-      {/* Instructions */}
-      <div className={`bg-gradient-to-r ${currentTheme.bg} rounded-xl p-6 border-2 ${currentTheme.border}`}>
-        <h3 className="font-bold text-lg mb-3 text-stone-800">How to Use Premium Features</h3>
-        <ul className="space-y-2 text-stone-700 text-sm sm:text-base">
-          <li><strong>Mantra Types:</strong> Choose from traditional mantras or create custom ones</li>
-          <li><strong>Auto-Increment:</strong> Automatic counting at your preferred pace</li>
-          <li><strong>Sound Effects:</strong> Audio feedback on bead completion</li>
-          <li><strong>Pause/Resume:</strong> Take breaks without losing progress</li>
-          <li><strong>Goals:</strong> Set and track daily, weekly, or monthly targets</li>
-          <li><strong>Milestones:</strong> Unlock achievements at 10, 50, 100, 500+ rounds</li>
-          <li><strong>Themes:</strong> Customize appearance to your preference</li>
-        </ul>
-      </div>
-
-      {/* Milestone Achievement Modal */}
-      {showMilestoneModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-4 animate-fadeIn">
-          <div className="bg-gradient-to-br from-white to-yellow-50 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center space-y-6 border-4 border-yellow-300">
-            <div className="bg-gradient-to-r from-yellow-100 to-amber-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <Trophy className="text-yellow-600 w-16 h-16" />
-            </div>
-            
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
-                Milestone Achieved!
-              </h2>
-              <p className="text-2xl font-bold text-stone-800">
-                {milestoneRounds} Rounds Completed
-              </p>
-              <p className="text-stone-700 text-lg leading-relaxed">
-                Your dedication to spiritual practice is truly inspiring. Keep chanting!
-              </p>
-              <p className="text-orange-600 font-bold text-xl">Hare Krishna!</p>
-            </div>
-
-            <button
-              onClick={() => setShowMilestoneModal(false)}
-              className="w-full px-6 py-3 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 text-white rounded-xl font-bold transition-all shadow-lg"
-            >
-              Continue Chanting
-            </button>
-          </div>
         </div>
       )}
-
-      {/* Session Saved Modal */}
-      {showSaveModal && sessionSummary && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-4 animate-fadeIn">
-          <div className="bg-gradient-to-br from-white to-green-50 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center space-y-6 border-4 border-green-300">
-            <div className="bg-gradient-to-r from-green-100 to-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <CheckCircle className="text-green-600 w-16 h-16" />
-            </div>
-            
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                Session Saved!
-              </h2>
-              
-              <div className="bg-white/70 rounded-xl p-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-stone-600 font-semibold">Rounds:</span>
-                  <span className="text-2xl font-bold text-green-600">{sessionSummary.rounds}</span>
-                </div>
-                {sessionSummary.count > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-stone-600 font-semibold">Extra Beads:</span>
-                    <span className="text-xl font-bold text-stone-700">{sessionSummary.count}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center">
-                  <span className="text-stone-600 font-semibold">Duration:</span>
-                  <span className="text-lg font-bold text-stone-700">
-                    {Math.floor(sessionSummary.duration / 60)}m {sessionSummary.duration % 60}s
-                  </span>
-                </div>
-                <div className="flex justify-between items-center border-t-2 border-stone-200 pt-2 mt-2">
-                  <span className="text-stone-600 font-semibold">Total Lifetime:</span>
-                  <span className="text-2xl font-bold text-orange-600">{sessionSummary.totalRounds} rounds</span>
-                </div>
-              </div>
-
-              <p className="text-stone-700 text-sm">
-                Your spiritual progress has been recorded
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowSaveModal(false);
-                  setSessionSummary(null);
-                }}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Beads Confirmation Modal */}
-      {showResetBeadsConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-4 animate-fadeIn">
-          <div className="bg-gradient-to-br from-white to-stone-50 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center space-y-6 border-4 border-stone-300">
-            <div className="bg-gradient-to-r from-stone-100 to-stone-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <RefreshCw className="text-stone-600 w-16 h-16" />
-            </div>
-            
-            <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-stone-800">
-                Reset Beads Counter?
-              </h2>
-              <p className="text-stone-600 text-base">
-                This will reset the current beads count to zero. Your completed rounds will be preserved.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowResetBeadsConfirm(false)}
-                className="flex-1 px-6 py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmResetBeads}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl font-bold transition-all shadow-lg"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Rounds Confirmation Modal */}
-      {showResetRoundsConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-4 animate-fadeIn">
-          <div className="bg-gradient-to-br from-white to-orange-50 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center space-y-6 border-4 border-orange-300">
-            <div className="bg-gradient-to-r from-orange-100 to-amber-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <RotateCcw className="text-orange-600 w-16 h-16" />
-            </div>
-            
-            <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-stone-800">
-                Reset Rounds Counter?
-              </h2>
-              <p className="text-stone-600 text-base">
-                This will reset the session rounds counter to zero. Your lifetime statistics will not be affected.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowResetRoundsConfirm(false)}
-                className="flex-1 px-6 py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmResetRounds}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl font-bold transition-all shadow-lg"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Timer Confirmation Modal */}
-      {showResetTimerConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-4 animate-fadeIn">
-          <div className="bg-gradient-to-br from-white to-purple-50 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center space-y-6 border-4 border-purple-300">
-            <div className="bg-gradient-to-r from-purple-100 to-pink-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <Clock className="text-purple-600 w-16 h-16" />
-            </div>
-            
-            <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-stone-800">
-                Reset Session Timer?
-              </h2>
-              <p className="text-stone-600 text-base">
-                This will reset the session timer to zero and start counting from now. Your rounds and beads will not be affected.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowResetTimerConfirm(false)}
-                className="flex-1 px-6 py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmResetTimer}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      </div>
-      </div>
     </div>
   );
-};
-
-export default ChantingCounter;
+}
