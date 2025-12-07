@@ -857,8 +857,8 @@ const AdminPanel: React.FC = () => {
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={getUserActivityData()}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <XAxis dataKey="name" stroke="#888888" tickLine={true} />
+                  <YAxis stroke="#888888" tickLine={true} />
                   <Tooltip />
                   <Legend />
                   <Line type="monotone" dataKey="active" stroke="#3b82f6" strokeWidth={2} name="Active Users" />
@@ -876,8 +876,8 @@ const AdminPanel: React.FC = () => {
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={getCenterDistribution()}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} fontSize={12} />
-                  <YAxis />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} fontSize={12} stroke="#888888" tickLine={true} />
+                  <YAxis stroke="#888888" tickLine={true} />
                   <Tooltip />
                   <Bar dataKey="value" fill="#10b981" name="Users" />
                 </BarChart>

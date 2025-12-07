@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
-import { auth, googleProvider } from '../services/firebase';
+import { auth, googleProvider, db } from '../services/firebase';
+import { ref, update } from 'firebase/database';
 import { setUserOnlineStatus } from '../services/chat';
 
 interface AuthContextType {
@@ -101,6 +102,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       keysToRemove.forEach(key => localStorage.removeItem(key));
       
       const result = await signInWithPopup(auth, googleProvider);
+      
+      // Save user email to database for admin access
+      if (result.user.email) {
+        const userRef = ref(db, `users/${result.user.uid}`);
+        await update(userRef, {
+          email: result.user.email,
+          displayName: result.user.displayName || '',
+          photoURL: result.user.photoURL || ''
+        });
+      }
+      
       // Check if this is a new user
       const isNew = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
       setIsNewUser(isNew);

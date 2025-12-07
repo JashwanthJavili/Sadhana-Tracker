@@ -9,6 +9,38 @@
       "$userId": {
         ".write": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
         ".read": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+        "email": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
+        "displayName": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
+        "photoURL": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
+        "userName": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
+        "guruName": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
+        "iskconCenter": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
+        "isOnline": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
+        "lastSeen": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
         "entries": {
           ".read": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
           ".write": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
@@ -75,6 +107,15 @@
       ".read": "auth != null",
       ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
       ".indexOn": ["date"]
+    },
+    "appSettings": {
+      ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')"
+    },
+    "flaggedContent": {
+      ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".indexOn": ["timestamp", "type"]
     }
   }
 }

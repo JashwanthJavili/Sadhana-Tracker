@@ -54,9 +54,9 @@ const Analytics: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
-                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} />
-                <YAxis yAxisId="left" domain={[0, 5]} orientation="left" stroke="#2563eb" label={{ value: 'Discipline', angle: -90, position: 'insideLeft', style: {fontWeight: 'bold'} }}/>
-                <YAxis yAxisId="right" domain={[0, 10]} orientation="right" stroke="#ea580c" label={{ value: 'Mood', angle: 90, position: 'insideRight', style: {fontWeight: 'bold'} }}/>
+                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} stroke="#888888" tickLine={true} />
+                <YAxis yAxisId="left" domain={[0, 5]} orientation="left" stroke="#2563eb" label={{ value: 'Discipline', angle: -90, position: 'insideLeft', style: {fontWeight: 'bold'} }} tickLine={true} />
+                <YAxis yAxisId="right" domain={[0, 10]} orientation="right" stroke="#ea580c" label={{ value: 'Mood', angle: 90, position: 'insideRight', style: {fontWeight: 'bold'} }} tickLine={true} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', padding: '12px', fontWeight: 600 }}
                 />
@@ -78,8 +78,8 @@ const Analytics: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fef3c7" />
-                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} />
-                <YAxis domain={[0, 25]} tick={{fontWeight: 600}} />
+                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} stroke="#888888" tickLine={true} />
+                <YAxis domain={[0, 25]} tick={{fontWeight: 600}} stroke="#888888" tickLine={true} />
                 <Tooltip cursor={{fill: '#fff7ed'}} contentStyle={{borderRadius: '12px', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', fontWeight: 600}} />
                 <Legend wrapperStyle={{fontWeight: 600}} />
                 <Bar dataKey="chanting" fill="url(#orangeGradient)" radius={[8, 8, 0, 0]} />
@@ -104,9 +104,9 @@ const Analytics: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} />
-                <YAxis yAxisId="left" label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: {fontWeight: 'bold'} }} tick={{fontWeight: 600}} />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 10]} label={{ value: 'Energy', angle: 90, position: 'insideRight', style: {fontWeight: 'bold'} }} tick={{fontWeight: 600}} />
+                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} stroke="#888888" tickLine={true} />
+                <YAxis yAxisId="left" label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: {fontWeight: 'bold'} }} tick={{fontWeight: 600}} stroke="#888888" tickLine={true} />
+                <YAxis yAxisId="right" orientation="right" domain={[0, 10]} label={{ value: 'Energy', angle: 90, position: 'insideRight', style: {fontWeight: 'bold'} }} tick={{fontWeight: 600}} stroke="#888888" tickLine={true} />
                 <Tooltip contentStyle={{borderRadius: '12px', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', fontWeight: 600}} />
                 <Legend wrapperStyle={{fontWeight: 600}} />
                 <Area yAxisId="left" type="monotone" dataKey="sleep" fill="#c7d2fe" stroke="#818cf8" fillOpacity={0.5} strokeWidth={3} />
@@ -126,8 +126,8 @@ const Analytics: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fee2e2" />
-                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} />
-                <YAxis tick={{fontWeight: 600}} />
+                <XAxis dataKey="date" tick={{fontSize: 13, fontWeight: 600}} stroke="#888888" tickLine={true} />
+                <YAxis tick={{fontWeight: 600}} stroke="#888888" tickLine={true} />
                 <Tooltip contentStyle={{borderRadius: '12px', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', fontWeight: 600}} />
                 <Area type="monotone" dataKey="phone" stroke="#ef4444" fill="#fee2e2" strokeWidth={3} fillOpacity={0.6} />
               </AreaChart>

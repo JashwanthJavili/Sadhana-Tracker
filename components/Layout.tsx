@@ -35,7 +35,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showInstallButton, setShowInstallButton] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Sadhana Practice']));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([
+    'Sadhana Practice',
+    'Knowledge & Learning',
+    'Community & Connection',
+    'Progress & Insights',
+    'Settings'
+  ]));
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -301,38 +307,47 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="space-y-1.5">
                     {group.items.map((item) => {
                       const isLocked = item.locked === true;
-                      const NavComponent = isLocked ? 'div' : NavLink;
                       
+                      // Locked item (not clickable)
+                      if (isLocked) {
+                        return (
+                          <div
+                            key={item.to}
+                            data-tour={item.tourAttr}
+                            className="flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative text-stone-500 cursor-not-allowed opacity-60 min-h-[48px] touch-manipulation"
+                          >
+                            <item.icon size={20} className="flex-shrink-0" />
+                            <span className="font-medium text-sm sm:text-base">{item.label}</span>
+                            <div className="ml-auto text-orange-500 flex-shrink-0">
+                              <Lock size={16} />
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Active NavLink (clickable)
                       return (
-                        <NavComponent
+                        <NavLink
                           key={item.to}
-                          {...(!isLocked && {
-                            to: item.to,
-                            onClick: () => setIsSidebarOpen(false)
-                          })}
+                          to={item.to}
+                          onClick={() => setIsSidebarOpen(false)}
                           data-tour={item.tourAttr}
-                          className={isLocked 
-                            ? 'flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative text-stone-500 cursor-not-allowed opacity-60 min-h-[48px] touch-manipulation'
-                            : ({ isActive }: any) => `
-                              flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative min-h-[48px] touch-manipulation active:scale-95
-                              ${isActive 
-                                ? 'bg-orange-700 text-white shadow-lg' 
-                                : 'text-stone-300 hover:bg-stone-800 hover:text-white'}
-                            `
-                          }
+                          className={({ isActive }: any) => {
+                            const baseClasses = "flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative min-h-[48px] touch-manipulation active:scale-95";
+                            const activeClasses = "bg-orange-700 text-white shadow-lg";
+                            const inactiveClasses = "text-stone-300 hover:bg-stone-800 hover:text-white";
+                            return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
+                          }}
                         >
                           <item.icon size={20} className="flex-shrink-0" />
                           <span className="font-medium text-sm sm:text-base">{item.label}</span>
-                          {isLocked && (
-                            <Lock size={16} className="ml-auto text-orange-500 flex-shrink-0" title="Sign in to unlock" />
-                          )}
                           {/* Unread badge for Messages */}
-                          {item.to === '/chats' && unreadCount > 0 && !isLocked && (
+                          {item.to === '/chats' && unreadCount > 0 && (
                             <span className="ml-auto bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold min-w-[20px] text-center flex-shrink-0">
                               {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                           )}
-                        </NavComponent>
+                        </NavLink>
                       );
                     })}
                   </div>
