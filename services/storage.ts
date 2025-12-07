@@ -145,12 +145,29 @@ export const getSettings = async (userId: string): Promise<UserSettings> => {
     const snapshot = await get(child(dbRef, `users/${userId}/settings`));
     
     if (snapshot.exists()) {
-      return { ...DEFAULT_SETTINGS, ...snapshot.val() };
+      const userSettings = snapshot.val();
+      // CRITICAL: If user has cleared their data, don't return defaults
+      // Only merge defaults if user has actual saved settings
+      return { ...DEFAULT_SETTINGS, ...userSettings };
     }
-    return DEFAULT_SETTINGS;
+    
+    // CRITICAL FIX: Don't auto-create settings, return minimal empty settings
+    // This prevents useSyncChatProfile from re-creating deleted data
+    console.log('⚠️ No settings found for user, returning empty settings (not defaults)');
+    return {
+      ...DEFAULT_SETTINGS,
+      userName: '', // Empty instead of 'Bhakta'
+      guruName: '', // Empty instead of default guru
+      iskconCenter: '', // Empty instead of default center
+    };
   } catch (error) {
     console.error("Error fetching settings:", error);
-    return DEFAULT_SETTINGS;
+    return {
+      ...DEFAULT_SETTINGS,
+      userName: '',
+      guruName: '',
+      iskconCenter: '',
+    };
   }
 };
 
@@ -365,38 +382,37 @@ export const markFeedbackShown = async (userId: string, rating?: number): Promis
   }
 };
 
-export const seedDataIfEmpty = async (userId: string) => {
-  const entries = await getAllEntries(userId);
-  if (entries.length === 0) {
-    const today = new Date();
-    
-    // Create 14 days of dummy data
-    for (let i = 14; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      
-      const randomMetrics = { ...INITIAL_METRICS };
-      randomMetrics.disciplineScore = 2 + Math.floor(Math.random() * 4);
-      randomMetrics.mood = 3 + Math.floor(Math.random() * 8);
-      randomMetrics.chantingRounds = 10 + Math.floor(Math.random() * 8);
-      randomMetrics.deepStudyHours = Math.floor(Math.random() * 4);
-      randomMetrics.totalSleep = 5 + Math.floor(Math.random() * 4);
-      randomMetrics.energyLevel = 3 + Math.floor(Math.random() * 8);
-      randomMetrics.phoneUsage = Math.floor(Math.random() * 120);
+// Removed seedDataIfEmpty - new users should start with empty data, not fake history
 
-      const entry = {
-        id: dateStr,
-        date: dateStr,
-        commitments: Array(5).fill(null).map((_, idx) => ({ id: idx + 1, text: `Commitment ${idx + 1}`, done: Math.random() > 0.4 })),
-        reasonNotCompleted: '',
-        timeline: generateTimeSlots(),
-        metrics: randomMetrics,
-        reflections: { ...INITIAL_REFLECTIONS },
-        lastUpdated: Date.now(),
-      };
-      
-      await saveEntry(userId, entry);
+// AUTOMATIC CLEANUP: Remove fake seed data that was created before this fix
+export const cleanupFakeSeedData = async (userId: string): Promise<number> => {
+  if (isGuest(userId)) return 0;
+  
+  try {
+    const entries = await getAllEntries(userId);
+    let removedCount = 0;
+    
+    // Detect fake entries: they have generic "Commitment 1, 2, 3..." text
+    const fakeEntries = entries.filter(entry => {
+      const hasGenericCommitments = entry.commitments.some(c => 
+        c.text.match(/^Commitment \d+$/)
+      );
+      return hasGenericCommitments;
+    });
+    
+    // Delete all fake entries
+    for (const entry of fakeEntries) {
+      await set(ref(db, `users/${userId}/entries/${entry.date}`), null);
+      removedCount++;
     }
+    
+    if (removedCount > 0) {
+      console.log(`🧹 Auto-cleaned ${removedCount} fake seed entries for user ${userId}`);
+    }
+    
+    return removedCount;
+  } catch (error) {
+    console.error('Error cleaning fake data:', error);
+    return 0;
   }
 };

@@ -71,12 +71,12 @@ const DailyPlanner: React.FC = () => {
   const completedCommitmentsCount = entry.commitments.filter(c => c.done).length;
 
   return (
-    <div className="min-h-full space-y-8">
+    <div className="min-h-full space-y-4 sm:space-y-6 md:space-y-8 px-3 sm:px-4">
       {/* Header & Date Picker */}
-      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-6 bg-gradient-to-r from-white to-orange-50 p-7 rounded-2xl shadow-xl border-2 border-orange-200">
+      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 sm:gap-6 bg-gradient-to-r from-white to-orange-50 p-4 sm:p-5 md:p-7 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border-2 border-orange-200">
         <div>
-          <h2 className="text-3xl font-serif font-bold text-stone-900 mb-1">Daily Sadhana</h2>
-          <p className="text-stone-600 text-base font-medium">Guided by the teachings of HG Pranavanand Das Prabhu</p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-stone-900 mb-1">Daily Sadhana</h2>
+          <p className="text-stone-600 text-xs sm:text-sm md:text-base font-medium">Guided by HG Pranavanand Das Prabhu</p>
         </div>
         <div className="flex items-center gap-5">
           <input

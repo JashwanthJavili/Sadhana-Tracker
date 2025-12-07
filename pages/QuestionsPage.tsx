@@ -16,13 +16,13 @@ const QuestionsPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const categories: Array<{ value: Question['category'] | 'all'; label: string; emoji: string }> = [
-    { value: 'all', label: 'All Questions', emoji: '📚' },
-    { value: 'spiritual', label: 'Spiritual Practice', emoji: '🙏' },
-    { value: 'sadhana', label: 'Sadhana', emoji: '📿' },
-    { value: 'scripture', label: 'Scripture Study', emoji: '📖' },
-    { value: 'lifestyle', label: 'Lifestyle', emoji: '🌱' },
-    { value: 'general', label: 'General', emoji: '💬' },
+  const categories: Array<{ value: Question['category'] | 'all'; label: string; emoji?: string }> = [
+    { value: 'all', label: 'All Topics' },
+    { value: 'spiritual', label: 'Spiritual Guidance' },
+    { value: 'sadhana', label: 'Sadhana & Practice' },
+    { value: 'scripture', label: 'Scriptural Studies' },
+    { value: 'lifestyle', label: 'Devotional Life' },
+    { value: 'general', label: 'Community Discussion' },
   ];
 
   useEffect(() => {
@@ -157,7 +157,6 @@ const QuestionsPage: React.FC = () => {
                   : 'bg-white border-2 border-stone-200 text-stone-700 hover:border-orange-300'
               }`}
             >
-              <span className="mr-2">{cat.emoji}</span>
               {cat.label}
             </button>
           ))}

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
 import { UserSettings } from '../types';
-import { Save, User, Wrench, Users, Trash2 } from 'lucide-react';
+import { Save, User, Wrench, Users, Trash2, RefreshCw, Shield, Lock, Eye, Download, Database, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserData } from '../contexts/UserDataContext';
 import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
 import { createUserProfile } from '../services/chat';
 import { ref, remove } from 'firebase/database';
@@ -10,16 +11,43 @@ import { db } from '../services/firebase';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
+  const { userSettings: contextSettings, updateUserSettings, refreshUserData } = useUserData();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isEditing, setIsEditing] = useState(false);
   const [editedSettings, setEditedSettings] = useState<UserSettings | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [clearDataStatus, setClearDataStatus] = useState<'idle' | 'clearing' | 'success' | 'error'>('idle');
+  const [refreshing, setRefreshing] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['profile']));
   
   // Admin email - only this user has admin privileges
   const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
   const isAdmin = user?.email === ADMIN_EMAIL;
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(section)) {
+        newSet.delete(section);
+      } else {
+        newSet.add(section);
+      }
+      return newSet;
+    });
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshUserData();
+    setTimeout(() => setRefreshing(false), 500);
+  };
+
+  useEffect(() => {
+    if (contextSettings) {
+      setSettings(contextSettings);
+    }
+  }, [contextSettings]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -60,26 +88,20 @@ const Settings: React.FC = () => {
       try {
         setSaveStatus('saving');
         
-        // Save settings to database
-        await saveSettings(user.uid, editedSettings);
-        
-        // Update chat profile with new settings
-        if (editedSettings.userName && editedSettings.guruName && editedSettings.iskconCenter) {
-          const profileData: any = {
-            userName: editedSettings.userName,
-            guruName: editedSettings.guruName,
-            iskconCenter: editedSettings.iskconCenter,
-          };
-          
-          if (user.photoURL) profileData.photoURL = user.photoURL;
-          
-          await createUserProfile(user.uid, profileData);
-          console.log('✅ Chat profile updated with new settings');
-        }
+        // Use context's optimistic update - instant UI, background sync
+        await updateUserSettings({
+          userName: editedSettings.userName,
+          guruName: editedSettings.guruName,
+          iskconCenter: editedSettings.iskconCenter,
+        });
         
         setSettings(editedSettings);
         setSaveStatus('saved');
         setIsEditing(false);
+        
+        // Notify other components to refresh
+        window.dispatchEvent(new CustomEvent('userDataUpdated'));
+        
         setTimeout(() => setSaveStatus('idle'), 2000);
       } catch (error) {
         console.error('Error saving settings:', error);
@@ -180,96 +202,114 @@ const Settings: React.FC = () => {
   if (!settings) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div><p className="text-stone-600 font-medium text-lg">Loading settings...</p></div></div>;
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto animate-fadeIn">
-      <div className="bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 rounded-2xl p-8 shadow-2xl border-2 border-orange-400">
+    <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn">
+      <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-700 rounded-2xl p-6 shadow-2xl border-2 border-indigo-400">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-4xl font-serif font-bold text-white mb-2 flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <Wrench className="text-white" size={36} />
-              </div>
-              App Customization
+            <h2 className="text-3xl font-bold text-white mb-1 flex items-center gap-3">
+              <Wrench className="text-white" size={32} />
+              Application Settings
             </h2>
-            <p className="text-orange-100 text-lg font-medium">Personalize your spiritual workspace</p>
+            <p className="text-indigo-100 font-medium">Configure your spiritual practice workspace</p>
           </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold shadow-lg transition-all disabled:opacity-50"
+          >
+            <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
+            Refresh
+          </button>
         </div>
       </div>
 
-      {/* Identity Section */}
-      <section className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl border-3 border-blue-300 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h3 className="text-2xl font-bold text-stone-900 flex items-center gap-3">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
-              <User className="text-white" size={28}/>
+      {/* Profile Section */}
+      <section className="bg-white rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
+        <button
+          onClick={() => toggleSection('profile')}
+          className="w-full flex justify-between items-center p-6 hover:bg-stone-50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg">
+              <User className="text-white" size={24}/>
             </div>
-            Identity & Center
-          </h3>
-          {!isEditing && (
-            <button
-              onClick={handleEdit}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
-            >
-              <Wrench size={20} />
-              Edit
-            </button>
-          )}
-        </div>
-        {isEditing ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
-              <input
-                type="text"
-                value={editedSettings?.userName || ''}
-                onChange={(e) => setEditedSettings({ ...editedSettings!, userName: e.target.value })}
-                className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
-              <input
-                type="text"
-                value={editedSettings?.iskconCenter || ''}
-                onChange={(e) => setEditedSettings({ ...editedSettings!, iskconCenter: e.target.value })}
-                className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
-              />
+            <div className="text-left">
+              <h3 className="text-xl font-bold text-stone-900">Profile Information</h3>
+              <p className="text-sm text-stone-600">Personal details and spiritual identity</p>
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
-              <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
-                {settings.userName || 'Not set'}
+          {expandedSections.has('profile') ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
+        </button>
+        
+        {expandedSections.has('profile') && (
+          <div className="p-6 border-t border-stone-200 bg-stone-50">
+            {!isEditing && (
+              <button
+                onClick={handleEdit}
+                className="mb-4 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all"
+              >
+                <Wrench size={18} />
+                Edit Profile
+              </button>
+            )}
+            {isEditing ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
+                  <input
+                    type="text"
+                    value={editedSettings?.userName || ''}
+                    onChange={(e) => setEditedSettings({ ...editedSettings!, userName: e.target.value })}
+                    className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
+                  <input
+                    type="text"
+                    value={editedSettings?.iskconCenter || ''}
+                    onChange={(e) => setEditedSettings({ ...editedSettings!, iskconCenter: e.target.value })}
+                    className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
+                  />
+                </div>
               </div>
-            </div>
-            <div>
-              <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
-              <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
-                {settings.iskconCenter || 'Not set'}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
+                  <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                    {settings.userName || 'Not set'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
+                  <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                    {settings.iskconCenter || 'Not set'}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-        {isEditing && (
-          <div className="flex gap-4 mt-6">
-            <button
-              onClick={handleSaveEdit}
-              className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 ${
-                saveStatus === 'saved'
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
-              }`}
-            >
-              <Save size={24} />
-              {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
-            </button>
-            <button
-              onClick={handleCancelEdit}
-              className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-xl transform hover:scale-105 active:scale-95"
-            >
-              Cancel
-            </button>
+            )}
+            {isEditing && (
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={handleSaveEdit}
+                  className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 ${
+                    saveStatus === 'saved'
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                  }`}
+                >
+                  <Save size={24} />
+                  {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-xl transform hover:scale-105 active:scale-95"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -305,6 +345,187 @@ const Settings: React.FC = () => {
           <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-6 rounded-2xl shadow-md border-2 border-orange-300">
             <p className="text-base text-orange-900 italic font-serif font-semibold leading-relaxed">
               "By the mercy of the spiritual master one receives the benediction of Krishna."
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy & Data Control Section */}
+      <section className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-xl border-3 border-green-300 p-8">
+        <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-xl shadow-lg">
+            <Shield className="text-white" size={28}/>
+          </div>
+          Privacy & Data Control
+        </h3>
+        
+        <div className="space-y-6">
+          {/* Data Ownership Notice */}
+          <div className="bg-green-50 border-2 border-green-300 rounded-xl p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <Lock className="text-green-600 flex-shrink-0 mt-1" size={24} />
+              <div>
+                <h4 className="text-lg font-bold text-green-900 mb-2">Your Data, Your Rights</h4>
+                <p className="text-green-800 text-sm leading-relaxed">
+                  You have <strong>complete ownership and control</strong> over all your personal data. 
+                  We respect your privacy and ensure your spiritual journey data is:
+                </p>
+                <ul className="mt-3 space-y-2 text-green-800 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span><strong>Private by default</strong> - Only you can access your daily entries, journal, and analytics</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span><strong>Encrypted in transit</strong> - All data transfers use secure HTTPS/SSL encryption</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span><strong>Stored securely</strong> - Hosted on Firebase's enterprise-grade infrastructure</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span><strong>Never shared or sold</strong> - Your data will never be shared with third parties</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span><strong>Deletable anytime</strong> - You can permanently delete all your data instantly</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* What We Store */}
+          <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
+            <div className="flex items-start gap-3">
+              <Database className="text-blue-600 flex-shrink-0 mt-1" size={24} />
+              <div>
+                <h4 className="text-lg font-bold text-blue-900 mb-2">What We Store</h4>
+                <div className="space-y-3 text-blue-800 text-sm">
+                  <div>
+                    <strong className="block mb-1">Personal Information:</strong>
+                    <span className="text-blue-700">Name, Guru Name, ISKCON Center, Email (from Google Sign-In), Profile Photo</span>
+                  </div>
+                  <div>
+                    <strong className="block mb-1">Spiritual Practice Data:</strong>
+                    <span className="text-blue-700">Daily commitments, chanting rounds, study hours, discipline scores, mood tracking</span>
+                  </div>
+                  <div>
+                    <strong className="block mb-1">Journal Entries:</strong>
+                    <span className="text-blue-700">Your devotional reflections and spiritual insights</span>
+                  </div>
+                  <div>
+                    <strong className="block mb-1">Community Data:</strong>
+                    <span className="text-blue-700">Chat messages, questions, answers (in Community section only)</span>
+                  </div>
+                  <div>
+                    <strong className="block mb-1">Usage Analytics:</strong>
+                    <span className="text-blue-700">Anonymous usage patterns to improve the app (no personal tracking)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Visibility Controls */}
+          <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-6">
+            <div className="flex items-start gap-3">
+              <Eye className="text-purple-600 flex-shrink-0 mt-1" size={24} />
+              <div className="w-full">
+                <h4 className="text-lg font-bold text-purple-900 mb-3">What Others Can See</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PUBLIC</div>
+                    <div className="text-sm text-purple-800">
+                      <strong>Community Profile:</strong> Your name, guru, ISKCON center, profile photo, online status
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PUBLIC</div>
+                    <div className="text-sm text-purple-800">
+                      <strong>Community Content:</strong> Questions you ask, answers you provide, chat messages
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
+                    <div className="text-sm text-purple-800">
+                      <strong>Daily Planner:</strong> Your commitments, timeline, reflections - <strong>completely private</strong>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
+                    <div className="text-sm text-purple-800">
+                      <strong>Journal:</strong> All devotional journal entries - <strong>completely private</strong>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
+                    <div className="text-sm text-purple-800">
+                      <strong>Analytics:</strong> All performance metrics and graphs - <strong>completely private</strong>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
+                    <div className="text-sm text-purple-800">
+                      <strong>Chanting Counter:</strong> Your rounds, sessions, goals - <strong>completely private</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Export Data Option */}
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-6">
+            <div className="flex items-start gap-3">
+              <Download className="text-amber-600 flex-shrink-0 mt-1" size={24} />
+              <div className="flex-1">
+                <h4 className="text-lg font-bold text-amber-900 mb-2">Export Your Data</h4>
+                <p className="text-amber-800 text-sm mb-4">
+                  Download a complete copy of all your data in JSON format. This includes everything: settings, entries, journal, analytics, and community activity.
+                </p>
+                <button
+                  onClick={async () => {
+                    if (user) {
+                      try {
+                        const userData = {
+                          exportDate: new Date().toISOString(),
+                          userId: user.uid,
+                          email: user.email,
+                          settings: settings,
+                          note: 'This is your complete Sadhana Tracker data export. You have full ownership of this data.'
+                        };
+                        const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `sadhana-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch (error) {
+                        console.error('Export error:', error);
+                        alert('Failed to export data. Please try again.');
+                      }
+                    }
+                  }}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+                >
+                  <Download size={20} />
+                  Download My Data
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Privacy Contact */}
+          <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6">
+            <h4 className="text-base font-bold text-gray-900 mb-2">Privacy Questions?</h4>
+            <p className="text-gray-700 text-sm">
+              If you have concerns about your data privacy or want to exercise your data rights, contact us at{' '}
+              <a href="mailto:jashwanthjavili7@gmail.com" className="text-blue-600 hover:text-blue-800 font-bold underline">
+                jashwanthjavili7@gmail.com
+              </a>
             </p>
           </div>
         </div>

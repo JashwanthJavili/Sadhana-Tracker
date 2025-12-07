@@ -23,9 +23,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      /* Cross-browser normalization */
       * {
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html {
+        /* Prevent font size adjustments in different browsers */
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        font-size: 16px; /* Base font size for all browsers */
       }
       
       html, body {
@@ -36,7 +49,9 @@
       }
       
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        font-size: 1rem; /* 16px base */
+        line-height: 1.5;
         background: linear-gradient(135deg, #f8fafc 0%, #fef3c7 50%, #f8fafc 100%);
         background-attachment: fixed;
         overflow-x: hidden;
@@ -71,8 +86,20 @@
         }
       }
       
-      h1, h2, h3, .quote-text {
-        font-family: 'Merriweather', serif;
+      /* Consistent heading sizes across browsers */
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Merriweather', 'Georgia', serif;
+        line-height: 1.2;
+        font-weight: 700;
+      }
+      
+      h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); } /* 28px - 40px */
+      h2 { font-size: clamp(1.5rem, 3vw, 2rem); }    /* 24px - 32px */
+      h3 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); } /* 20px - 28px */
+      h4 { font-size: clamp(1.125rem, 2vw, 1.5rem); }   /* 18px - 24px */
+      
+      .quote-text {
+        font-family: 'Merriweather', 'Georgia', serif;
       }
       /* Custom scrollbar for timeline */
       .timeline-scroll::-webkit-scrollbar {

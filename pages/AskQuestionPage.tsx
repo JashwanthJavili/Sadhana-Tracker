@@ -14,12 +14,12 @@ const AskQuestionPage: React.FC = () => {
   const [tagsInput, setTagsInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const categories: Array<{ value: Question['category']; label: string; emoji: string; description: string }> = [
-    { value: 'spiritual', label: 'Spiritual Practice', emoji: '🙏', description: 'Questions about devotion, meditation, prayer' },
-    { value: 'sadhana', label: 'Sadhana', emoji: '📿', description: 'Daily spiritual practices and routines' },
-    { value: 'scripture', label: 'Scripture Study', emoji: '📖', description: 'Questions about Bhagavad Gita, Srimad Bhagavatam, etc.' },
-    { value: 'lifestyle', label: 'Lifestyle', emoji: '🌱', description: 'Living a conscious, devotional lifestyle' },
-    { value: 'general', label: 'General', emoji: '💬', description: 'General questions and discussions' },
+  const categories: Array<{ value: Question['category']; label: string; description: string }> = [
+    { value: 'spiritual', label: 'Spiritual Guidance', description: 'Devotional practices, meditation, and prayer guidance' },
+    { value: 'sadhana', label: 'Sadhana & Practice', description: 'Daily spiritual practices and routines' },
+    { value: 'scripture', label: 'Scriptural Studies', description: 'Study of Bhagavad Gita, Srimad Bhagavatam, and Vedic texts' },
+    { value: 'lifestyle', label: 'Devotional Life', description: 'Living a conscious, devotional lifestyle' },
+    { value: 'general', label: 'Community Discussion', description: 'General spiritual discussions and topics' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,9 +116,8 @@ const AskQuestionPage: React.FC = () => {
                     : 'border-stone-200 hover:border-orange-300 bg-white'
                 }`}
               >
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-2xl">{cat.emoji}</span>
-                  <span className="font-bold text-stone-900">{cat.label}</span>
+                <div className="mb-1">
+                  <span className="font-bold text-stone-900 text-lg">{cat.label}</span>
                 </div>
                 <p className="text-sm text-stone-600">{cat.description}</p>
               </button>

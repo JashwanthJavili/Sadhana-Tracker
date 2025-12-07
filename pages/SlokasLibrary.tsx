@@ -256,9 +256,9 @@ const SlokasLibrary: React.FC = () => {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600 rounded-2xl p-8 shadow-2xl border-2 border-purple-300">
-        <h1 className="text-4xl font-bold text-white mb-2">Slokas & Mantras Library</h1>
-        <p className="text-purple-100 text-lg">Community collection of sacred verses and mantras</p>
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600 rounded-2xl p-6 sm:p-8 shadow-2xl border-2 border-purple-300">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">Mantras & Kirtans</h1>
+        <p className="text-purple-100 text-sm sm:text-base md:text-lg">Sacred Collection of Devotional Chants and Prayers</p>
       </div>
 
       {/* Search & Add */}
@@ -268,18 +268,18 @@ const SlokasLibrary: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400" size={20} />
             <input
               type="text"
-              placeholder="Search slokas by title, mantra, or meaning..."
+              placeholder="Search by title, verse, or meaning..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className="w-full pl-10 pr-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-sm sm:text-base"
             />
           </div>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg flex items-center gap-2"
+            className="px-4 sm:px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
           >
-            <Plus size={20} />
-            Add Sloka
+            <Plus size={18} />
+            Add Chant
           </button>
         </div>
       </div>
@@ -287,7 +287,7 @@ const SlokasLibrary: React.FC = () => {
       {/* Add Sloka Form */}
       {showAddForm && (
         <div className="bg-white rounded-xl p-6 shadow-xl border-2 border-purple-300">
-          <h3 className="text-xl font-bold text-stone-800 mb-4">Add New Sloka</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-stone-800 mb-4">Add Mantra or Kirtan</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-stone-700 mb-2">Title *</label>
@@ -300,13 +300,13 @@ const SlokasLibrary: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Mantra / Sloka *</label>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Verse / Mantra *</label>
               <textarea
                 value={newSloka.mantra}
                 onChange={(e) => setNewSloka({ ...newSloka, mantra: e.target.value })}
-                placeholder="Enter the Sanskrit mantra or sloka..."
+                placeholder="Enter the mantra or kirtan text..."
                 rows={6}
-                className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none font-serif text-lg"
+                className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none font-serif text-base leading-relaxed"
               />
             </div>
             <div>
@@ -322,9 +322,9 @@ const SlokasLibrary: React.FC = () => {
             <div className="flex gap-4">
               <button
                 onClick={handleAddSloka}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-bold transition-all"
+                className="flex-1 px-4 sm:px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-bold transition-all text-sm sm:text-base"
               >
-                Submit Sloka
+                Add to Library
               </button>
               <button
                 onClick={() => setShowAddForm(false)}

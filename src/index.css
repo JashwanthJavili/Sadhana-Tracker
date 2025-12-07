@@ -65,6 +65,17 @@
   }
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-out;
 }
@@ -83,6 +94,10 @@
 
 .animate-slideDown {
   animation: slideDown 0.3s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
 }
 
 /* Smooth transitions for all interactive elements */

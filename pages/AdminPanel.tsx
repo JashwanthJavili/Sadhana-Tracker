@@ -5,7 +5,7 @@ import {
   Users, Trash2, RefreshCw, BarChart3, MessageSquare, 
   HelpCircle, Shield, UserX, Calendar, Activity, UserPlus, UserMinus,
   Download, Bell, Flag, CheckCircle, XCircle, Search, Filter,
-  TrendingUp, Database, Zap, FileText, Eye, EyeOff, AlertTriangle, MoreVertical
+  TrendingUp, Database, Zap, FileText, Eye, EyeOff, AlertTriangle, MoreVertical, MessageCircle
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -23,6 +23,7 @@ import {
 import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
 import { ref, set, push, get, remove, update } from 'firebase/database';
 import { db } from '../services/firebase';
+import FeedbackViewer from '../components/FeedbackViewer';
 
 interface UserInfo {
   uid: string;
@@ -62,7 +63,7 @@ const AdminPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'admins' | 'content' | 'system' | 'logs' | 'reports' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'admins' | 'content' | 'feedback' | 'system' | 'logs' | 'reports' | 'settings'>('overview');
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -78,6 +79,12 @@ const AdminPanel: React.FC = () => {
   const [flaggedContent, setFlaggedContent] = useState<any[]>([]);
   const [contentFilter, setContentFilter] = useState<'all' | 'questions' | 'answers' | 'flagged'>('all');
   const [contentSearch, setContentSearch] = useState('');
+
+  // App Settings States
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [guestModeEnabled, setGuestModeEnabled] = useState(true);
+  const [registrationEnabled, setRegistrationEnabled] = useState(true);
+  const [firebaseUsage, setFirebaseUsage] = useState<any>(null);
 
   const isSuperAdmin = user?.email === ADMIN_EMAIL;
   const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PANEL_PASSWORD || 'Hare Krishna';
@@ -159,7 +166,9 @@ const AdminPanel: React.FC = () => {
         getAllUsersAdmin(),
         getAppStatistics(),
         getAllAdmins(),
-        loadContentData()
+        loadContentData(),
+        loadAppSettings(),
+        loadFirebaseUsage()
       ]);
       
       // Mark users who are admins
@@ -177,6 +186,91 @@ const AdminPanel: React.FC = () => {
       alert('Failed to load admin data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAppSettings = async () => {
+    try {
+      const settingsRef = ref(db, 'appSettings');
+      const snapshot = await get(settingsRef);
+      
+      if (snapshot.exists()) {
+        const settings = snapshot.val();
+        setMaintenanceMode(settings.maintenanceMode || false);
+        setGuestModeEnabled(settings.guestModeEnabled !== false); // default true
+        setRegistrationEnabled(settings.registrationEnabled !== false); // default true
+      }
+    } catch (error) {
+      console.error('Error loading app settings:', error);
+    }
+  };
+
+  const loadFirebaseUsage = async () => {
+    try {
+      // Estimate Firebase usage by counting data
+      const usersSnapshot = await get(ref(db, 'users'));
+      const questionsSnapshot = await get(ref(db, 'questions'));
+      const chatsSnapshot = await get(ref(db, 'chats'));
+      
+      let totalSize = 0;
+      let userCount = 0;
+      let questionCount = 0;
+      let chatCount = 0;
+
+      if (usersSnapshot.exists()) {
+        userCount = Object.keys(usersSnapshot.val()).length;
+        totalSize += JSON.stringify(usersSnapshot.val()).length;
+      }
+
+      if (questionsSnapshot.exists()) {
+        questionCount = Object.keys(questionsSnapshot.val()).length;
+        totalSize += JSON.stringify(questionsSnapshot.val()).length;
+      }
+
+      if (chatsSnapshot.exists()) {
+        chatCount = Object.keys(chatsSnapshot.val()).length;
+        totalSize += JSON.stringify(chatsSnapshot.val()).length;
+      }
+
+      const sizeInMB = (totalSize / (1024 * 1024)).toFixed(2);
+      const freeLimit = 1024; // 1GB free tier
+      const usagePercent = ((parseFloat(sizeInMB) / freeLimit) * 100).toFixed(2);
+
+      setFirebaseUsage({
+        totalSizeMB: parseFloat(sizeInMB),
+        freeLimitMB: freeLimit,
+        usagePercent: parseFloat(usagePercent),
+        userCount,
+        questionCount,
+        chatCount,
+        estimatedReadsPerDay: userCount * 50, // Rough estimate
+        estimatedWritesPerDay: userCount * 20
+      });
+    } catch (error) {
+      console.error('Error loading Firebase usage:', error);
+    }
+  };
+
+  const saveAppSettings = async (setting: string, value: boolean) => {
+    try {
+      await update(ref(db, 'appSettings'), { [setting]: value });
+      
+      switch (setting) {
+        case 'maintenanceMode':
+          setMaintenanceMode(value);
+          break;
+        case 'guestModeEnabled':
+          setGuestModeEnabled(value);
+          break;
+        case 'registrationEnabled':
+          setRegistrationEnabled(value);
+          break;
+      }
+
+      alert(`✅ ${setting} ${value ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error saving app settings:', error);
+      alert('❌ Failed to save settings');
     }
   };
 
@@ -690,6 +784,17 @@ const AdminPanel: React.FC = () => {
           >
             <Flag className="inline mr-2" size={20} />
             Content Moderation
+          </button>
+          <button
+            onClick={() => setActiveTab('feedback')}
+            className={`px-6 py-3 rounded-xl font-bold transition-all ${
+              activeTab === 'feedback'
+                ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-lg'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+            }`}
+          >
+            <MessageCircle className="inline mr-2" size={20} />
+            User Feedback
           </button>
           <button
             onClick={() => setActiveTab('system')}
@@ -1501,6 +1606,20 @@ const AdminPanel: React.FC = () => {
         </div>
       )}
 
+      {activeTab === 'feedback' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 rounded-xl p-6 text-white shadow-2xl">
+            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+              <MessageCircle size={32} />
+              User Feedback Management
+            </h2>
+            <p className="text-pink-100">View and manage all user feedback submissions</p>
+          </div>
+
+          <FeedbackViewer />
+        </div>
+      )}
+
       {activeTab === 'system' && (
         <div className="bg-white rounded-2xl shadow-xl border-2 border-stone-200 p-6">
           <div className="mb-6">
@@ -1536,7 +1655,7 @@ const AdminPanel: React.FC = () => {
                 Active Sessions
               </h3>
               <p className="text-3xl font-bold text-purple-600">{users.filter(u => {
-                const lastActive = u.lastActiveAt ? new Date(u.lastActiveAt) : null;
+                const lastActive = u.lastActive ? new Date(u.lastActive) : null;
                 return lastActive && (new Date().getTime() - lastActive.getTime()) < 15 * 60 * 1000;
               }).length}</p>
               <p className="text-sm text-stone-600 mt-2">Users online now</p>
@@ -1817,7 +1936,12 @@ const AdminPanel: React.FC = () => {
                     <p className="text-xs text-stone-600">Disable app for maintenance</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={maintenanceMode}
+                      onChange={(e) => saveAppSettings('maintenanceMode', e.target.checked)}
+                    />
                     <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
@@ -1827,7 +1951,12 @@ const AdminPanel: React.FC = () => {
                     <p className="text-xs text-stone-600">Allow guest demo access</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={guestModeEnabled}
+                      onChange={(e) => saveAppSettings('guestModeEnabled', e.target.checked)}
+                    />
                     <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
@@ -1837,88 +1966,13 @@ const AdminPanel: React.FC = () => {
                     <p className="text-xs text-stone-600">Allow new signups</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={registrationEnabled}
+                      onChange={(e) => saveAppSettings('registrationEnabled', e.target.checked)}
+                    />
                     <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Feature Toggles */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Zap className="text-purple-600" size={24} />
-                Feature Toggles
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold">Community Forum</p>
-                    <p className="text-xs text-stone-600">Q&A discussions</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold">Direct Messaging</p>
-                    <p className="text-xs text-stone-600">User-to-user chats</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold">Devotional Journal</p>
-                    <p className="text-xs text-stone-600">Personal journaling</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Notification Settings */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-200">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Bell className="text-blue-600" size={24} />
-                Notification Settings
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold">Email Notifications</p>
-                    <p className="text-xs text-stone-600">Send email updates</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold">Push Notifications</p>
-                    <p className="text-xs text-stone-600">Browser notifications</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold">Weekly Digest</p>
-                    <p className="text-xs text-stone-600">Summary emails</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               </div>
@@ -1931,10 +1985,6 @@ const AdminPanel: React.FC = () => {
                 Database Management
               </h3>
               <div className="space-y-3">
-                <button className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-bold hover:from-orange-600 hover:to-amber-600 transition-all flex items-center justify-center gap-2">
-                  <Download size={20} />
-                  Export All Data
-                </button>
                 <button 
                   onClick={handleMigrateProfiles}
                   className={`w-full px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
@@ -1954,17 +2004,81 @@ const AdminPanel: React.FC = () => {
                    migrationStatus === 'error' ? '❌ Migration Failed' :
                    'Migrate Chat Profiles'}
                 </button>
-                <button className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-bold hover:from-purple-600 hover:to-pink-600 transition-all flex items-center justify-center gap-2">
-                  <Database size={20} />
-                  Backup Database
-                </button>
-                <button className="w-full px-4 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg font-bold hover:from-red-700 hover:to-rose-700 transition-all flex items-center justify-center gap-2">
-                  <AlertTriangle size={20} />
-                  Clear Cache
-                </button>
               </div>
             </div>
           </div>
+
+          {/* Firebase Usage Monitor */}
+          {firebaseUsage && (
+            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-orange-200">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Database className="text-orange-600" size={24} />
+                Firebase Usage Monitor
+              </h3>
+              <div className="space-y-4">
+                <div className="p-4 bg-orange-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-semibold text-stone-800">Storage Used</span>
+                    <span className="text-2xl font-bold text-orange-600">
+                      {firebaseUsage.totalSizeMB} MB
+                    </span>
+                  </div>
+                  <div className="w-full bg-stone-200 rounded-full h-4 overflow-hidden">
+                    <div 
+                      className={`h-full transition-all ${
+                        firebaseUsage.usagePercent > 80 ? 'bg-red-500' :
+                        firebaseUsage.usagePercent > 50 ? 'bg-yellow-500' :
+                        'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(firebaseUsage.usagePercent, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-stone-600 mt-2">
+                    {firebaseUsage.usagePercent}% of {firebaseUsage.freeLimitMB} MB free tier
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-stone-600 mb-1">Total Users</p>
+                    <p className="text-2xl font-bold text-blue-600">{firebaseUsage.userCount}</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <p className="text-xs text-stone-600 mb-1">Questions</p>
+                    <p className="text-2xl font-bold text-purple-600">{firebaseUsage.questionCount}</p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <p className="text-xs text-stone-600 mb-1">Chats</p>
+                    <p className="text-2xl font-bold text-green-600">{firebaseUsage.chatCount}</p>
+                  </div>
+                  <div className="p-3 bg-pink-50 rounded-lg">
+                    <p className="text-xs text-stone-600 mb-1">Est. Reads/Day</p>
+                    <p className="text-lg font-bold text-pink-600">{firebaseUsage.estimatedReadsPerDay}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border-2 border-orange-300">
+                  <p className="font-semibold text-orange-800 mb-2">Free Tier Limits:</p>
+                  <ul className="text-sm text-stone-700 space-y-1">
+                    <li>• Storage: 1 GB (Realtime Database)</li>
+                    <li>• Downloads: 10 GB/month</li>
+                    <li>• Concurrent Connections: 100</li>
+                    <li>• Estimated time until limit: {
+                      Math.floor((firebaseUsage.freeLimitMB - firebaseUsage.totalSizeMB) / (firebaseUsage.totalSizeMB / 30))
+                    } days</li>
+                  </ul>
+                </div>
+
+                <button 
+                  onClick={() => loadFirebaseUsage()}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-all flex items-center justify-center gap-2"
+                >
+                  <RefreshCw size={20} />
+                  Refresh Usage Stats
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Security Settings */}
           <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-200">

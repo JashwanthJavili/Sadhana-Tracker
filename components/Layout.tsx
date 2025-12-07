@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle, HelpCircle as QuestionIcon, Shield, Lock, Flame, BookText, Calendar, Download } from 'lucide-react';
+import { LayoutDashboard, PenTool, BarChart2, BookOpen, Menu, X, Settings, User, LogOut, Info, HelpCircle, MessageSquare, Heart, Users, MessageCircle, HelpCircle as QuestionIcon, Shield, Lock, Flame, BookText, Calendar, Download, ChevronDown, ChevronRight } from 'lucide-react';
 import { getSettings, trackUsage } from '../services/storage';
 import { getTotalUnreadCount } from '../services/chat';
 import { UserSettings } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserData } from '../contexts/UserDataContext';
 import InteractiveTour from './InteractiveTour';
+import FeedbackPrompt from './FeedbackPrompt';
 import { useSyncChatProfile } from '../hooks/useSyncChatProfile';
 
 // @ts-ignore
@@ -26,13 +28,35 @@ declare global {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout, isNewUser } = useAuth();
+  const { userSettings } = useUserData();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [showTour, setShowTour] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showInstallButton, setShowInstallButton] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Sadhana Practice']));
   const location = useLocation();
   const navigate = useNavigate();
+
+  const toggleGroup = (groupTitle: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupTitle)) {
+        newSet.delete(groupTitle);
+      } else {
+        newSet.add(groupTitle);
+      }
+      return newSet;
+    });
+  };
+
+  // Sync context settings to local state
+  useEffect(() => {
+    if (userSettings) {
+      setSettings(userSettings);
+    }
+  }, [userSettings]);
 
   // Sync chat profile for existing users
   useSyncChatProfile();
@@ -101,6 +125,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     };
     fetchSettings();
+
+    // Listen for user data updates
+    const handleDataUpdate = () => {
+      console.log('📡 Layout: Received data update event');
+      fetchSettings();
+    };
+    
+    window.addEventListener('userDataUpdated', handleDataUpdate);
+    return () => window.removeEventListener('userDataUpdated', handleDataUpdate);
   }, [location.pathname, user, isNewUser]);
 
   // Load unread messages count
@@ -141,21 +174,46 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const isGuest = user?.uid === 'guest';
   
-  const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard', tourAttr: 'dashboard', guestAllowed: true },
-    { to: '/planner', icon: PenTool, label: 'Daily Planner', tourAttr: 'planner', guestAllowed: true },
-    { to: '/analytics', icon: BarChart2, label: 'Analytics', tourAttr: 'analytics', guestAllowed: true },
-    { to: '/chanting', icon: Flame, label: 'Japa Counter', tourAttr: 'chanting', guestAllowed: true },
-    { to: '/slokas', icon: BookText, label: 'Slokas Library', tourAttr: 'slokas', guestAllowed: true },
-    { to: '/festivals', icon: Calendar, label: 'Festivals', tourAttr: 'festivals', guestAllowed: true },
-    { to: '/journal', icon: Heart, label: 'Devotional Journal', tourAttr: 'journal', guestAllowed: false, locked: isGuest },
-    { to: '/history', icon: BookOpen, label: 'History', tourAttr: 'history', guestAllowed: true },
-    { to: '/community', icon: Users, label: 'Community', tourAttr: 'community', guestAllowed: false, locked: isGuest },
-    { to: '/chats', icon: MessageCircle, label: 'Messages', tourAttr: 'messages', guestAllowed: false, locked: isGuest },
-    { to: '/questions', icon: QuestionIcon, label: 'Q&A Forum', tourAttr: 'questions', guestAllowed: false, locked: isGuest },
-    ...(user?.email === ADMIN_EMAIL ? [{ to: '/admin', icon: Shield, label: 'Admin Panel', tourAttr: 'admin', guestAllowed: false }] : []),
-    { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings', guestAllowed: true },
-    { to: '/about', icon: Info, label: 'About', guestAllowed: true },
+  const navGroups = [
+    {
+      title: 'Sadhana Practice',
+      items: [
+        { to: '/', icon: LayoutDashboard, label: 'Dashboard', tourAttr: 'dashboard', guestAllowed: true },
+        { to: '/planner', icon: PenTool, label: 'Daily Planner', tourAttr: 'planner', guestAllowed: true },
+        { to: '/chanting', icon: Flame, label: 'Japa Counter', tourAttr: 'chanting', guestAllowed: true },
+        { to: '/journal', icon: Heart, label: 'Devotional Journal', tourAttr: 'journal', guestAllowed: false, locked: isGuest },
+      ]
+    },
+    {
+      title: 'Knowledge & Learning',
+      items: [
+        { to: '/slokas', icon: BookText, label: 'Mantras & Kirtans', tourAttr: 'slokas', guestAllowed: true },
+        { to: '/festivals', icon: Calendar, label: 'Vaishnava Calendar', tourAttr: 'festivals', guestAllowed: true },
+        { to: '/questions', icon: QuestionIcon, label: 'Spiritual Forum', tourAttr: 'questions', guestAllowed: false, locked: isGuest },
+      ]
+    },
+    {
+      title: 'Community & Connection',
+      items: [
+        { to: '/community', icon: Users, label: 'Devotee Community', tourAttr: 'community', guestAllowed: false, locked: isGuest },
+        { to: '/chats', icon: MessageCircle, label: 'Messages', tourAttr: 'messages', guestAllowed: false, locked: isGuest },
+      ]
+    },
+    {
+      title: 'Progress & Insights',
+      items: [
+        { to: '/analytics', icon: BarChart2, label: 'Analytics', tourAttr: 'analytics', guestAllowed: true },
+        { to: '/history', icon: BookOpen, label: 'History', tourAttr: 'history', guestAllowed: true },
+      ]
+    },
+    {
+      title: 'Settings',
+      items: [
+        ...(user?.email === ADMIN_EMAIL ? [{ to: '/admin', icon: Shield, label: 'Admin Panel', tourAttr: 'admin', guestAllowed: false }] : []),
+        { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings', guestAllowed: true },
+        { to: '/about', icon: Info, label: 'About', guestAllowed: true },
+      ]
+    },
   ];
 
   if (!user) return <>{children}</>;
@@ -217,41 +275,69 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
 
-        <nav className="p-3 sm:p-4 space-y-1.5 sm:space-y-2 flex-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const isLocked = item.locked === true;
-            const NavComponent = isLocked ? 'div' : NavLink;
+        <nav className="p-3 sm:p-4 space-y-4 flex-1 overflow-y-auto">
+          {navGroups.map((group, groupIndex) => {
+            const isExpanded = expandedGroups.has(group.title);
             
             return (
-              <NavComponent
-                key={item.to}
-                {...(!isLocked && {
-                  to: item.to,
-                  onClick: () => setIsSidebarOpen(false)
-                })}
-                data-tour={item.tourAttr}
-                className={isLocked 
-                  ? 'flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative text-stone-500 cursor-not-allowed opacity-60 min-h-[48px] touch-manipulation'
-                  : ({ isActive }: any) => `
-                    flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative min-h-[48px] touch-manipulation active:scale-95
-                    ${isActive 
-                      ? 'bg-orange-700 text-white shadow-lg' 
-                      : 'text-stone-300 hover:bg-stone-800 hover:text-white'}
-                  `
-                }
-              >
-                <item.icon size={20} className="flex-shrink-0" />
-                <span className="font-medium text-sm sm:text-base">{item.label}</span>
-                {isLocked && (
-                  <Lock size={16} className="ml-auto text-orange-500 flex-shrink-0" title="Sign in to unlock" />
+              <div key={groupIndex} className="space-y-1.5">
+                {/* Group Title - Clickable to expand/collapse */}
+                <button
+                  onClick={() => toggleGroup(group.title)}
+                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-stone-800/50 rounded-lg transition-colors group"
+                >
+                  <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider group-hover:text-stone-400">
+                    {group.title}
+                  </h3>
+                  {isExpanded ? (
+                    <ChevronDown size={16} className="text-stone-500 group-hover:text-stone-400" />
+                  ) : (
+                    <ChevronRight size={16} className="text-stone-500 group-hover:text-stone-400" />
+                  )}
+                </button>
+                
+                {/* Group Items - Show only when expanded */}
+                {isExpanded && (
+                  <div className="space-y-1.5">
+                    {group.items.map((item) => {
+                      const isLocked = item.locked === true;
+                      const NavComponent = isLocked ? 'div' : NavLink;
+                      
+                      return (
+                        <NavComponent
+                          key={item.to}
+                          {...(!isLocked && {
+                            to: item.to,
+                            onClick: () => setIsSidebarOpen(false)
+                          })}
+                          data-tour={item.tourAttr}
+                          className={isLocked 
+                            ? 'flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative text-stone-500 cursor-not-allowed opacity-60 min-h-[48px] touch-manipulation'
+                            : ({ isActive }: any) => `
+                              flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 rounded-lg transition-colors relative min-h-[48px] touch-manipulation active:scale-95
+                              ${isActive 
+                                ? 'bg-orange-700 text-white shadow-lg' 
+                                : 'text-stone-300 hover:bg-stone-800 hover:text-white'}
+                            `
+                          }
+                        >
+                          <item.icon size={20} className="flex-shrink-0" />
+                          <span className="font-medium text-sm sm:text-base">{item.label}</span>
+                          {isLocked && (
+                            <Lock size={16} className="ml-auto text-orange-500 flex-shrink-0" title="Sign in to unlock" />
+                          )}
+                          {/* Unread badge for Messages */}
+                          {item.to === '/chats' && unreadCount > 0 && !isLocked && (
+                            <span className="ml-auto bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold min-w-[20px] text-center flex-shrink-0">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                        </NavComponent>
+                      );
+                    })}
+                  </div>
                 )}
-                {/* Unread badge for Messages */}
-                {item.to === '/chats' && unreadCount > 0 && !isLocked && (
-                  <span className="ml-auto bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold min-w-[20px] text-center flex-shrink-0">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </NavComponent>
+              </div>
             );
           })}
         </nav>
@@ -280,15 +366,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <HelpCircle size={14} />
               <span>Tour</span>
             </button>
-            <a
-              href="https://forms.zohopublic.in/jashwanthjashu684gm1/form/SadhanaTracerFeedbackForm/formperma/KOoeajQ20c3B6YQ6Bmmy76hxc3xkOC9-BAc-Lu7GEjU"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setShowFeedback(true)}
               className="flex items-center justify-center gap-1 text-xs text-stone-400 hover:text-orange-400 hover:bg-stone-800 px-2 py-2 rounded-lg transition-colors"
             >
               <MessageSquare size={14} />
               <span>Feedback</span>
-            </a>
+            </button>
           </div>
 
           <div className="flex items-center gap-3 mb-4 px-2">
@@ -348,6 +432,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Interactive Tour */}
       {showTour && <InteractiveTour onComplete={handleTourComplete} />}
+
+      {/* Feedback Modal */}
+      {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
     </div>
   );
 };

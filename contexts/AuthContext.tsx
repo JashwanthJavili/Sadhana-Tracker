@@ -59,6 +59,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [user]);
 
+  // CRITICAL SECURITY: Continuous monitoring to prevent ANY localStorage for authenticated users
+  // This protects against browser extensions, third-party scripts, or any unauthorized access
+  useEffect(() => {
+    if (!user || user.uid === 'guest') return;
+
+    // Aggressive cleanup every 3 seconds
+    const monitoringInterval = setInterval(() => {
+      const unauthorizedKeys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sl_')) {
+          unauthorizedKeys.push(key);
+        }
+      }
+      
+      if (unauthorizedKeys.length > 0) {
+        console.error(`🚨 SECURITY ALERT: Detected ${unauthorizedKeys.length} unauthorized localStorage items for authenticated user ${user.uid}:`, unauthorizedKeys);
+        unauthorizedKeys.forEach(key => {
+          console.error(`🗑️ Removing unauthorized key: ${key}`);
+          localStorage.removeItem(key);
+        });
+        console.log('✅ Unauthorized localStorage cleaned');
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => clearInterval(monitoringInterval);
+  }, [user]);
+
   const signInWithGoogle = async () => {
     try {
       // CRITICAL: Clear ALL guest data from localStorage when a real user signs in

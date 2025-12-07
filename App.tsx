@@ -3,11 +3,16 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './components/Login';
 import OnboardingModal from './components/OnboardingModal';
+import FeedbackPrompt from './components/FeedbackPrompt';
 import LoadingScreen from './components/LoadingScreen';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { getSettings, saveSettings } from './services/storage';
+import { UserDataProvider, useUserData } from './contexts/UserDataContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { getSettings, saveSettings, cleanupFakeSeedData } from './services/storage';
 import { createUserProfile, setUserOnlineStatus, getUserProfile } from './services/chat';
+import { ref, get } from 'firebase/database';
+import { db } from './services/firebase';
 
 // Lazy load heavy pages for better performance
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -66,11 +71,15 @@ const DefaultRedirect: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <LanguageProvider>
-        <HashRouter>
-          <AppContent />
-        </HashRouter>
-      </LanguageProvider>
+      <UserDataProvider>
+        <ToastProvider>
+          <LanguageProvider>
+            <HashRouter>
+              <AppContent />
+            </HashRouter>
+          </LanguageProvider>
+        </ToastProvider>
+      </UserDataProvider>
     </AuthProvider>
   );
 }
@@ -78,6 +87,7 @@ function App() {
 function AppContent() {
   const { user, loading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // CRITICAL: Clear localStorage immediately for authenticated users
   useEffect(() => {
@@ -100,6 +110,13 @@ function AppContent() {
     const checkFirstTime = async () => {
       if (user && user.uid !== 'guest') {
         console.log('Checking first time for user:', user.uid);
+        
+        // AUTOMATIC CLEANUP: Remove fake seed data from old version
+        const removedCount = await cleanupFakeSeedData(user.uid);
+        if (removedCount > 0) {
+          console.log(`✅ Automatically removed ${removedCount} fake entries`);
+        }
+        
         const settings = await getSettings(user.uid);
         console.log('User settings:', settings);
         console.log('Is first time?', settings.isFirstTime);
@@ -107,10 +124,60 @@ function AppContent() {
           console.log('Showing onboarding modal');
           setShowOnboarding(true);
         }
+
+        // ONCE-PER-DAY CHECK: Check if user should see feedback prompt
+        checkFeedbackEligibility(user.uid, settings);
       }
     };
     checkFirstTime();
   }, [user]);
+
+  // Check if user is eligible for feedback (once per day if not submitted)
+  const checkFeedbackEligibility = async (userId: string, settings: any) => {
+    try {
+      // Check last feedback submission time
+      const feedbackRef = ref(db, `users/${userId}/lastFeedback`);
+      const feedbackSnapshot = await get(feedbackRef);
+      
+      if (feedbackSnapshot.exists()) {
+        const lastFeedbackTime = feedbackSnapshot.val().timestamp;
+        const currentTime = Date.now();
+        const hoursSinceLastFeedback = Math.floor((currentTime - lastFeedbackTime) / (1000 * 60 * 60));
+        
+        // If submitted in last 24 hours, don't show
+        if (hoursSinceLastFeedback < 24) {
+          console.log(`✓ Feedback already submitted ${hoursSinceLastFeedback} hours ago. Next prompt in ${24 - hoursSinceLastFeedback} hours.`);
+          return;
+        }
+      }
+
+      // Get user creation time (registration date)
+      const userCreatedAt = user?.metadata?.creationTime;
+      if (!userCreatedAt) {
+        console.log('⚠️ Cannot determine user creation time');
+        return;
+      }
+
+      const createdDate = new Date(userCreatedAt);
+      const currentDate = new Date();
+      const daysSinceRegistration = Math.floor((currentDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      console.log(`📅 Days since registration: ${daysSinceRegistration}`);
+
+      // Show feedback after 2+ days
+      if (daysSinceRegistration >= 2) {
+        console.log('✅ User eligible for feedback prompt');
+        // Delay showing by 5 seconds to let app load
+        setTimeout(() => {
+          setShowFeedback(true);
+        }, 5000);
+      } else {
+        console.log(`⏳ User needs ${2 - daysSinceRegistration} more day(s) before feedback`);
+      }
+    } catch (error) {
+      console.error('Error checking feedback eligibility:', error);
+    }
+  };
 
   const handleOnboardingComplete = async (data: { userName: string; guruName: string; iskconCenter: string }) => {
     if (user) {
@@ -141,7 +208,12 @@ function AppContent() {
       }
       
       setShowOnboarding(false);
-      // Tour will be shown automatically by InteractiveTour component
+      
+      // SMART UPDATE: Trigger context refresh without page reload
+      console.log('✅ Onboarding complete - updating app state');
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('userDataUpdated'));
+      }, 300);
     }
   };
 
@@ -183,6 +255,9 @@ function AppContent() {
       </Layout>
 
       <OnboardingModal isOpen={showOnboarding} onComplete={handleOnboardingComplete} />
+      
+      {/* Feedback Prompt - Shows after 2+ days */}
+      {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
     </>
   );
 }
