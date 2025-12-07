@@ -1,24 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import DailyPlanner from './pages/DailyPlanner';
-import Analytics from './pages/Analytics';
-import History from './pages/History';
-import Settings from './pages/Settings';
-import About from './pages/About';
-import DevotionalJournal from './pages/DevotionalJournal';
-import Community from './pages/Community';
-import ChatsList from './pages/ChatsList';
-import ChatWindow from './pages/ChatWindow';
-import QuestionsPage from './pages/QuestionsPage';
-import AskQuestionPage from './pages/AskQuestionPage';
-import QuestionDetailPage from './pages/QuestionDetailPage';
-import AdminPanel from './pages/AdminPanel';
-import ChantingCounter from './pages/ChantingCounter';
-import SlokasLibrary from './pages/SlokasLibrary';
-import FestivalsPage from './pages/FestivalsPage';
-import FestivalDetailPage from './pages/FestivalDetailPage';
 import Login from './components/Login';
 import OnboardingModal from './components/OnboardingModal';
 import LoadingScreen from './components/LoadingScreen';
@@ -26,6 +8,26 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { getSettings, saveSettings } from './services/storage';
 import { createUserProfile, setUserOnlineStatus, getUserProfile } from './services/chat';
+
+// Lazy load heavy pages for better performance
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const DailyPlanner = lazy(() => import('./pages/DailyPlanner'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const History = lazy(() => import('./pages/History'));
+const Settings = lazy(() => import('./pages/Settings'));
+const About = lazy(() => import('./pages/About'));
+const DevotionalJournal = lazy(() => import('./pages/DevotionalJournal'));
+const Community = lazy(() => import('./pages/Community'));
+const ChatsList = lazy(() => import('./pages/ChatsList'));
+const ChatWindow = lazy(() => import('./pages/ChatWindow'));
+const QuestionsPage = lazy(() => import('./pages/QuestionsPage'));
+const AskQuestionPage = lazy(() => import('./pages/AskQuestionPage'));
+const QuestionDetailPage = lazy(() => import('./pages/QuestionDetailPage'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const ChantingCounter = lazy(() => import('./pages/ChantingCounter'));
+const SlokasLibrary = lazy(() => import('./pages/SlokasLibrary'));
+const FestivalsPage = lazy(() => import('./pages/FestivalsPage'));
+const FestivalDetailPage = lazy(() => import('./pages/FestivalDetailPage'));
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -151,31 +153,33 @@ function AppContent() {
   return (
     <>
       <Layout>
-        <Routes>
-          <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-          
-          <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/planner" element={<PrivateRoute><DailyPlanner /></PrivateRoute>} />
-          <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
-          <Route path="/journal" element={<PrivateRoute><DevotionalJournal /></PrivateRoute>} />
-          <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
-          <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-          <Route path="/about" element={<PrivateRoute><About /></PrivateRoute>} />
-          <Route path="/community" element={<PrivateRoute><Community /></PrivateRoute>} />
-          <Route path="/chats" element={<PrivateRoute><ChatsList /></PrivateRoute>} />
-          <Route path="/chat/:chatId" element={<PrivateRoute><ChatWindow /></PrivateRoute>} />
-          <Route path="/questions" element={<PrivateRoute><QuestionsPage /></PrivateRoute>} />
-          <Route path="/questions/ask" element={<PrivateRoute><AskQuestionPage /></PrivateRoute>} />
-          <Route path="/questions/:questionId" element={<PrivateRoute><QuestionDetailPage /></PrivateRoute>} />
-          <Route path="/chanting" element={<PrivateRoute><ChantingCounter /></PrivateRoute>} />
-          <Route path="/slokas" element={<PrivateRoute><SlokasLibrary /></PrivateRoute>} />
-          <Route path="/festivals" element={<PrivateRoute><FestivalsPage /></PrivateRoute>} />
-          <Route path="/festival/:festivalId" element={<PrivateRoute><FestivalDetailPage /></PrivateRoute>} />
-          <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
-          
-          {/* Catch-all: redirect to dashboard if logged in, login if not */}
-          <Route path="*" element={<DefaultRedirect />} />
-        </Routes>
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+            
+            <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/planner" element={<PrivateRoute><DailyPlanner /></PrivateRoute>} />
+            <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
+            <Route path="/journal" element={<PrivateRoute><DevotionalJournal /></PrivateRoute>} />
+            <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+            <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+            <Route path="/about" element={<PrivateRoute><About /></PrivateRoute>} />
+            <Route path="/community" element={<PrivateRoute><Community /></PrivateRoute>} />
+            <Route path="/chats" element={<PrivateRoute><ChatsList /></PrivateRoute>} />
+            <Route path="/chat/:chatId" element={<PrivateRoute><ChatWindow /></PrivateRoute>} />
+            <Route path="/questions" element={<PrivateRoute><QuestionsPage /></PrivateRoute>} />
+            <Route path="/questions/ask" element={<PrivateRoute><AskQuestionPage /></PrivateRoute>} />
+            <Route path="/questions/:questionId" element={<PrivateRoute><QuestionDetailPage /></PrivateRoute>} />
+            <Route path="/chanting" element={<PrivateRoute><ChantingCounter /></PrivateRoute>} />
+            <Route path="/slokas" element={<PrivateRoute><SlokasLibrary /></PrivateRoute>} />
+            <Route path="/festivals" element={<PrivateRoute><FestivalsPage /></PrivateRoute>} />
+            <Route path="/festival/:festivalId" element={<PrivateRoute><FestivalDetailPage /></PrivateRoute>} />
+            <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
+            
+            {/* Catch-all: redirect to dashboard if logged in, login if not */}
+            <Route path="*" element={<DefaultRedirect />} />
+          </Routes>
+        </Suspense>
       </Layout>
 
       <OnboardingModal isOpen={showOnboarding} onComplete={handleOnboardingComplete} />
