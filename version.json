@@ -1,7 +1,19 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "buildDate": "2025-12-08",
   "changelog": [
+    {
+      "version": "1.0.1",
+      "date": "2025-12-08",
+      "changes": [
+        "Vibration and sound feedback for Japa Counter",
+        "Settings toggles for vibration and sound control",
+        "Auto-collapse navigation (one section at a time)",
+        "Optimized mobile spacing throughout sidebar",
+        "Reduced logo, buttons, and padding for better mobile UX",
+        "Smaller Tour, Feedback, and Install buttons"
+      ]
+    },
     {
       "version": "1.0.0",
       "date": "2025-12-08",
