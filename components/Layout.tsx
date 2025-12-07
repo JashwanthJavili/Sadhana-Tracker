@@ -37,22 +37,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showInstallButton, setShowInstallButton] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([
-    'Sadhana Practice',
-    'Knowledge & Learning',
-    'Community & Connection',
-    'Progress & Insights',
-    'Settings'
-  ]));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const location = useLocation();
   const navigate = useNavigate();
 
   const toggleGroup = (groupTitle: string) => {
     setExpandedGroups(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(groupTitle)) {
-        newSet.delete(groupTitle);
-      } else {
+      const newSet = new Set<string>();
+      // If clicking already expanded group, close it. Otherwise open only this one.
+      if (!prev.has(groupTitle)) {
         newSet.add(groupTitle);
       }
       return newSet;
@@ -260,53 +253,50 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Branding Area */}
-        <div className="p-6 border-b border-stone-700/50 flex flex-col items-center text-center gap-4 bg-gradient-to-br from-orange-900/20 to-transparent">
+        <div className="p-3 sm:p-4 border-b border-stone-700/50 flex flex-col items-center text-center gap-2 bg-gradient-to-br from-orange-900/20 to-transparent">
           {/* ISKCON Logo */}
-          <div className="bg-white/95 p-3 rounded-2xl shadow-xl ring-2 ring-orange-500/30">
+          <div className="bg-white/95 p-1.5 rounded-xl shadow-lg ring-2 ring-orange-500/30">
             <img 
               src={iskconLogo} 
               alt="ISKCON Logo" 
-              className="w-16 h-16 object-contain"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
             />
           </div>
           
           <div>
-            <h1 className="font-serif font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-200 to-orange-300">
+            <h1 className="font-serif font-bold text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-200 to-orange-300">
               Sadhana Sanga
             </h1>
-            {settings?.iskconCenter && settings.iskconCenter.toLowerCase() !== 'n/a' && (
-              <p className="text-xs text-orange-300/80 mt-1 font-semibold">{settings.iskconCenter}</p>
-            )}
             {settings?.guruName && settings.guruName.toLowerCase() !== 'n/a' && (
               <p className="text-xs text-stone-400 mt-0.5">Guided by {settings.guruName}</p>
             )}
           </div>
         </div>
 
-        <nav className="p-3 sm:p-4 space-y-4 flex-1 overflow-y-auto">
+        <nav className="p-2 sm:p-3 space-y-2 flex-1 overflow-y-auto">
           {navGroups.map((group, groupIndex) => {
             const isExpanded = expandedGroups.has(group.title);
             
             return (
-              <div key={groupIndex} className="space-y-1.5">
+              <div key={groupIndex} className="space-y-1">
                 {/* Group Title - Clickable to expand/collapse */}
                 <button
                   onClick={() => toggleGroup(group.title)}
-                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-stone-800/50 rounded-lg transition-colors group"
+                  className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-stone-800/50 rounded-lg transition-colors group"
                 >
                   <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider group-hover:text-stone-400">
                     {group.title}
                   </h3>
                   {isExpanded ? (
-                    <ChevronDown size={16} className="text-stone-500 group-hover:text-stone-400" />
+                    <ChevronDown size={14} className="text-stone-500 group-hover:text-stone-400" />
                   ) : (
-                    <ChevronRight size={16} className="text-stone-500 group-hover:text-stone-400" />
+                    <ChevronRight size={14} className="text-stone-500 group-hover:text-stone-400" />
                   )}
                 </button>
                 
                 {/* Group Items - Show only when expanded */}
                 {isExpanded && (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {group.items.map((item) => {
                       const isLocked = item.locked === true;
                       
@@ -361,13 +351,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Install App Button - Top of Navigation */}
         {showInstallButton && (
-          <div className="p-3 border-b border-stone-800">
+          <div className="px-2 py-1.5 border-b border-stone-800">
             <button
               onClick={handleInstallClick}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2.5 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl active:scale-95 text-sm"
+              className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-2 py-1.5 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl active:scale-95 text-xs"
             >
-              <Download size={16} />
-              <span>Install App</span>
+              <Download size={12} />
+              <span>Install</span>
             </button>
           </div>
         )}
@@ -375,44 +365,44 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Footer section */}
 
         {/* User Profile & Logout */}
-        <div className="p-4 border-t border-stone-800 bg-stone-900 space-y-2">
+        <div className="p-2 sm:p-3 border-t border-stone-800 bg-stone-900 space-y-2">
           
           {/* Help & Feedback Buttons */}
-          <div className="grid responsive-grid-2 gap-2 mb-3">
+          <div className="flex gap-1.5 mb-2">
             <button
               onClick={() => {
                 alert('🚧 Tour Feature\n\nThe interactive tour is currently under maintenance.\n\nWe\'re working on improving your experience!\n\nCheck back soon. 🙏');
               }}
-              className="flex items-center justify-center gap-1 text-xs text-stone-400 hover:text-orange-400 hover:bg-stone-800 px-2 py-2 rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 text-xs text-stone-400 hover:text-orange-400 hover:bg-stone-800 px-1.5 py-1.5 rounded-lg transition-colors"
             >
-              <HelpCircle size={14} />
-              <span>Tour</span>
+              <HelpCircle size={12} />
+              <span className="text-[10px] sm:text-xs">Tour</span>
             </button>
             <button
               onClick={() => setShowFeedback(true)}
-              className="flex items-center justify-center gap-1 text-xs text-stone-400 hover:text-orange-400 hover:bg-stone-800 px-2 py-2 rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 text-xs text-stone-400 hover:text-orange-400 hover:bg-stone-800 px-1.5 py-1.5 rounded-lg transition-colors"
             >
-              <MessageSquare size={14} />
-              <span>Feedback</span>
+              <MessageSquare size={12} />
+              <span className="text-[10px] sm:text-xs">Feedback</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-3 mb-4 px-2">
+          <div className="flex items-center gap-2 mb-2 px-1">
             <img 
               src={user.photoURL || ''} 
               alt={settings?.userName || user.displayName || 'User'} 
-              className="w-8 h-8 rounded-full bg-stone-700"
+              className="w-7 h-7 rounded-full bg-stone-700"
             />
             <div className="overflow-hidden">
-              <p className="text-sm font-medium truncate">{settings?.userName && settings?.gender ? getGreeting(settings.userName, settings.gender) : (settings?.userName || 'Devotee')}</p>
-              <p className="text-xs text-stone-500 truncate">{user.uid === 'guest' ? 'Guest Mode' : 'Signed In'}</p>
+              <p className="text-xs font-medium truncate">{settings?.userName && settings?.gender ? getGreeting(settings.userName, settings.gender) : (settings?.userName || 'Devotee')}</p>
+              <p className="text-[10px] text-stone-500 truncate">{user.uid === 'guest' ? 'Guest Mode' : 'Signed In'}</p>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 text-stone-400 hover:text-white hover:bg-stone-800 px-4 py-2 rounded-lg transition-colors text-sm"
+            className="w-full flex items-center gap-2 text-stone-400 hover:text-white hover:bg-stone-800 px-2 py-1.5 rounded-lg transition-colors text-xs"
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
             Sign Out
           </button>
         </div>

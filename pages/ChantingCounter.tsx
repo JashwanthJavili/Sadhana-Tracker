@@ -46,6 +46,8 @@ export default function ChantingCounter() {
   const [targetRounds, setTargetRounds] = useState(16);
   const [targetBeads, setTargetBeads] = useState(BEADS_PER_ROUND);
   const [autoLapEnabled, setAutoLapEnabled] = useState(true);
+  const [vibrationEnabled, setVibrationEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   
   // History
   const [sessions, setSessions] = useState<ChantingSession[]>([]);
@@ -127,12 +129,26 @@ export default function ChantingCounter() {
   const handleBeadIncrement = () => {
     const newBead = currentBead + 1;
     
+    // Vibrate on each bead count
+    if (vibrationEnabled && 'vibrate' in navigator) {
+      navigator.vibrate(20); // Short vibration
+    }
+    
     if (newBead >= targetBeads) {
       // Round completed (108 beads done)
       const newRound = currentRound + 1;
       setCurrentRound(newRound);
       setCurrentBead(0); // Reset to bead 0 for next round
-      playRoundCompleteSound();
+      
+      // Play sound for round completion
+      if (soundEnabled) {
+        playRoundCompleteSound();
+      }
+      
+      // Stronger vibration for round completion
+      if (vibrationEnabled && 'vibrate' in navigator) {
+        navigator.vibrate([100, 50, 100]); // Pattern for round completion
+      }
       
       if (newRound >= targetRounds && autoLapEnabled) {
         showSuccess('Target rounds completed! 🎉');
@@ -636,6 +652,28 @@ export default function ChantingCounter() {
                   className={`relative w-16 h-8 rounded-full transition-colors shadow-inner ${autoLapEnabled ? 'bg-orange-600' : 'bg-stone-300'}`}
                 >
                   <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${autoLapEnabled ? 'translate-x-8' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* Vibration Toggle */}
+              <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
+                <span className="text-sm font-bold text-stone-700">📳 Vibration feedback</span>
+                <button
+                  onClick={() => setVibrationEnabled(!vibrationEnabled)}
+                  className={`relative w-16 h-8 rounded-full transition-colors shadow-inner ${vibrationEnabled ? 'bg-orange-600' : 'bg-stone-300'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${vibrationEnabled ? 'translate-x-8' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* Sound Toggle */}
+              <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
+                <span className="text-sm font-bold text-stone-700">🔔 Sound on round complete</span>
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`relative w-16 h-8 rounded-full transition-colors shadow-inner ${soundEnabled ? 'bg-orange-600' : 'bg-stone-300'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${soundEnabled ? 'translate-x-8' : 'translate-x-0'}`} />
                 </button>
               </div>
 
