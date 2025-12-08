@@ -9,6 +9,7 @@ import { useUserData } from '../contexts/UserDataContext';
 import InteractiveTour from './InteractiveTour';
 import GuidedTour from './GuidedTour';
 import FeedbackPrompt from './FeedbackPrompt';
+import NotificationBell from './NotificationBell';
 import { useSyncChatProfile } from '../hooks/useSyncChatProfile';
 import { getGreeting } from '../utils/honorific';
 
@@ -234,22 +235,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
       {/* Mobile Header */}
       <div className="md:hidden bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-4 shadow-lg sticky top-0 z-40">
-        <button 
-          onClick={toggleSidebar}
-          className="w-full flex items-center gap-3 hover:bg-white/10 rounded-lg p-2 -m-2 transition-all active:scale-95"
-          aria-label="Toggle navigation menu"
-          data-tour="navigation-toggle"
-        >
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={toggleSidebar}
+            className="p-2 hover:bg-white/10 rounded-lg transition-all active:scale-95"
+            aria-label="Toggle navigation menu"
+            data-tour="navigation-toggle"
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
           <img 
             src={iskconLogo} 
             alt="ISKCON Logo" 
             className="h-10 w-10 object-contain bg-white/90 rounded-lg p-1 flex-shrink-0"
           />
-          <span className="font-serif font-bold text-xl flex-1 text-left">Sadhana Sanga</span>
-          <div className="text-white/80 flex-shrink-0">
-            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          <span className="font-serif font-bold text-xl flex-1">Sadhana Sanga</span>
+          <div className="flex items-center gap-2">
+            {user && <NotificationBell />}
           </div>
-        </button>
+        </div>
       </div>
 
       {/* Sidebar */}
@@ -401,7 +405,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               alt={settings?.userName || user.displayName || 'User'} 
               className="w-7 h-7 rounded-full bg-stone-700"
             />
-            <div className="overflow-hidden">
+            <div className="overflow-hidden flex-1">
               <p className="text-xs font-medium truncate">{settings?.userName && settings?.gender ? getGreeting(settings.userName, settings.gender) : (settings?.userName || 'Devotee')}</p>
               <p className="text-[10px] text-stone-500 truncate">{user.uid === 'guest' ? 'Guest Mode' : 'Signed In'}</p>
             </div>
@@ -455,6 +459,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Feedback Modal */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
+
+      {/* Floating Notification Bell - Desktop Only, Above Chat Icon */}
+      {!isGuest && (
+        <div className="hidden md:block fixed bottom-24 right-6 z-50">
+          <NotificationBell />
+        </div>
+      )}
 
       {/* Floating WhatsApp-style Message Icon - Always Visible */}
       {!isGuest && location.pathname !== '/chats' && !location.pathname.startsWith('/chat/') && (

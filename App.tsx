@@ -14,7 +14,8 @@ import { getSettings, saveSettings, cleanupFakeSeedData } from './services/stora
 import { createUserProfile, setUserOnlineStatus, getUserProfile } from './services/chat';
 import { ref, get } from 'firebase/database';
 import { db } from './services/firebase';
-
+import { checkForUpdates, markVersionSeen, VERSION_HISTORY } from './utils/version';
+import { X, Sparkles } from 'lucide-react';
 // Lazy load heavy pages for better performance
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const DailyPlanner = lazy(() => import('./pages/DailyPlanner'));
@@ -90,7 +91,19 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showGenderSelection, setShowGenderSelection] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showVersionUpdate, setShowVersionUpdate] = useState(false);
+  const [versionInfo, setVersionInfo] = useState<any>(null);
 
+  // Check for version updates
+  useEffect(() => {
+    if (user) {
+      const updateInfo = checkForUpdates();
+      if (updateInfo.hasUpdate) {
+        setVersionInfo(updateInfo);
+        setShowVersionUpdate(true);
+      }
+    }
+  }, [user]);
   // CRITICAL: Clear localStorage immediately for authenticated users
   useEffect(() => {
     if (user && user.uid !== 'guest') {
@@ -136,6 +149,22 @@ function AppContent() {
   // Check if user is eligible for feedback (once per week if not submitted)
   const checkFeedbackEligibility = async (userId: string, settings: any) => {
     try {
+      // Check if user dismissed today
+      const dismissedRef = ref(db, `users/${userId}/lastFeedbackDismissed`);
+      const dismissedSnapshot = await get(dismissedRef);
+
+      if (dismissedSnapshot.exists()) {
+        const lastDismissedTime = dismissedSnapshot.val().timestamp;
+        const currentTime = Date.now();
+        const hoursSinceDismissed = Math.floor((currentTime - lastDismissedTime) / (1000 * 60 * 60));
+
+        // If dismissed in last 24 hours, don't show
+        if (hoursSinceDismissed < 24) {
+          console.log(`✓ Feedback dismissed ${Math.floor(hoursSinceDismissed)} hour(s) ago. Will prompt tomorrow.`);
+          return;
+        }
+      }
+
       // Check last feedback submission time
       const feedbackRef = ref(db, `users/${userId}/lastFeedback`);
       const feedbackSnapshot = await get(feedbackRef);
@@ -145,9 +174,9 @@ function AppContent() {
         const currentTime = Date.now();
         const hoursSinceLastFeedback = Math.floor((currentTime - lastFeedbackTime) / (1000 * 60 * 60));
 
-        // If submitted in last 7 days (168 hours), don't show
-        if (hoursSinceLastFeedback < 168) {
-          const daysRemaining = Math.ceil((168 - hoursSinceLastFeedback) / 24);
+        // If submitted in last 14 days (336 hours), don't show
+        if (hoursSinceLastFeedback < 336) {
+          const daysRemaining = Math.ceil((336 - hoursSinceLastFeedback) / 24);
           console.log(`✓ Feedback already submitted ${Math.floor(hoursSinceLastFeedback / 24)} day(s) ago. Next prompt in ${daysRemaining} day(s).`);
           return;
         }
@@ -281,6 +310,83 @@ function AppContent() {
 
       {/* Feedback Prompt - Shows after 2+ days */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
+
+      {/* Version Update Modal */}
+      {showVersionUpdate && versionInfo && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border-4 border-green-400 animate-scale-in overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+              <div className="relative flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles size={32} className="text-yellow-300" />
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold">New Version Available!</h2>
+                    <p className="text-green-100 mt-1">Version {versionInfo.latestVersion} is here</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    markVersionSeen();
+                    setShowVersionUpdate(false);
+                  }}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-all"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-stone-800 mb-3 flex items-center gap-2">
+                🎉 What's New
+              </h3>
+              <ul className="space-y-2 mb-6">
+                {versionInfo.latestFeatures.map((feature: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-3 text-stone-700">
+                    <span className="text-green-600 font-bold mt-0.5">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Version History */}
+              <details className="mb-4">
+                <summary className="cursor-pointer text-sm font-bold text-stone-600 hover:text-green-600 transition-colors">
+                  View Full Version History
+                </summary>
+                <div className="mt-3 space-y-3 pl-4">
+                  {VERSION_HISTORY.slice(1).map((version) => (
+                    <div key={version.version} className="border-l-2 border-stone-200 pl-4">
+                      <p className="font-bold text-stone-700">
+                        Version {version.version} <span className="text-xs text-stone-500">({version.date})</span>
+                      </p>
+                      <ul className="text-sm text-stone-600 mt-1 space-y-1">
+                        {version.features.map((feature, idx) => (
+                          <li key={idx}>• {feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              <button
+                onClick={() => {
+                  markVersionSeen();
+                  setShowVersionUpdate(false);
+                }}
+                className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg transition-all transform hover:scale-105 active:scale-95"
+              >
+                Got it, Thanks!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

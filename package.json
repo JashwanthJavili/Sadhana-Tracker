@@ -13,6 +13,8 @@
     "release": "npm run version:patch && git add . && git commit -m \"Release\" && git push origin main"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@sendgrid/mail": "^8.1.6",
     "clsx": "2.1.0",
     "firebase": "^10.13.2",
     "lucide-react": "0.330.0",

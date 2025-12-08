@@ -5,7 +5,7 @@ import {
   Users, Trash2, RefreshCw, BarChart3, MessageSquare, 
   HelpCircle, Shield, UserX, Calendar, Activity, UserPlus, UserMinus,
   Download, Bell, Flag, CheckCircle, XCircle, Search, Filter,
-  TrendingUp, Database, Zap, FileText, Eye, EyeOff, AlertTriangle, MoreVertical, MessageCircle
+  TrendingUp, Database, Zap, FileText, Eye, EyeOff, AlertTriangle, MoreVertical, MessageCircle, Send
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -24,6 +24,7 @@ import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
 import { ref, set, push, get, remove, update } from 'firebase/database';
 import { db } from '../services/firebase';
 import FeedbackViewer from '../components/FeedbackViewer';
+import AdminRequestsPanel from '../components/AdminRequestsPanel';
 
 interface UserInfo {
   uid: string;
@@ -63,7 +64,16 @@ const AdminPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'admins' | 'content' | 'feedback' | 'system' | 'logs' | 'reports' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'admins' | 'content' | 'feedback' | 'requests' | 'announcements' | 'system' | 'logs' | 'reports' | 'settings'>('overview');
+  
+  // Announcements State
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementText, setAnnouncementText] = useState('');
+  const [announcementType, setAnnouncementType] = useState<'info' | 'update' | 'warning' | 'celebration'>('info');
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [fontSize, setFontSize] = useState('16');
+  const [textColor, setTextColor] = useState('#000000');
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -440,7 +450,7 @@ const AdminPanel: React.FC = () => {
 
       // Send notification to each user
       const notificationPromises = users.map(async (targetUser) => {
-        const notificationRef = push(ref(db, `notifications/${targetUser.uid}`));
+        const notificationRef = push(ref(db, `userNotifications/${targetUser.uid}`));
         return set(notificationRef, {
           type: 'broadcast',
           title: '📢 Admin Announcement',
@@ -763,17 +773,19 @@ const AdminPanel: React.FC = () => {
             <Users className="inline mr-2" size={20} />
             Users ({users.length})
           </button>
-          <button
-            onClick={() => setActiveTab('admins')}
-            className={`px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === 'admins'
-                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            }`}
-          >
-            <Shield className="inline mr-2" size={20} />
-            Admins ({admins.length})
-          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveTab('admins')}
+              className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                activeTab === 'admins'
+                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <Shield className="inline mr-2" size={20} />
+              Admins ({admins.length})
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('content')}
             className={`px-6 py-3 rounded-xl font-bold transition-all ${
@@ -797,38 +809,42 @@ const AdminPanel: React.FC = () => {
             User Feedback
           </button>
           <button
-            onClick={() => setActiveTab('system')}
+            onClick={() => setActiveTab('requests')}
             className={`px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === 'system'
-                ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg'
+              activeTab === 'requests'
+                ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg'
                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
-            <Database className="inline mr-2" size={20} />
-            System Health
+            <Send className="inline mr-2" size={20} />
+            Content Requests
           </button>
-          <button
-            onClick={() => setActiveTab('logs')}
-            className={`px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === 'logs'
-                ? 'bg-gradient-to-r from-cyan-600 to-cyan-700 text-white shadow-lg'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            }`}
-          >
-            <FileText className="inline mr-2" size={20} />
-            Activity Logs
-          </button>
-          <button
-            onClick={() => setActiveTab('reports')}
-            className={`px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === 'reports'
-                ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            }`}
-          >
-            <BarChart3 className="inline mr-2" size={20} />
-            Reports & Insights
-          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveTab('announcements')}
+              className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                activeTab === 'announcements'
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <Bell className="inline mr-2" size={20} />
+              Announcements
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveTab('system')}
+              className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                activeTab === 'system'
+                  ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <Database className="inline mr-2" size={20} />
+              System Health
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('settings')}
             className={`px-6 py-3 rounded-xl font-bold transition-all ${
@@ -1000,11 +1016,7 @@ const AdminPanel: React.FC = () => {
                 >
                   Clear Selection
                 </button>
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all"
-                >
-                  Bulk Delete
-                </button>
+                {/* Bulk deletion removed - delete users individually for safety */}
               </div>
             </div>
           )}
@@ -1173,19 +1185,23 @@ const AdminPanel: React.FC = () => {
                                 Send Direct Message
                               </button>
                               
-                              <div className="border-t border-stone-200 my-1" />
-                              
-                              {/* Delete User */}
-                              <button
-                                onClick={() => {
-                                  handleDeleteUser(u.uid, u.userName);
-                                  setOpenDropdown(null);
-                                }}
-                                className="w-full px-4 py-2 text-left hover:bg-red-50 transition-all flex items-center gap-2 text-red-700 font-semibold"
-                              >
-                                <Trash2 size={16} />
-                                Delete User
-                              </button>
+                              {isSuperAdmin && (
+                                <>
+                                  <div className="border-t border-stone-200 my-1" />
+                                  
+                                  {/* Delete User */}
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteUser(u.uid, u.userName);
+                                      setOpenDropdown(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left hover:bg-red-50 transition-all flex items-center gap-2 text-red-700 font-semibold"
+                                  >
+                                    <Trash2 size={16} />
+                                    Delete User
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </>
@@ -1224,7 +1240,7 @@ const AdminPanel: React.FC = () => {
                 {admins.map((admin) => (
                   <tr key={admin.uid} className="border-b border-stone-200 hover:bg-red-50">
                     <td className="p-3 font-semibold">
-                      {users.find(u => u.uid === admin.uid)?.userName || 'Unknown'}
+                      {users.find(u => u.uid === admin.uid)?.userName || admin.email.split('@')[0] || 'Admin User'}
                     </td>
                     <td className="p-3 text-sm text-stone-600">{admin.email}</td>
                     <td className="p-3">
@@ -1244,7 +1260,7 @@ const AdminPanel: React.FC = () => {
                     <td className="p-3 text-center">
                       {!admin.isSuperAdmin ? (
                         <button
-                          onClick={() => handleRevokeAdmin(admin.uid, users.find(u => u.uid === admin.uid)?.userName || 'Unknown')}
+                          onClick={() => handleRevokeAdmin(admin.uid, users.find(u => u.uid === admin.uid)?.userName || admin.email.split('@')[0] || 'Admin')}
                           className="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition-all flex items-center gap-2 mx-auto"
                           title="Revoke admin rights"
                         >
@@ -1620,6 +1636,298 @@ const AdminPanel: React.FC = () => {
         </div>
       )}
 
+      {activeTab === 'requests' && (
+        <AdminRequestsPanel />
+      )}
+
+      {/* Announcements Tab - Rich Text Broadcast System */}
+      {activeTab === 'announcements' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl p-6 text-white shadow-2xl">
+            <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
+              <Bell size={32} />
+              Broadcast Announcements
+            </h2>
+            <p className="text-cyan-100">Send styled announcements and notifications to all users</p>
+          </div>
+
+          {/* Rich Text Editor */}
+          <div className="bg-white rounded-xl shadow-xl border-2 border-cyan-200 p-6">
+            <h3 className="text-xl font-bold mb-4 text-cyan-700">Create New Announcement</h3>
+            
+            {/* Announcement Type Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-bold text-stone-700 mb-2">Announcement Type</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { value: 'info', label: '📢 Information', color: 'blue' },
+                  { value: 'update', label: '🆕 Version Update', color: 'green' },
+                  { value: 'warning', label: '⚠️ Important Notice', color: 'amber' },
+                  { value: 'celebration', label: '🎉 Celebration', color: 'purple' }
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => setAnnouncementType(type.value as any)}
+                    className={`p-3 rounded-lg border-2 font-semibold text-sm transition-all ${
+                      announcementType === type.value
+                        ? `bg-${type.color}-600 text-white border-${type.color}-600 shadow-lg scale-105`
+                        : `bg-white text-${type.color}-700 border-${type.color}-300 hover:border-${type.color}-500`
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Title Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-bold text-stone-700 mb-2">Title</label>
+              <input
+                type="text"
+                value={announcementTitle}
+                onChange={(e) => setAnnouncementTitle(e.target.value)}
+                placeholder="Enter announcement title..."
+                className="w-full px-4 py-3 border-2 border-stone-300 rounded-lg focus:border-cyan-500 focus:outline-none text-lg font-semibold"
+              />
+            </div>
+
+            {/* Text Formatting Toolbar */}
+            <div className="mb-2">
+              <label className="block text-sm font-bold text-stone-700 mb-2">Message</label>
+              <div className="flex flex-wrap gap-2 p-3 bg-stone-100 rounded-t-lg border-2 border-b-0 border-stone-300">
+                {/* Bold */}
+                <button
+                  onClick={() => setIsBold(!isBold)}
+                  className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                    isBold ? 'bg-cyan-600 text-white' : 'bg-white text-stone-700 hover:bg-stone-200'
+                  }`}
+                  title="Bold"
+                >
+                  <span className="font-bold">B</span>
+                </button>
+                
+                {/* Italic */}
+                <button
+                  onClick={() => setIsItalic(!isItalic)}
+                  className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                    isItalic ? 'bg-cyan-600 text-white' : 'bg-white text-stone-700 hover:bg-stone-200'
+                  }`}
+                  title="Italic"
+                >
+                  <span className="italic">I</span>
+                </button>
+
+                <div className="w-px h-8 bg-stone-300"></div>
+
+                {/* Font Size */}
+                <select
+                  value={fontSize}
+                  onChange={(e) => setFontSize(e.target.value)}
+                  className="px-3 py-2 rounded-lg border-2 border-stone-300 bg-white hover:border-cyan-500 transition-all cursor-pointer"
+                >
+                  <option value="12">Small</option>
+                  <option value="16">Normal</option>
+                  <option value="20">Large</option>
+                  <option value="24">Extra Large</option>
+                </select>
+
+                {/* Text Color */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-semibold text-stone-700">Color:</label>
+                  <input
+                    type="color"
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className="w-12 h-10 rounded-lg border-2 border-stone-300 cursor-pointer"
+                  />
+                </div>
+
+                <div className="w-px h-8 bg-stone-300"></div>
+
+                {/* Quick Emojis */}
+                <div className="flex gap-1">
+                  {['🙏', '🎉', '📢', '⚠️', '✨', '🔔', '❤️', '🌟'].map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => setAnnouncementText(announcementText + emoji)}
+                      className="px-2 py-1 hover:bg-stone-200 rounded transition-all text-xl"
+                      title={`Add ${emoji}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Message Textarea */}
+            <textarea
+              value={announcementText}
+              onChange={(e) => setAnnouncementText(e.target.value)}
+              placeholder="Type your message here..."
+              rows={6}
+              style={{
+                fontWeight: isBold ? 'bold' : 'normal',
+                fontStyle: isItalic ? 'italic' : 'normal',
+                fontSize: `${fontSize}px`,
+                color: textColor
+              }}
+              className="w-full px-4 py-3 border-2 border-t-0 border-stone-300 rounded-b-lg focus:border-cyan-500 focus:outline-none resize-none"
+            />
+
+            {/* Preview */}
+            <div className="mt-4 p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border-2 border-cyan-200">
+              <p className="text-xs font-bold text-cyan-700 mb-2">PREVIEW</p>
+              <div className={`
+                p-4 rounded-lg shadow-md
+                ${announcementType === 'info' ? 'bg-blue-50 border-2 border-blue-300' : ''}
+                ${announcementType === 'update' ? 'bg-green-50 border-2 border-green-300' : ''}
+                ${announcementType === 'warning' ? 'bg-amber-50 border-2 border-amber-300' : ''}
+                ${announcementType === 'celebration' ? 'bg-purple-50 border-2 border-purple-300' : ''}
+              `}>
+                {announcementTitle && (
+                  <h4 className="font-bold text-lg mb-2">{announcementTitle}</h4>
+                )}
+                {announcementText && (
+                  <p
+                    style={{
+                      fontWeight: isBold ? 'bold' : 'normal',
+                      fontStyle: isItalic ? 'italic' : 'normal',
+                      fontSize: `${fontSize}px`,
+                      color: textColor
+                    }}
+                    className="whitespace-pre-wrap"
+                  >
+                    {announcementText}
+                  </p>
+                )}
+                {!announcementTitle && !announcementText && (
+                  <p className="text-stone-400 italic">Your announcement will appear here...</p>
+                )}
+              </div>
+            </div>
+
+            {/* Send Button */}
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={async () => {
+                  if (!announcementTitle || !announcementText) {
+                    alert('Please enter both title and message');
+                    return;
+                  }
+                  
+                  try {
+                    const announcementData = {
+                      title: announcementTitle,
+                      message: announcementText,
+                      type: announcementType,
+                      formatting: {
+                        bold: isBold,
+                        italic: isItalic,
+                        fontSize: fontSize,
+                        color: textColor
+                      },
+                      sentBy: user?.email,
+                      timestamp: Date.now()
+                    };
+
+                    // Send to all users
+                    const promises = users.map(async (targetUser) => {
+                      const notifRef = push(ref(db, `userNotifications/${targetUser.uid}`));
+                      return set(notifRef, {
+                        type: announcementType,
+                        title: announcementTitle,
+                        message: announcementText,
+                        formatting: announcementData.formatting,
+                        timestamp: Date.now(),
+                        read: false
+                      });
+                    });
+
+                    await Promise.all(promises);
+                    
+                    // Save to announcement history
+                    const historyRef = push(ref(db, 'announcements'));
+                    await set(historyRef, announcementData);
+
+                    alert(`✅ Announcement sent to ${users.length} users!`);
+                    setAnnouncementTitle('');
+                    setAnnouncementText('');
+                    setIsBold(false);
+                    setIsItalic(false);
+                    setFontSize('16');
+                    setTextColor('#000000');
+                  } catch (error: any) {
+                    alert(`❌ Failed to send: ${error.message}`);
+                  }
+                }}
+                disabled={!announcementTitle || !announcementText}
+                className="flex-1 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-stone-300 disabled:to-stone-400 text-white rounded-xl font-bold text-lg shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:scale-100 flex items-center justify-center gap-2"
+              >
+                <Send size={24} />
+                Broadcast to All Users ({users.length})
+              </button>
+              <button
+                onClick={() => {
+                  setAnnouncementTitle('');
+                  setAnnouncementText('');
+                  setIsBold(false);
+                  setIsItalic(false);
+                  setFontSize('16');
+                  setTextColor('#000000');
+                }}
+                className="px-6 py-4 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Templates */}
+          <div className="bg-white rounded-xl shadow-xl border-2 border-stone-200 p-6">
+            <h3 className="text-xl font-bold mb-4 text-stone-700">Quick Templates</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                {
+                  title: 'New Feature Announcement',
+                  message: 'Exciting news! We\'ve added new features to enhance your spiritual journey. Check them out now! 🎉',
+                  type: 'update'
+                },
+                {
+                  title: 'Festival Reminder',
+                  message: 'Don\'t forget! Upcoming festival celebrations. Mark your calendars! 🙏',
+                  type: 'celebration'
+                },
+                {
+                  title: 'Maintenance Notice',
+                  message: 'Scheduled maintenance will occur soon. The app may be temporarily unavailable. Thank you for your patience. ⚙️',
+                  type: 'warning'
+                },
+                {
+                  title: 'Community Update',
+                  message: 'Join our growing community of devotees! Share your experiences and connect with others on the spiritual path. ✨',
+                  type: 'info'
+                }
+              ].map((template, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setAnnouncementTitle(template.title);
+                    setAnnouncementText(template.message);
+                    setAnnouncementType(template.type as any);
+                  }}
+                  className="p-4 text-left border-2 border-stone-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition-all group"
+                >
+                  <h4 className="font-bold text-stone-800 group-hover:text-cyan-700">{template.title}</h4>
+                  <p className="text-sm text-stone-600 mt-1 line-clamp-2">{template.message}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'system' && (
         <div className="bg-white rounded-2xl shadow-xl border-2 border-stone-200 p-6">
           <div className="mb-6">
@@ -1645,8 +1953,34 @@ const AdminPanel: React.FC = () => {
                 <Database className="text-blue-600" size={24} />
                 Database Size
               </h3>
-              <p className="text-3xl font-bold text-blue-600">~2.5 MB</p>
-              <p className="text-sm text-stone-600 mt-2">Firebase Realtime DB</p>
+              <p className="text-3xl font-bold text-blue-600">
+                {firebaseUsage ? `${firebaseUsage.totalSizeMB} MB` : 'Loading...'}
+              </p>
+              <p className="text-sm text-stone-600 mt-2">
+                {firebaseUsage ? `${firebaseUsage.usagePercent}% of 1GB used` : 'Firebase Realtime DB'}
+              </p>
+              {firebaseUsage && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-stone-600">Users</span>
+                    <span className="font-semibold text-blue-700">{firebaseUsage.userCount} records</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-stone-600">Questions</span>
+                    <span className="font-semibold text-blue-700">{firebaseUsage.questionCount} records</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-stone-600">Chats</span>
+                    <span className="font-semibold text-blue-700">{firebaseUsage.chatCount} records</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2 mt-3">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all"
+                      style={{ width: `${Math.min(firebaseUsage.usagePercent, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-300">
@@ -1708,13 +2042,11 @@ const AdminPanel: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'logs' && (
-        <div className="bg-white rounded-2xl shadow-xl border-2 border-stone-200 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <FileText size={28} className="text-cyan-600" />
-              Activity Logs & Audit Trail
-            </h2>
+      {/* App Settings Tab */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white">
+            <h2 className="text-2xl font-bold mb-2">⚙️ Application Settings</h2>
             <p className="text-stone-600 mt-2">Track all admin actions and system events</p>
           </div>
 

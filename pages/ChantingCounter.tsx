@@ -3,7 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { ref, get, set } from 'firebase/database';
 import { db } from '../services/firebase';
 import { useToast } from '../contexts/ToastContext';
-import { Clock, RotateCcw, Calendar, X, Plus, Minus, Play, Pause, History as HistoryIcon, Award, CheckCircle, Flame, Sparkles, HelpCircle, Info } from 'lucide-react';
+import { Clock, RotateCcw, Calendar, X, Plus, Minus, Play, Pause, History as HistoryIcon, Award, CheckCircle, Flame, Sparkles, HelpCircle, Info, Settings } from 'lucide-react';
+import { requestVibrationPermission, vibrate } from '../utils/permissions';
 
 interface ChantingSession {
   id: string;
@@ -48,6 +49,8 @@ export default function ChantingCounter() {
   const [autoLapEnabled, setAutoLapEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [clickAreaShape, setClickAreaShape] = useState<'circle' | 'square'>('circle');
+  const [hideBeadNumbers, setHideBeadNumbers] = useState(false);
   
   // History
   const [sessions, setSessions] = useState<ChantingSession[]>([]);
@@ -130,8 +133,8 @@ export default function ChantingCounter() {
     const newBead = currentBead + 1;
     
     // Vibrate on each bead count
-    if (vibrationEnabled && 'vibrate' in navigator) {
-      navigator.vibrate(20); // Short vibration
+    if (vibrationEnabled) {
+      vibrate(20); // Short vibration
     }
     
     if (newBead >= targetBeads) {
@@ -140,14 +143,14 @@ export default function ChantingCounter() {
       setCurrentRound(newRound);
       setCurrentBead(0); // Reset to bead 0 for next round
       
-      // Play sound for round completion
+      // Play bell sound for round completion
       if (soundEnabled) {
         playRoundCompleteSound();
       }
       
-      // Stronger vibration for round completion
-      if (vibrationEnabled && 'vibrate' in navigator) {
-        navigator.vibrate([100, 50, 100]); // Pattern for round completion
+      // Double vibration for round completion
+      if (vibrationEnabled) {
+        vibrate([200, 100, 200]); // Double vibration pattern
       }
       
       if (newRound >= targetRounds && autoLapEnabled) {
@@ -376,6 +379,13 @@ export default function ChantingCounter() {
           </div>
           <div className="flex gap-2">
             <button
+              onClick={() => setShowSettingsModal(true)}
+              className="p-2 sm:p-3 bg-white/20 hover:bg-white/30 rounded-lg transition-all shadow-lg"
+              title="Settings"
+            >
+              <Settings className="text-white" size={20} />
+            </button>
+            <button
               onClick={() => setShowHistory(!showHistory)}
               className="p-2 sm:p-3 bg-white/20 hover:bg-white/30 rounded-lg transition-all shadow-lg"
               title="View History"
@@ -390,6 +400,42 @@ export default function ChantingCounter() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Usage Instructions - Collapsible (Moved to Top) */}
+      <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 overflow-hidden">
+        <button
+          onClick={() => setShowInlineGuide(!showInlineGuide)}
+          className="w-full p-4 sm:p-6 flex items-center justify-between hover:bg-orange-100/50 transition-all"
+        >
+          <h3 className="text-sm sm:text-base font-bold text-orange-600">How to Use</h3>
+          <div className={`transform transition-transform ${showInlineGuide ? 'rotate-180' : ''}`}>
+            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </button>
+        
+        {showInlineGuide && (
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg p-3 border border-orange-200">
+                <p className="text-xs sm:text-sm font-semibold text-stone-700 mb-2">📿 BEADS Counter:</p>
+                <ul className="text-xs text-stone-600 space-y-1">
+                  <li>• <strong>Web:</strong> Click = Configure • 2× Click = Reset</li>
+                  <li>• <strong>Mobile:</strong> Tap = Configure • Long press = Reset</li>
+                </ul>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-orange-200">
+                <p className="text-xs sm:text-sm font-semibold text-stone-700 mb-2">⏱️ TIMER:</p>
+                <ul className="text-xs text-stone-600 space-y-1">
+                  <li>• <strong>Web:</strong> Click = Start/Pause • 2× Click = Reset</li>
+                  <li>• <strong>Mobile:</strong> Tap = Start/Pause • Long press = Reset</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Counter Section */}
@@ -431,61 +477,61 @@ export default function ChantingCounter() {
         </div>
       </div>
 
-      {/* Usage Instructions - Collapsible */}
-      <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 overflow-hidden">
-        <button
-          onClick={() => setShowInlineGuide(!showInlineGuide)}
-          className="w-full p-4 sm:p-6 flex items-center justify-between hover:bg-orange-100/50 transition-all"
-        >
-          <h3 className="text-sm sm:text-base font-bold text-orange-600">How to Use</h3>
-          <div className={`transform transition-transform ${showInlineGuide ? 'rotate-180' : ''}`}>
-            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </button>
-        
-        {showInlineGuide && (
-          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-white rounded-lg p-3 border border-orange-200">
-                <p className="text-xs sm:text-sm font-semibold text-stone-700 mb-2">📿 BEADS Counter:</p>
-                <ul className="text-xs text-stone-600 space-y-1">
-                  <li>• <strong>Web:</strong> Click = Configure • 2× Click = Reset</li>
-                  <li>• <strong>Mobile:</strong> Tap = Configure • Long press = Reset</li>
-                </ul>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-orange-200">
-                <p className="text-xs sm:text-sm font-semibold text-stone-700 mb-2">⏱️ TIMER:</p>
-                <ul className="text-xs text-stone-600 space-y-1">
-                  <li>• <strong>Web:</strong> Click = Start/Pause • 2× Click = Reset</li>
-                  <li>• <strong>Mobile:</strong> Tap = Start/Pause • Long press = Reset</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
+      {/* Tap Button to Increment Beads (Removed duplicate instructions) */}
       {/* Tap Button to Increment Beads */}
-      <div className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-xl border-2 border-orange-200">
-        <div className="flex flex-col items-center gap-6">
-          <button
-            onClick={handleBeadIncrement}
-            className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-full shadow-2xl transform transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center border-4 sm:border-6 border-orange-300 relative overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <span className="text-7xl sm:text-8xl md:text-9xl font-bold relative z-10">{currentBead}</span>
-            <span className="text-sm sm:text-base font-medium mt-2 relative z-10 opacity-90">Tap to Count</span>
-          </button>
-          <div className="text-center">
-            <p className="text-stone-700 text-base sm:text-lg font-semibold mb-1">
-              {targetBeads - currentBead} beads remaining
-            </p>
-            <p className="text-stone-500 text-sm">in this round</p>
+      {clickAreaShape === 'circle' ? (
+        // Circle Mode - Traditional round button
+        <div className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-xl border-2 border-orange-200">
+          <div className="flex flex-col items-center gap-6">
+            <button
+              onClick={handleBeadIncrement}
+              className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-full shadow-2xl transform transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center border-4 sm:border-6 border-orange-300 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              {!hideBeadNumbers && (
+                <span className="text-7xl sm:text-8xl md:text-9xl font-bold relative z-10">{currentBead}</span>
+              )}
+              <span className={`text-sm sm:text-base font-medium ${hideBeadNumbers ? '' : 'mt-2'} relative z-10 opacity-90`}>
+                {hideBeadNumbers ? <span className="text-6xl sm:text-7xl md:text-8xl font-bold">Tap</span> : 'Tap to Count'}
+              </span>
+            </button>
+            {!hideBeadNumbers && (
+              <div className="text-center">
+                <p className="text-stone-700 text-base sm:text-lg font-semibold mb-1">
+                  {targetBeads - currentBead} beads remaining
+                </p>
+                <p className="text-stone-500 text-sm">in this round</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      ) : (
+        // Square Mode - Entire box becomes orange and clickable
+        <button
+          onClick={handleBeadIncrement}
+          className="w-full bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-xl border-4 border-orange-300 transform transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="flex flex-col items-center gap-6 relative z-10">
+            <div className="text-center">
+              {!hideBeadNumbers && (
+                <span className="text-7xl sm:text-8xl md:text-9xl font-bold text-white block">{currentBead}</span>
+              )}
+              <span className={`text-base sm:text-lg font-bold text-white block ${hideBeadNumbers ? '' : 'mt-4'} opacity-90`}>
+                {hideBeadNumbers ? <span className="text-6xl sm:text-7xl md:text-8xl">Tap to Count</span> : 'Tap to Count'}
+              </span>
+            </div>
+            {!hideBeadNumbers && (
+              <div className="text-center">
+                <p className="text-white text-base sm:text-lg font-semibold mb-1">
+                  {targetBeads - currentBead} beads remaining
+                </p>
+                <p className="text-orange-100 text-sm">in this round</p>
+              </div>
+            )}
+          </div>
+        </button>
+      )}
 
       {/* Rounds Progress */}
       <div className="bg-white rounded-xl sm:rounded-2xl p-6 shadow-xl border-2 border-orange-200">
@@ -659,7 +705,22 @@ export default function ChantingCounter() {
               <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
                 <span className="text-sm font-bold text-stone-700">📳 Vibration feedback</span>
                 <button
-                  onClick={() => setVibrationEnabled(!vibrationEnabled)}
+                  onClick={async () => {
+                    if (!vibrationEnabled) {
+                      // Request permission when enabling
+                      const permission = await requestVibrationPermission();
+                      if (permission.granted) {
+                        setVibrationEnabled(true);
+                        vibrate(50); // Test vibration
+                        showSuccess('Vibration enabled');
+                      } else {
+                        showWarning('Vibration Not Available', permission.error || 'Your device does not support vibration');
+                      }
+                    } else {
+                      setVibrationEnabled(false);
+                      showSuccess('Vibration disabled');
+                    }
+                  }}
                   className={`relative w-16 h-8 rounded-full transition-colors shadow-inner ${vibrationEnabled ? 'bg-orange-600' : 'bg-stone-300'}`}
                 >
                   <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${vibrationEnabled ? 'translate-x-8' : 'translate-x-0'}`} />
@@ -675,6 +736,59 @@ export default function ChantingCounter() {
                 >
                   <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${soundEnabled ? 'translate-x-8' : 'translate-x-0'}`} />
                 </button>
+              </div>
+
+              {/* Hide Bead Numbers Toggle */}
+              <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
+                <div>
+                  <span className="text-sm font-bold text-stone-700 block">🎯 Hide bead numbers</span>
+                  <span className="text-xs text-stone-500">Increase focus during chanting</span>
+                </div>
+                <button
+                  onClick={() => setHideBeadNumbers(!hideBeadNumbers)}
+                  className={`relative w-16 h-8 rounded-full transition-colors shadow-inner ${hideBeadNumbers ? 'bg-orange-600' : 'bg-stone-300'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${hideBeadNumbers ? 'translate-x-8' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* Click Area Shape Toggle */}
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-3">TAP BUTTON SHAPE</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setClickAreaShape('circle')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      clickAreaShape === 'circle'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white border-orange-600 shadow-lg'
+                        : 'bg-white text-stone-700 border-orange-200 hover:border-orange-400'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-orange-400"></div>
+                      </div>
+                      <span className="font-bold text-sm">Circle</span>
+                      <span className="text-xs opacity-80">(Default)</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setClickAreaShape('square')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      clickAreaShape === 'square'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white border-orange-600 shadow-lg'
+                        : 'bg-white text-stone-700 border-orange-200 hover:border-orange-400'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-2xl bg-orange-400"></div>
+                      </div>
+                      <span className="font-bold text-sm">Square</span>
+                      <span className="text-xs opacity-80">(Box shape)</span>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Action Buttons */}

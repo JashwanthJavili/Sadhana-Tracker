@@ -7,7 +7,15 @@ import { database, auth } from './firebase';
 export const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
 
 /**
- * Check if current user is admin
+ * Check if current user is SUPER ADMIN (jashwanthjavili7@gmail.com)
+ */
+export const isSuperAdmin = (): boolean => {
+  const currentUser = auth.currentUser;
+  return currentUser?.email === ADMIN_EMAIL;
+};
+
+/**
+ * Check if current user is admin (includes super admin and regular admins)
  */
 export const isAdmin = async (): Promise<boolean> => {
   const currentUser = auth.currentUser;
@@ -127,11 +135,19 @@ export const getAllAdmins = async () => {
  * - Chat messages (where user is participant)
  * - Questions and answers posted by user
  */
+/**
+ * SUPER ADMIN ONLY: Delete a user permanently
+ */
 export const deleteUserPermanently = async (userId: string): Promise<void> => {
-  verifyAdminAccess();
+  await verifyAdminAccess();
+  
+  // Only super admin can delete users
+  if (!isSuperAdmin()) {
+    throw new Error('⛔ Only the super admin can delete users');
+  }
   
   try {
-    console.log(`🗑️ Admin ${auth.currentUser?.email} deleting user: ${userId}`);
+    console.log(`🗑️ Super Admin ${auth.currentUser?.email} deleting user: ${userId}`);
     
     // Get user data first to show confirmation
     const userRef = ref(database, `users/${userId}`);

@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ref, get, set, push, remove, update } from 'firebase/database';
 import { db } from '../services/firebase';
-import { BookOpen, Plus, MessageSquare, Trash2, Search, Heart, User, Clock, Languages, GripVertical } from 'lucide-react';
+import { BookOpen, Plus, MessageSquare, Trash2, Search, Heart, User, Clock, Languages, GripVertical, Send } from 'lucide-react';
 import { translateText, SUPPORTED_LANGUAGES } from '../services/translator';
+import { isAdmin } from '../services/admin';
+import SlokaRequestForm from '../components/SlokaRequestForm';
+import { getUserSlokaRequests, SlokaRequest } from '../services/requests';
 
 const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
 
@@ -33,6 +36,7 @@ const SlokasLibrary: React.FC = () => {
   const { user } = useAuth();
   const [slokas, setSlokas] = useState<Sloka[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [newSloka, setNewSloka] = useState({ title: '', mantra: '', meaning: '' });
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
@@ -43,10 +47,27 @@ const SlokasLibrary: React.FC = () => {
   const [showTranslateModal, setShowTranslateModal] = useState<{ [key: string]: boolean }>({});
   const [expandedSlokas, setExpandedSlokas] = useState<{ [key: string]: boolean }>({});
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const [userRequests, setUserRequests] = useState<SlokaRequest[]>([]);
 
   useEffect(() => {
     loadSlokas();
+    checkAdminStatus();
   }, []);
+
+  useEffect(() => {
+    if (user && user.uid !== 'guest') {
+      const unsubscribe = getUserSlokaRequests(user.uid, (requests) => {
+        setUserRequests(requests);
+      });
+      return unsubscribe;
+    }
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    const adminStatus = await isAdmin();
+    setUserIsAdmin(adminStatus);
+  };
 
   const loadSlokas = async () => {
     try {
@@ -274,13 +295,24 @@ const SlokasLibrary: React.FC = () => {
               className="w-full pl-10 pr-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-sm sm:text-base"
             />
           </div>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 sm:px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
-          >
-            <Plus size={18} />
-            Add Chant
-          </button>
+          <div className="flex gap-2">
+            {userIsAdmin && (
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg text-xs font-semibold transition-all shadow-md whitespace-nowrap"
+              >
+                <Plus size={14} />
+                <span>Admin Add</span>
+              </button>
+            )}
+            <button
+              onClick={() => setShowRequestModal(true)}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-lg text-xs font-semibold transition-all shadow-md whitespace-nowrap"
+            >
+              <Plus size={14} />
+              <span>Add Sloka</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -454,41 +486,78 @@ const SlokasLibrary: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Translation Modal */}
+                  {/* Quick Language Selector - Modern Pills UI */}
                   {showTranslateModal[sloka.id] && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-200">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <select
-                          value={selectedLang[sloka.id] || ''}
-                          onChange={(e) => setSelectedLang({ ...selectedLang, [sloka.id]: e.target.value })}
-                          className="flex-1 min-w-[200px] px-3 py-2 border-2 border-green-300 rounded-lg focus:border-green-500 focus:outline-none bg-white"
-                        >
-                          <option value="">Select Language</option>
-                          {SUPPORTED_LANGUAGES.map(lang => (
-                            <option key={lang.code} value={lang.code}>{lang.name}</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTranslate(sloka.id, sloka.mantra, sloka.meaning || '');
-                            setShowTranslateModal({ ...showTranslateModal, [sloka.id]: false });
-                          }}
-                          disabled={!selectedLang[sloka.id] || translating[sloka.id]}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-bold transition-all"
-                        >
-                          {translating[sloka.id] ? '⏳ Translating...' : '🌐 Translate'}
-                        </button>
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-green-700">Choose Language</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowTranslateModal({ ...showTranslateModal, [sloka.id]: false });
                           }}
-                          className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-bold transition-all"
+                          className="text-stone-400 hover:text-stone-600 transition-colors"
                         >
-                          Cancel
+                          <X size={18} />
                         </button>
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {SUPPORTED_LANGUAGES.slice(0, 9).map(lang => (
+                          <button
+                            key={lang.code}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedLang({ ...selectedLang, [sloka.id]: lang.code });
+                              handleTranslate(sloka.id, sloka.mantra, sloka.meaning || '');
+                              setTimeout(() => {
+                                setShowTranslateModal({ ...showTranslateModal, [sloka.id]: false });
+                              }, 300);
+                            }}
+                            disabled={translating[sloka.id]}
+                            className={`
+                              px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all
+                              ${translating[sloka.id] && selectedLang[sloka.id] === lang.code
+                                ? 'bg-green-600 text-white animate-pulse'
+                                : 'bg-white text-green-700 border-2 border-green-300 hover:border-green-500 hover:bg-green-50 active:scale-95'
+                              }
+                            `}
+                          >
+                            {lang.flag} {lang.name}
+                          </button>
+                        ))}
+                      </div>
+                      {SUPPORTED_LANGUAGES.length > 9 && (
+                        <details className="mt-2">
+                          <summary className="text-xs text-green-600 cursor-pointer hover:text-green-700 font-semibold">
+                            + {SUPPORTED_LANGUAGES.length - 9} more languages
+                          </summary>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                            {SUPPORTED_LANGUAGES.slice(9).map(lang => (
+                              <button
+                                key={lang.code}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedLang({ ...selectedLang, [sloka.id]: lang.code });
+                                  handleTranslate(sloka.id, sloka.mantra, sloka.meaning || '');
+                                  setTimeout(() => {
+                                    setShowTranslateModal({ ...showTranslateModal, [sloka.id]: false });
+                                  }, 300);
+                                }}
+                                disabled={translating[sloka.id]}
+                                className={`
+                                  px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all
+                                  ${translating[sloka.id] && selectedLang[sloka.id] === lang.code
+                                    ? 'bg-green-600 text-white animate-pulse'
+                                    : 'bg-white text-green-700 border-2 border-green-300 hover:border-green-500 hover:bg-green-50 active:scale-95'
+                                  }
+                                `}
+                              >
+                                {lang.flag} {lang.name}
+                              </button>
+                            ))}
+                          </div>
+                        </details>
+                      )}
                     </div>
                   )}
 
@@ -578,6 +647,57 @@ const SlokasLibrary: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* User's Pending Requests */}
+      {userRequests.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl p-6 border-2 border-orange-200">
+          <h2 className="text-xl font-bold text-orange-900 mb-4 flex items-center gap-2">
+            <Send size={20} />
+            Your Sloka Requests ({userRequests.length})
+          </h2>
+          <div className="space-y-3">
+            {userRequests.map((request) => (
+              <div
+                key={request.id}
+                className="bg-white rounded-lg p-4 border-2 border-orange-200"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-stone-800">{request.title}</h3>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      request.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : request.status === 'approved'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {request.status.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-sm text-stone-600 mb-2 font-sanskrit">{request.sanskrit}</p>
+                <p className="text-sm text-stone-700">{request.translation}</p>
+                {request.adminComment && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-xs font-bold text-blue-900 mb-1">Admin Comment:</p>
+                    <p className="text-sm text-blue-800">{request.adminComment}</p>
+                    {request.reviewedBy && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        Reviewed by {request.reviewedBy}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sloka Request Modal */}
+      {showRequestModal && (
+        <SlokaRequestForm onClose={() => setShowRequestModal(false)} />
+      )}
     </div>
   );
 };

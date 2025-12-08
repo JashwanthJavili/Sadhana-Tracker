@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { ref, set, get, push, remove } from 'firebase/database';
-import { Calendar, Plus, X, Search, Heart, ExternalLink, Users, Trash2, Languages } from 'lucide-react';
+import { Calendar, Plus, X, Search, Heart, ExternalLink, Users, Trash2, Languages, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { translateText, SUPPORTED_LANGUAGES } from '../services/translator';
+import { isAdmin } from '../services/admin';
+import FestivalRequestForm from '../components/FestivalRequestForm';
+import { getUserFestivalRequests, FestivalRequest } from '../services/requests';
 
 interface Festival {
   id: string;
@@ -26,13 +29,17 @@ const FestivalsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [festivals, setFestivals] = useState<Festival[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [translating, setTranslating] = useState<{ [key: string]: boolean }>({});
   const [translations, setTranslations] = useState<{ [key: string]: { name: string; description: string } }>({});
   const [selectedLang, setSelectedLang] = useState<{ [key: string]: string }>({});
   const [showTranslateModal, setShowTranslateModal] = useState<{ [key: string]: boolean }>({});
   const [expandedFestivals, setExpandedFestivals] = useState<{ [key: string]: boolean }>({});
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const [userRequests, setUserRequests] = useState<FestivalRequest[]>([]);
   const [newFestival, setNewFestival] = useState({
     name: '',
     date: '',
@@ -45,10 +52,26 @@ const FestivalsPage: React.FC = () => {
 
   useEffect(() => {
     loadFestivals();
+    checkAdminStatus();
   }, []);
+
+  useEffect(() => {
+    if (user && user.uid !== 'guest') {
+      const unsubscribe = getUserFestivalRequests(user.uid, (requests) => {
+        setUserRequests(requests);
+      });
+      return unsubscribe;
+    }
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    const adminStatus = await isAdmin();
+    setUserIsAdmin(adminStatus);
+  };
 
   const loadFestivals = async () => {
     try {
+      setLoading(true);
       const festivalsRef = ref(db, 'festivals');
       const snapshot = await get(festivalsRef);
       if (snapshot.exists()) {
@@ -57,9 +80,13 @@ const FestivalsPage: React.FC = () => {
           festivalsData.push({ id: child.key!, ...child.val() });
         });
         setFestivals(festivalsData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+      } else {
+        setFestivals([]);
       }
     } catch (error) {
       console.error('Error loading festivals:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -224,14 +251,24 @@ const FestivalsPage: React.FC = () => {
               Sacred celebrations and appearance days of the Supreme Lord and His devotees
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-purple-600 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:bg-purple-50 transition-all shadow-lg whitespace-nowrap"
-          >
-            <Plus size={16} className="sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Add Festival</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+          <div className="flex gap-2">
+            {userIsAdmin && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-white text-purple-600 rounded-lg text-xs font-semibold hover:bg-purple-50 transition-all shadow-md whitespace-nowrap border border-purple-200"
+              >
+                <Plus size={14} />
+                <span>Admin Add</span>
+              </button>
+            )}
+            <button
+              onClick={() => setShowRequestModal(true)}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg text-xs font-semibold hover:from-orange-600 hover:to-pink-600 transition-all shadow-md whitespace-nowrap"
+            >
+              <Plus size={14} />
+              <span>Add Festival</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -444,48 +481,81 @@ const FestivalsPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Translation Modal */}
+                {/* Quick Language Selector - Modern Pills UI */}
                 {showTranslateModal[festival.id] && (
                   <div 
-                    className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 mb-3 border-2 border-green-200"
+                    className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-3 border-2 border-green-200 shadow-lg"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        value={selectedLang[festival.id] || ''}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          setSelectedLang({ ...selectedLang, [festival.id]: e.target.value });
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-1 min-w-[150px] px-2 py-1 text-sm border-2 border-green-300 rounded-lg focus:border-green-500 focus:outline-none bg-white"
-                      >
-                        <option value="">Select Language</option>
-                        {SUPPORTED_LANGUAGES.map(lang => (
-                          <option key={lang.code} value={lang.code}>{lang.name}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTranslate(festival.id, festival.name, festival.shortDescription);
-                          setShowTranslateModal({ ...showTranslateModal, [festival.id]: false });
-                        }}
-                        disabled={!selectedLang[festival.id] || translating[festival.id]}
-                        className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-bold transition-all"
-                      >
-                        {translating[festival.id] ? '⏳' : '🌐'}
-                      </button>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold text-green-700">Choose Language</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowTranslateModal({ ...showTranslateModal, [festival.id]: false });
                         }}
-                        className="px-3 py-1 text-sm bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-bold transition-all"
+                        className="text-stone-400 hover:text-stone-600 transition-colors"
                       >
-                        ✕
+                        <X size={18} />
                       </button>
                     </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {SUPPORTED_LANGUAGES.slice(0, 9).map(lang => (
+                        <button
+                          key={lang.code}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLang({ ...selectedLang, [festival.id]: lang.code });
+                            handleTranslate(festival.id, festival.name, festival.shortDescription);
+                            setTimeout(() => {
+                              setShowTranslateModal({ ...showTranslateModal, [festival.id]: false });
+                            }, 300);
+                          }}
+                          disabled={translating[festival.id]}
+                          className={`
+                            px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all
+                            ${translating[festival.id] && selectedLang[festival.id] === lang.code
+                              ? 'bg-green-600 text-white animate-pulse'
+                              : 'bg-white text-green-700 border-2 border-green-300 hover:border-green-500 hover:bg-green-50 active:scale-95'
+                            }
+                          `}
+                        >
+                          {lang.flag} {lang.name}
+                        </button>
+                      ))}
+                    </div>
+                    {SUPPORTED_LANGUAGES.length > 9 && (
+                      <details className="mt-2">
+                        <summary className="text-xs text-green-600 cursor-pointer hover:text-green-700 font-semibold">
+                          + {SUPPORTED_LANGUAGES.length - 9} more languages
+                        </summary>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                          {SUPPORTED_LANGUAGES.slice(9).map(lang => (
+                            <button
+                              key={lang.code}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLang({ ...selectedLang, [festival.id]: lang.code });
+                                handleTranslate(festival.id, festival.name, festival.shortDescription);
+                                setTimeout(() => {
+                                  setShowTranslateModal({ ...showTranslateModal, [festival.id]: false });
+                                }, 300);
+                              }}
+                              disabled={translating[festival.id]}
+                              className={`
+                                px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all
+                                ${translating[festival.id] && selectedLang[festival.id] === lang.code
+                                  ? 'bg-green-600 text-white animate-pulse'
+                                  : 'bg-white text-green-700 border-2 border-green-300 hover:border-green-500 hover:bg-green-50 active:scale-95'
+                                }
+                              `}
+                            >
+                              {lang.flag} {lang.name}
+                            </button>
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
                 )}
 
@@ -523,11 +593,69 @@ const FestivalsPage: React.FC = () => {
         </div>
       )}
 
-      {filteredFestivals.length === 0 && (
+      {loading ? (
+        <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-stone-300">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mb-4"></div>
+          <p className="text-stone-500 text-lg">Loading festivals...</p>
+        </div>
+      ) : filteredFestivals.length === 0 && (
         <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-stone-300">
           <Calendar size={48} className="mx-auto text-stone-400 mb-4" />
           <p className="text-stone-500 text-lg">No festivals found. Add the first one!</p>
         </div>
+      )}
+
+      {/* User's Pending Requests */}
+      {userRequests.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl p-6 border-2 border-orange-200">
+          <h2 className="text-xl font-bold text-orange-900 mb-4 flex items-center gap-2">
+            <Send size={20} />
+            Your Festival Requests ({userRequests.length})
+          </h2>
+          <div className="space-y-3">
+            {userRequests.map((request) => (
+              <div
+                key={request.id}
+                className="bg-white rounded-lg p-4 border-2 border-orange-200"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-stone-800">{request.name}</h3>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      request.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : request.status === 'approved'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {request.status.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-sm text-stone-600 mb-1">
+                  {new Date(request.date).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-stone-700">{request.description}</p>
+                {request.adminComment && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-xs font-bold text-blue-900 mb-1">Admin Comment:</p>
+                    <p className="text-sm text-blue-800">{request.adminComment}</p>
+                    {request.reviewedBy && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        Reviewed by {request.reviewedBy}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Festival Request Modal */}
+      {showRequestModal && (
+        <FestivalRequestForm onClose={() => setShowRequestModal(false)} />
       )}
     </div>
   );

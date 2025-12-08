@@ -121,14 +121,46 @@
       ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
       ".indexOn": ["date"]
     },
+    "festivalRequests": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp", "status", "requesterId"]
+    },
+    "slokaRequests": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp", "status", "requesterId"]
+    },
     "appSettings": {
       ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
       ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')"
     },
     "flaggedContent": {
       ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp", "contentType", "status"]
+    },
+    "adminNotifications": {
+      ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp", "type", "read"]
+    },
+    "userNotifications": {
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+        ".indexOn": ["timestamp", "read"]
+      }
+    },
+    "announcements": {
+      ".read": "auth != null",
       ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
       ".indexOn": ["timestamp", "type"]
+    },
+    "broadcasts": {
+      ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".indexOn": ["timestamp"]
     }
   }
 }

@@ -23,6 +23,21 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose }) => {
 
   const lang = language as 'en' | 'hi' | 'te';
 
+  const handleMaybeLater = async () => {
+    try {
+      if (user?.uid) {
+        const dismissedRef = ref(db, `users/${user.uid}/lastFeedbackDismissed`);
+        await set(dismissedRef, {
+          timestamp: Date.now()
+        });
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error saving dismissal:', error);
+      onClose();
+    }
+  };
+
   const content = {
     en: {
       title: 'Share Your Experience',
@@ -245,7 +260,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose }) => {
             <label className="block text-lg font-bold text-stone-900">
               {content[lang].categoryLabel}
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid responsive-grid-2 gap-3">
               {Object.entries(content[lang].categories).map(([key, label]) => (
                 <button
                   key={key}
@@ -280,7 +295,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose }) => {
           {/* Actions */}
           <div className="flex gap-3 pt-4">
             <button
-              onClick={onClose}
+              onClick={handleMaybeLater}
               className="flex-1 px-6 py-4 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95"
             >
               {content[lang].laterButton}
