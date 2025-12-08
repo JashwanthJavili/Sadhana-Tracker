@@ -3,8 +3,19 @@
  * Handles version updates and notifications
  */
 
-export const APP_VERSION = '1.2.1'; // Update this when releasing new version
+export const APP_VERSION = '1.2.2'; // Update this when releasing new version
 export const VERSION_HISTORY = [
+  {
+    version: '1.2.2',
+    date: '2025-12-09',
+    features: [
+      'Enhanced vibration feedback - stronger and more noticeable (30ms)',
+      'Improved bell sound - louder dual-tone for round completion',
+      'Test vibration (3 pulses) when enabling in settings',
+      'Test sound plays immediately when enabling',
+      'Better user feedback with descriptive messages'
+    ]
+  },
   {
     version: '1.2.1',
     date: '2025-12-09',

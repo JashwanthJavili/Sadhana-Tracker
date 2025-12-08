@@ -134,7 +134,10 @@ export default function ChantingCounter() {
     
     // Vibrate on each bead count
     if (vibrationEnabled) {
-      vibrate(20); // Short vibration
+      // Try both patterns for better compatibility
+      if ('vibrate' in navigator) {
+        navigator.vibrate(30); // Slightly longer for better feedback
+      }
     }
     
     if (newBead >= targetBeads) {
@@ -149,8 +152,8 @@ export default function ChantingCounter() {
       }
       
       // Double vibration for round completion
-      if (vibrationEnabled) {
-        vibrate([200, 100, 200]); // Double vibration pattern
+      if (vibrationEnabled && 'vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]); // Double vibration pattern
       }
       
       if (newRound >= targetRounds && autoLapEnabled) {
@@ -170,14 +173,24 @@ export default function ChantingCounter() {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      oscillator.frequency.value = 800;
+      // Bell-like sound with higher frequency
+      oscillator.frequency.value = 1000;
       oscillator.type = 'sine';
       
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+      // Louder and longer
+      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.4);
+      oscillator.stop(audioContext.currentTime + 0.6);
+      
+      // Add a second tone for richness
+      const oscillator2 = audioContext.createOscillator();
+      oscillator2.connect(gainNode);
+      oscillator2.frequency.value = 1500;
+      oscillator2.type = 'sine';
+      oscillator2.start(audioContext.currentTime);
+      oscillator2.stop(audioContext.currentTime + 0.6);
     } catch (error) {
       console.error('Error playing sound:', error);
     }
@@ -703,7 +716,12 @@ export default function ChantingCounter() {
 
               {/* Vibration Toggle */}
               <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
-                <span className="text-sm font-bold text-stone-700">📳 Vibration feedback</span>
+                <div className="flex-1">
+                  <span className="text-sm font-bold text-stone-700 block">📳 Vibration feedback</span>
+                  <span className="text-xs text-stone-500">
+                    {vibrationEnabled ? 'Tap each bead to feel vibration' : 'Enable to get haptic feedback'}
+                  </span>
+                </div>
                 <button
                   onClick={async () => {
                     if (!vibrationEnabled) {
@@ -711,8 +729,11 @@ export default function ChantingCounter() {
                       const permission = await requestVibrationPermission();
                       if (permission.granted) {
                         setVibrationEnabled(true);
-                        vibrate(50); // Test vibration
-                        showSuccess('Vibration enabled');
+                        // Test with a clear pattern
+                        if ('vibrate' in navigator) {
+                          navigator.vibrate([100, 50, 100, 50, 100]);
+                        }
+                        showSuccess('Vibration enabled - You should feel 3 pulses');
                       } else {
                         showWarning('Vibration Not Available', permission.error || 'Your device does not support vibration');
                       }
@@ -729,9 +750,24 @@ export default function ChantingCounter() {
 
               {/* Sound Toggle */}
               <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200">
-                <span className="text-sm font-bold text-stone-700">🔔 Sound on round complete</span>
+                <div className="flex-1">
+                  <span className="text-sm font-bold text-stone-700 block">🔔 Sound on round complete</span>
+                  <span className="text-xs text-stone-500">
+                    {soundEnabled ? 'Bell sound plays after 108 beads' : 'Enable to hear completion sound'}
+                  </span>
+                </div>
                 <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  onClick={() => {
+                    const newState = !soundEnabled;
+                    setSoundEnabled(newState);
+                    if (newState) {
+                      // Test sound when enabling
+                      playRoundCompleteSound();
+                      showSuccess('Sound enabled - You should hear a bell');
+                    } else {
+                      showSuccess('Sound disabled');
+                    }
+                  }}
                   className={`relative w-16 h-8 rounded-full transition-colors shadow-inner ${soundEnabled ? 'bg-orange-600' : 'bg-stone-300'}`}
                 >
                   <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${soundEnabled ? 'translate-x-8' : 'translate-x-0'}`} />
