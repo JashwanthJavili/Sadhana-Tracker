@@ -3,8 +3,19 @@
  * Handles version updates and notifications
  */
 
-export const APP_VERSION = '1.2.2'; // Update this when releasing new version
+export const APP_VERSION = '1.2.3'; // Update this when releasing new version
 export const VERSION_HISTORY = [
+  {
+    version: '1.2.3',
+    date: '2025-12-09',
+    features: [
+      'Much stronger vibration feedback - 100ms per tap (3x increase)',
+      'Triple vibration pattern on round completion (300ms pulses)',
+      'Realistic temple bell sound with multiple harmonics',
+      'Longer bell ring duration (1.5 seconds)',
+      'Rich C-E-G-C chord for authentic temple bell tone'
+    ]
+  },
   {
     version: '1.2.2',
     date: '2025-12-09',

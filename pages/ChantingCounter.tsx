@@ -134,9 +134,9 @@ export default function ChantingCounter() {
     
     // Vibrate on each bead count
     if (vibrationEnabled) {
-      // Try both patterns for better compatibility
+      // Strong vibration for clear feedback
       if ('vibrate' in navigator) {
-        navigator.vibrate(30); // Slightly longer for better feedback
+        navigator.vibrate(100); // Strong 100ms vibration
       }
     }
     
@@ -151,9 +151,9 @@ export default function ChantingCounter() {
         playRoundCompleteSound();
       }
       
-      // Double vibration for round completion
+      // Triple vibration for round completion - very strong
       if (vibrationEnabled && 'vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200]); // Double vibration pattern
+        navigator.vibrate([300, 100, 300, 100, 300]); // Triple strong vibration
       }
       
       if (newRound >= targetRounds && autoLapEnabled) {
@@ -167,30 +167,36 @@ export default function ChantingCounter() {
   const playRoundCompleteSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // Create a realistic temple bell sound with multiple harmonics
+      const playTone = (frequency: number, startTime: number, duration: number, volume: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(volume, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
       
-      // Bell-like sound with higher frequency
-      oscillator.frequency.value = 1000;
-      oscillator.type = 'sine';
+      const now = audioContext.currentTime;
       
-      // Louder and longer
-      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+      // Temple bell sound - multiple harmonics for rich tone
+      playTone(523, now, 1.5, 0.6);      // C5 - fundamental
+      playTone(659, now, 1.5, 0.4);      // E5 - third harmonic
+      playTone(784, now, 1.5, 0.3);      // G5 - fifth harmonic
+      playTone(1047, now + 0.05, 1.2, 0.2); // C6 - octave
       
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.6);
+      // Add a gentle strike sound at the beginning
+      playTone(200, now, 0.1, 0.5);
       
-      // Add a second tone for richness
-      const oscillator2 = audioContext.createOscillator();
-      oscillator2.connect(gainNode);
-      oscillator2.frequency.value = 1500;
-      oscillator2.type = 'sine';
-      oscillator2.start(audioContext.currentTime);
-      oscillator2.stop(audioContext.currentTime + 0.6);
     } catch (error) {
       console.error('Error playing sound:', error);
     }
@@ -729,11 +735,11 @@ export default function ChantingCounter() {
                       const permission = await requestVibrationPermission();
                       if (permission.granted) {
                         setVibrationEnabled(true);
-                        // Test with a clear pattern
+                        // Test with strong vibration pattern
                         if ('vibrate' in navigator) {
-                          navigator.vibrate([100, 50, 100, 50, 100]);
+                          navigator.vibrate([200, 100, 200, 100, 200]);
                         }
-                        showSuccess('Vibration enabled - You should feel 3 pulses');
+                        showSuccess('Vibration enabled - You should feel 3 strong pulses');
                       } else {
                         showWarning('Vibration Not Available', permission.error || 'Your device does not support vibration');
                       }
