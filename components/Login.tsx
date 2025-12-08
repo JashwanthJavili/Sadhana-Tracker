@@ -40,40 +40,62 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      {/* Decorative Background */}
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-100" style={{backgroundSize: '200% 200%', animation: 'gradient-shift 15s ease infinite'}}></div>
+      
+      {/* Spiritual Falling Om Symbols */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{animationDelay: '2s'}}></div>
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute text-orange-300 opacity-20 font-bold"
+            style={{
+              left: `${Math.random() * 100}%`,
+              fontSize: `${20 + Math.random() * 20}px`,
+              animation: `fall-down ${10 + Math.random() * 15}s linear infinite`,
+              animationDelay: `${Math.random() * 5}s`
+            }}
+          >
+            ॐ
+          </div>
+        ))}
+      </div>
+      
+      {/* Glowing Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-orange-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
 
       <div className="max-w-md w-full relative z-10">
         {/* Single Centered Card */}
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-orange-200">
           
-          {/* Header with Logo and Mantras */}
-          <div className="bg-gradient-to-br from-orange-600 via-amber-600 to-orange-500 p-6 sm:p-7 text-center relative overflow-hidden">
+          {/* Compact Header - Like Mantras Page */}
+          <div className="bg-gradient-to-br from-orange-600 via-amber-600 to-orange-500 p-4 sm:p-5 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-20"></div>
             
-            <div className="relative z-10 space-y-3">
-              {/* ISKCON Logo */}
+            <div className="relative z-10 space-y-2">
+              {/* ISKCON Logo - Smaller */}
               <div className="flex justify-center">
-                <div className="bg-white p-4 rounded-2xl shadow-xl">
+                <div className="bg-white p-3 rounded-xl shadow-lg">
                   <img 
                     src={iskconLogo} 
                     alt="ISKCON Logo" 
-                    className="w-16 h-16 object-contain"
+                    className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
                   />
                 </div>
               </div>
 
               {/* Om Mantra */}
-              <p className="text-white text-base sm:text-lg font-bold tracking-wider">
+              <p className="text-white text-sm sm:text-base font-bold tracking-wider">
                 ॐ Om Namo Bhagavate Vasudevaya
               </p>
 
-              {/* App Name */}
-              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-white drop-shadow-lg">
+              {/* App Name - Smaller */}
+              <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white drop-shadow-lg">
                 Sadhana Sanga
               </h1>
 
@@ -143,7 +165,7 @@ const Login: React.FC = () => {
             )}
 
             {/* Login Buttons */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <button 
                 onClick={handleLogin}
                 disabled={isLoading}
@@ -159,25 +181,20 @@ const Login: React.FC = () => {
                 </span>
               </button>
 
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t-2 border-orange-300" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-white px-4 py-1 text-orange-600 font-bold text-xs uppercase tracking-wider">Or</span>
-                </div>
+              {/* Guest Mode - Small Icon Button */}
+              <div className="flex justify-center">
+                <button 
+                  onClick={handleGuestLogin}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 bg-gradient-to-r from-stone-100 to-stone-200 hover:from-stone-200 hover:to-stone-300 text-stone-700 hover:text-stone-900 font-semibold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-stone-400 group text-sm border border-stone-300"
+                  title="Try as Guest"
+                >
+                  <UserCircle size={16} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-xs sm:text-sm">
+                    {isLoading ? 'Loading...' : 'Try as Guest'}
+                  </span>
+                </button>
               </div>
-
-              <button 
-                onClick={handleGuestLogin}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-700 hover:via-amber-700 hover:to-orange-600 text-white font-bold py-3.5 px-5 rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-orange-400 group"
-              >
-                <UserCircle size={22} className="group-hover:scale-110 transition-transform" />
-                <span className="text-base sm:text-lg">
-                  {isLoading ? 'Loading...' : 'Continue as Guest'}
-                </span>
-              </button>
             </div>
           </div>
 
@@ -189,6 +206,34 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <style>{`
+        @keyframes fall-down {
+          0% {
+            transform: translateY(-100px) rotate(0deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.3;
+          }
+          90% {
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes gradient-shift {
+          0%, 100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+      `}</style>
     </div>
   );
 };

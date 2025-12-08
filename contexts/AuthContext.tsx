@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       // If we are already in guest mode, don't overwrite with null
       if (user?.uid === 'guest') return;
-      
+
       // CRITICAL: Clear ALL localStorage data for authenticated users
       if (currentUser && currentUser.uid !== 'guest') {
         const keysToRemove: string[] = [];
@@ -37,10 +37,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         keysToRemove.forEach(key => localStorage.removeItem(key));
         console.log(`🧹 Cleared ${keysToRemove.length} localStorage items for authenticated user`);
       }
-      
+
       setUser(currentUser);
       setLoading(false);
-      
+
       // Set online status when user logs in
       if (currentUser && currentUser.uid !== 'guest') {
         try {
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     });
-    
+
     // Set offline status when component unmounts or user changes
     return () => {
       if (user && user.uid !== 'guest') {
@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           unauthorizedKeys.push(key);
         }
       }
-      
+
       if (unauthorizedKeys.length > 0) {
         console.error(`🚨 SECURITY ALERT: Detected ${unauthorizedKeys.length} unauthorized localStorage items for authenticated user ${user.uid}:`, unauthorizedKeys);
         unauthorizedKeys.forEach(key => {
@@ -100,9 +100,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
-      
+
       const result = await signInWithPopup(auth, googleProvider);
-      
+
       // Save user email to database for admin access
       if (result.user.email) {
         const userRef = ref(db, `users/${result.user.uid}`);
@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           photoURL: result.user.photoURL || ''
         });
       }
-      
+
       // Check if this is a new user
       const isNew = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
       setIsNewUser(isNew);
@@ -135,14 +135,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       providerData: [],
       refreshToken: '',
       tenantId: null,
-      delete: async () => {},
+      delete: async () => { },
       getIdToken: async () => '',
       getIdTokenResult: async () => ({} as any),
-      reload: async () => {},
+      reload: async () => { },
       toJSON: () => ({}),
       phoneNumber: null,
     } as User;
-    
+
     setUser(guestUser);
     setIsNewUser(true); // Guest users always see the tour
     setLoading(false);
@@ -152,16 +152,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (user?.uid === 'guest') {
         setUser(null);
+        setIsNewUser(false);
+        // Force navigation to login
+        window.location.href = '/login';
       } else {
         // Set offline status before signing out
         if (user) {
           await setUserOnlineStatus(user.uid, false);
         }
         await signOut(auth);
+        setIsNewUser(false);
+        // Redirect to login after sign out
+        window.location.href = '/login';
       }
-      setIsNewUser(false);
     } catch (error) {
       console.error("Error signing out:", error);
+      // Force redirect anyway
+      window.location.href = '/login';
     }
   };
 

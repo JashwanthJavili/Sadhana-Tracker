@@ -31,17 +31,17 @@ class ErrorLogger {
 
   log(error: AppError): void {
     this.errors.push(error);
-    
+
     // Limit stored errors
     if (this.errors.length > this.maxErrors) {
       this.errors.shift();
     }
-    
+
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('🔴 Error logged:', error);
     }
-    
+
     // Send to analytics in production
     if (process.env.NODE_ENV === 'production' && (window as any).gtag) {
       (window as any).gtag('event', 'exception', {
@@ -75,23 +75,23 @@ export const errorLogger = new ErrorLogger();
  */
 export function classifyError(error: Error): ErrorType {
   const message = error.message.toLowerCase();
-  
+
   if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
     return ErrorType.NETWORK;
   }
-  
+
   if (message.includes('firebase') || message.includes('database') || message.includes('permission')) {
     return ErrorType.DATABASE;
   }
-  
+
   if (message.includes('auth') || message.includes('unauthorized') || message.includes('login')) {
     return ErrorType.AUTHENTICATION;
   }
-  
+
   if (message.includes('invalid') || message.includes('required') || message.includes('validation')) {
     return ErrorType.VALIDATION;
   }
-  
+
   return ErrorType.UNKNOWN;
 }
 
@@ -102,16 +102,16 @@ export function getUserFriendlyMessage(error: AppError): string {
   switch (error.type) {
     case ErrorType.NETWORK:
       return '🌐 Network issue detected. Please check your internet connection and try again.';
-    
+
     case ErrorType.DATABASE:
       return '💾 Unable to save your data right now. Your changes will be retried automatically.';
-    
+
     case ErrorType.AUTHENTICATION:
       return '🔐 Authentication issue. Please sign in again to continue.';
-    
+
     case ErrorType.VALIDATION:
       return '⚠️ Please check your input and try again.';
-    
+
     default:
       return '❌ Something went wrong. We\'re working on it!';
   }
@@ -130,20 +130,20 @@ export class ErrorRecovery {
     baseDelay: number = 1000
   ): Promise<T> {
     let lastError: Error;
-    
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        
+
         const errorType = classifyError(lastError);
-        
+
         // Don't retry validation errors
         if (errorType === ErrorType.VALIDATION) {
           throw lastError;
         }
-        
+
         // Log error
         errorLogger.log({
           type: errorType,
@@ -152,7 +152,7 @@ export class ErrorRecovery {
           timestamp: Date.now(),
           context: { attempt, maxRetries }
         });
-        
+
         if (attempt < maxRetries - 1) {
           const delay = baseDelay * Math.pow(2, attempt);
           console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`);
@@ -160,7 +160,7 @@ export class ErrorRecovery {
         }
       }
     }
-    
+
     throw lastError!;
   }
 
@@ -228,7 +228,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const errorType = classifyError(error);
-    
+
     errorLogger.log({
       type: errorType,
       message: error.message,
@@ -236,7 +236,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       timestamp: Date.now(),
       context: errorInfo
     });
-    
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
@@ -251,7 +251,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       if (this.props.fallback) {
         return this.props.fallback;
       }
-      
+
       return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50 p-4">
           <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
@@ -266,7 +266,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 Don't worry, your data is safe. Let's try refreshing the page.
               </p>
             </div>
-            
+
             <div className="space-y-3">
               <button
                 onClick={this.handleReset}
@@ -274,15 +274,23 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               >
                 Try Again
               </button>
-              
+
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  // Hard refresh: Clear cache and reload
+                  if ('caches' in window) {
+                    caches.keys().then(names => {
+                      names.forEach(name => caches.delete(name));
+                    });
+                  }
+                  window.location.reload();
+                }}
                 className="w-full px-6 py-3 border-2 border-stone-300 text-stone-700 rounded-xl font-semibold hover:bg-stone-50 transition-all"
               >
                 Refresh Page
               </button>
             </div>
-            
+
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-6 text-left">
                 <summary className="cursor-pointer text-sm text-stone-500 hover:text-stone-700">
@@ -309,7 +317,7 @@ export function initializeErrorHandling(): void {
   // Handle unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
     const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
-    
+
     errorLogger.log({
       type: classifyError(error),
       message: error.message,
@@ -317,7 +325,7 @@ export function initializeErrorHandling(): void {
       timestamp: Date.now(),
       context: { type: 'unhandledRejection' }
     });
-    
+
     console.error('Unhandled promise rejection:', error);
   });
 
@@ -341,10 +349,10 @@ export function initializeErrorHandling(): void {
  */
 export function showErrorToast(error: AppError): void {
   const message = getUserFriendlyMessage(error);
-  
+
   // You can integrate with a toast library here
   console.error(message);
-  
+
   // Simple alert fallback
   if (error.type === ErrorType.AUTHENTICATION || error.type === ErrorType.DATABASE) {
     // Only show critical errors to user

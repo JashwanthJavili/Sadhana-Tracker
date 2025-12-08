@@ -211,6 +211,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       items: [
         ...(user?.email === ADMIN_EMAIL ? [{ to: '/admin', icon: Shield, label: 'Admin Panel', tourAttr: 'admin', guestAllowed: false }] : []),
         { to: '/settings', icon: Settings, label: 'Settings', tourAttr: 'settings', guestAllowed: true },
+      ]
+    },
+    {
+      title: 'About',
+      items: [
         { to: '/about', icon: Info, label: 'About', guestAllowed: true },
       ]
     },
@@ -276,26 +281,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <nav className="p-2 sm:p-3 space-y-2 flex-1 overflow-y-auto">
           {navGroups.map((group, groupIndex) => {
             const isExpanded = expandedGroups.has(group.title);
+            const isSettingsOrAbout = group.title === 'Settings' || group.title === 'About';
             
             return (
               <div key={groupIndex} className="space-y-1">
-                {/* Group Title - Clickable to expand/collapse */}
-                <button
-                  onClick={() => toggleGroup(group.title)}
-                  className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-stone-800/50 rounded-lg transition-colors group"
-                >
-                  <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider group-hover:text-stone-400">
-                    {group.title}
-                  </h3>
-                  {isExpanded ? (
-                    <ChevronDown size={14} className="text-stone-500 group-hover:text-stone-400" />
-                  ) : (
-                    <ChevronRight size={14} className="text-stone-500 group-hover:text-stone-400" />
-                  )}
-                </button>
+                {/* Group Title - Collapsible for most groups, hidden for Settings/About */}
+                {!isSettingsOrAbout && (
+                  <button
+                    onClick={() => toggleGroup(group.title)}
+                    className="w-full px-2 py-1.5 flex items-center justify-between rounded-lg transition-colors group"
+                  >
+                    <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider group-hover:text-stone-400">
+                      {group.title}
+                    </h3>
+                    {isExpanded ? (
+                      <ChevronDown size={14} className="text-stone-500 group-hover:text-stone-400" />
+                    ) : (
+                      <ChevronRight size={14} className="text-stone-500 group-hover:text-stone-400" />
+                    )}
+                  </button>
+                )}
                 
-                {/* Group Items - Show only when expanded */}
-                {isExpanded && (
+                {/* Group Items - Show only when expanded (or always for Settings/About) */}
+                {(isExpanded || isSettingsOrAbout) && (
                   <div className="space-y-1">
                     {group.items.map((item) => {
                       const isLocked = item.locked === true;
@@ -349,14 +357,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           })}
         </nav>
 
-        {/* Install App Button - Top of Navigation */}
+        {/* Install App Button - Top of Navigation - Compact */}
         {showInstallButton && (
-          <div className="px-2 py-1.5 border-b border-stone-800">
+          <div className="px-2 py-1 border-b border-stone-800">
             <button
               onClick={handleInstallClick}
-              className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-2 py-1.5 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl active:scale-95 text-xs"
+              className="w-full flex items-center justify-center gap-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-2 py-1 rounded-md font-semibold transition-all shadow-md hover:shadow-lg active:scale-95 text-[10px]"
             >
-              <Download size={12} />
+              <Download size={10} />
               <span>Install</span>
             </button>
           </div>

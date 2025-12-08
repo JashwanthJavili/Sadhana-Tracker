@@ -37,9 +37,9 @@ const FestivalDetailPage = lazy(() => import('./pages/FestivalDetailPage'));
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <LoadingScreen />;
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -49,9 +49,9 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <LoadingScreen />;
-  
+
   if (user) {
     return <Navigate to="/" replace />;
   }
@@ -62,9 +62,9 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 // Catch-all redirect based on auth status
 const DefaultRedirect: React.FC = () => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <LoadingScreen />;
-  
+
   // If logged in, go to dashboard; otherwise go to login
   return <Navigate to={user ? "/" : "/login"} replace />;
 };
@@ -111,24 +111,18 @@ function AppContent() {
   useEffect(() => {
     const checkFirstTime = async () => {
       if (user && user.uid !== 'guest') {
-        console.log('Checking first time for user:', user.uid);
-        
         // AUTOMATIC CLEANUP: Remove fake seed data from old version
         const removedCount = await cleanupFakeSeedData(user.uid);
         if (removedCount > 0) {
           console.log(`✅ Automatically removed ${removedCount} fake entries`);
         }
-        
+
         const settings = await getSettings(user.uid);
-        console.log('User settings:', settings);
-        console.log('Is first time?', settings.isFirstTime);
-        
+
         // Check if user needs to select gender (existing users without gender)
         if (!settings.isFirstTime && !settings.gender) {
-          console.log('Showing gender selection modal for existing user');
           setShowGenderSelection(true);
         } else if (settings.isFirstTime) {
-          console.log('Showing onboarding modal');
           setShowOnboarding(true);
         }
 
@@ -139,21 +133,22 @@ function AppContent() {
     checkFirstTime();
   }, [user]);
 
-  // Check if user is eligible for feedback (once per day if not submitted)
+  // Check if user is eligible for feedback (once per week if not submitted)
   const checkFeedbackEligibility = async (userId: string, settings: any) => {
     try {
       // Check last feedback submission time
       const feedbackRef = ref(db, `users/${userId}/lastFeedback`);
       const feedbackSnapshot = await get(feedbackRef);
-      
+
       if (feedbackSnapshot.exists()) {
         const lastFeedbackTime = feedbackSnapshot.val().timestamp;
         const currentTime = Date.now();
         const hoursSinceLastFeedback = Math.floor((currentTime - lastFeedbackTime) / (1000 * 60 * 60));
-        
-        // If submitted in last 24 hours, don't show
-        if (hoursSinceLastFeedback < 24) {
-          console.log(`✓ Feedback already submitted ${hoursSinceLastFeedback} hours ago. Next prompt in ${24 - hoursSinceLastFeedback} hours.`);
+
+        // If submitted in last 7 days (168 hours), don't show
+        if (hoursSinceLastFeedback < 168) {
+          const daysRemaining = Math.ceil((168 - hoursSinceLastFeedback) / 24);
+          console.log(`✓ Feedback already submitted ${Math.floor(hoursSinceLastFeedback / 24)} day(s) ago. Next prompt in ${daysRemaining} day(s).`);
           return;
         }
       }
@@ -197,9 +192,9 @@ function AppContent() {
         iskconCenter: data.iskconCenter,
         language: 'en', // Default to English
         isFirstTime: false,
-        showTour: true, // Enable tour for new users
+        tourCompleted: false, // Enable tour for new users
       });
-      
+
       // Create user profile for chat system
       try {
         const existingProfile = await getUserProfile(user.uid);
@@ -214,9 +209,9 @@ function AppContent() {
       } catch (error) {
         console.error('Error creating user profile:', error);
       }
-      
+
       setShowOnboarding(false);
-      
+
       // SMART UPDATE: Trigger context refresh and navigate to dashboard
       console.log('✅ Onboarding complete - updating app state and navigating to dashboard');
       setTimeout(() => {
@@ -233,9 +228,9 @@ function AppContent() {
         ...settings,
         gender: gender,
       });
-      
+
       setShowGenderSelection(false);
-      
+
       // SMART UPDATE: Trigger context refresh
       console.log('✅ Gender updated - updating app state');
       setTimeout(() => {
@@ -255,7 +250,7 @@ function AppContent() {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-            
+
             <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/planner" element={<PrivateRoute><DailyPlanner /></PrivateRoute>} />
             <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
@@ -274,7 +269,7 @@ function AppContent() {
             <Route path="/festivals" element={<PrivateRoute><FestivalsPage /></PrivateRoute>} />
             <Route path="/festival/:festivalId" element={<PrivateRoute><FestivalDetailPage /></PrivateRoute>} />
             <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
-            
+
             {/* Catch-all: redirect to dashboard if logged in, login if not */}
             <Route path="*" element={<DefaultRedirect />} />
           </Routes>
@@ -283,7 +278,7 @@ function AppContent() {
 
       <OnboardingModal isOpen={showOnboarding} onComplete={handleOnboardingComplete} />
       <GenderSelectionModal isOpen={showGenderSelection} onComplete={handleGenderSelection} />
-      
+
       {/* Feedback Prompt - Shows after 2+ days */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
     </>

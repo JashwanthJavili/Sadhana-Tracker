@@ -9,6 +9,13 @@ import { createUserProfile } from '../services/chat';
 import { ref, remove } from 'firebase/database';
 import { db } from '../services/firebase';
 
+// Declare global deferredPrompt
+declare global {
+  interface Window {
+    deferredPrompt: any;
+  }
+}
+
 const Settings: React.FC = () => {
   const { user } = useAuth();
   const { userSettings: contextSettings, updateUserSettings, refreshUserData } = useUserData();
@@ -20,6 +27,7 @@ const Settings: React.FC = () => {
   const [clearDataStatus, setClearDataStatus] = useState<'idle' | 'clearing' | 'success' | 'error'>('idle');
   const [refreshing, setRefreshing] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['profile']));
+  const [showInstallButton, setShowInstallButton] = useState(false);
   
   // Admin email - only this user has admin privileges
   const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
@@ -41,6 +49,46 @@ const Settings: React.FC = () => {
     setRefreshing(true);
     await refreshUserData();
     setTimeout(() => setRefreshing(false), 500);
+  };
+
+  // Check if app can be installed
+  useEffect(() => {
+    const checkInstallable = () => {
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setShowInstallButton(false);
+        return;
+      }
+      if (window.deferredPrompt) {
+        setShowInstallButton(true);
+      }
+    };
+
+    checkInstallable();
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!window.deferredPrompt) {
+      alert('To install this app:\n\niOS: Tap Share button, then "Add to Home Screen"\n\nAndroid: Tap menu (⋮), then "Install app" or "Add to Home screen"');
+      return;
+    }
+
+    window.deferredPrompt.prompt();
+    const { outcome } = await window.deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      setShowInstallButton(false);
+    }
+    
+    window.deferredPrompt = null;
   };
 
   useEffect(() => {
@@ -381,7 +429,7 @@ const Settings: React.FC = () => {
         </div>
       </section>
 
-      {/* Privacy & Data Control Section */}
+      {/* Privacy & Data Control Section - FAQ Style */}
       <section className="bg-gradient-to-br from-white to-green-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-green-300 p-4 sm:p-6">
         <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
           <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
@@ -390,131 +438,122 @@ const Settings: React.FC = () => {
           Privacy & Data Control
         </h3>
         
-        <div className="space-y-6">
-          {/* Data Ownership Notice */}
-          <div className="bg-green-50 border-2 border-green-300 rounded-xl p-6">
-            <div className="flex items-start gap-3 mb-4">
-              <Lock className="text-green-600 flex-shrink-0 mt-1" size={24} />
-              <div>
-                <h4 className="text-lg font-bold text-green-900 mb-2">Your Data, Your Rights</h4>
-                <p className="text-green-800 text-sm leading-relaxed">
-                  You have <strong>complete ownership and control</strong> over all your personal data. 
-                  We respect your privacy and ensure your spiritual journey data is:
-                </p>
-                <ul className="mt-3 space-y-2 text-green-800 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">✓</span>
-                    <span><strong>Private by default</strong> - Only you can access your daily entries, journal, and analytics</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">✓</span>
-                    <span><strong>Encrypted in transit</strong> - All data transfers use secure HTTPS/SSL encryption</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">✓</span>
-                    <span><strong>Stored securely</strong> - Hosted on Firebase's enterprise-grade infrastructure</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">✓</span>
-                    <span><strong>Never shared or sold</strong> - Your data will never be shared with third parties</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">✓</span>
-                    <span><strong>Deletable anytime</strong> - You can permanently delete all your data instantly</span>
-                  </li>
-                </ul>
+        <div className="space-y-3">
+          {/* FAQ 1: What data do we store? */}
+          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+            <button
+              onClick={() => toggleSection('privacy-what-store')}
+              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Database className="text-green-600" size={20} />
+                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">What data do you store?</span>
               </div>
-            </div>
+              {expandedSections.has('privacy-what-store') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </button>
+            {expandedSections.has('privacy-what-store') && (
+              <div className="px-4 pb-4 space-y-2 text-sm text-stone-700">
+                <div><strong className="text-green-700">• Personal Information:</strong> Name, Guru Name, ISKCON Center, Email (from Google Sign-In), Profile Photo</div>
+                <div><strong className="text-green-700">• Spiritual Practice Data:</strong> Daily commitments, chanting rounds, study hours, discipline scores, mood tracking</div>
+                <div><strong className="text-green-700">• Journal Entries:</strong> Your devotional reflections and spiritual insights</div>
+                <div><strong className="text-green-700">• Community Data:</strong> Chat messages, questions, answers (in Community section only)</div>
+                <div><strong className="text-green-700">• Usage Analytics:</strong> Anonymous usage patterns to improve the app (no personal tracking)</div>
+              </div>
+            )}
           </div>
 
-          {/* What We Store */}
-          <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
-            <div className="flex items-start gap-3">
-              <Database className="text-blue-600 flex-shrink-0 mt-1" size={24} />
-              <div>
-                <h4 className="text-lg font-bold text-blue-900 mb-2">What We Store</h4>
-                <div className="space-y-3 text-blue-800 text-sm">
-                  <div>
-                    <strong className="block mb-1">Personal Information:</strong>
-                    <span className="text-blue-700">Name, Guru Name, ISKCON Center, Email (from Google Sign-In), Profile Photo</span>
-                  </div>
-                  <div>
-                    <strong className="block mb-1">Spiritual Practice Data:</strong>
-                    <span className="text-blue-700">Daily commitments, chanting rounds, study hours, discipline scores, mood tracking</span>
-                  </div>
-                  <div>
-                    <strong className="block mb-1">Journal Entries:</strong>
-                    <span className="text-blue-700">Your devotional reflections and spiritual insights</span>
-                  </div>
-                  <div>
-                    <strong className="block mb-1">Community Data:</strong>
-                    <span className="text-blue-700">Chat messages, questions, answers (in Community section only)</span>
-                  </div>
-                  <div>
-                    <strong className="block mb-1">Usage Analytics:</strong>
-                    <span className="text-blue-700">Anonymous usage patterns to improve the app (no personal tracking)</span>
-                  </div>
+          {/* FAQ 2: What can others see? */}
+          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+            <button
+              onClick={() => toggleSection('privacy-what-visible')}
+              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Eye className="text-purple-600" size={20} />
+                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">What can others see about me?</span>
+              </div>
+              {expandedSections.has('privacy-what-visible') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </button>
+            {expandedSections.has('privacy-what-visible') && (
+              <div className="px-4 pb-4 space-y-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap mt-0.5">PUBLIC</span>
+                  <span className="text-stone-700"><strong>Community Profile:</strong> Your name, guru, ISKCON center, profile photo, online status</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap mt-0.5">PUBLIC</span>
+                  <span className="text-stone-700"><strong>Community Content:</strong> Questions you ask, answers you provide, chat messages</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap mt-0.5">PRIVATE</span>
+                  <span className="text-stone-700"><strong>Daily Planner:</strong> Your commitments, timeline, reflections - completely private</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap mt-0.5">PRIVATE</span>
+                  <span className="text-stone-700"><strong>Journal:</strong> All devotional journal entries - completely private</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap mt-0.5">PRIVATE</span>
+                  <span className="text-stone-700"><strong>Analytics & Chanting:</strong> All performance metrics, graphs, rounds - completely private</span>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Data Visibility Controls */}
-          <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-6">
-            <div className="flex items-start gap-3">
-              <Eye className="text-purple-600 flex-shrink-0 mt-1" size={24} />
-              <div className="w-full">
-                <h4 className="text-lg font-bold text-purple-900 mb-3">What Others Can See</h4>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PUBLIC</div>
-                    <div className="text-sm text-purple-800">
-                      <strong>Community Profile:</strong> Your name, guru, ISKCON center, profile photo, online status
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PUBLIC</div>
-                    <div className="text-sm text-purple-800">
-                      <strong>Community Content:</strong> Questions you ask, answers you provide, chat messages
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
-                    <div className="text-sm text-purple-800">
-                      <strong>Daily Planner:</strong> Your commitments, timeline, reflections - <strong>completely private</strong>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
-                    <div className="text-sm text-purple-800">
-                      <strong>Journal:</strong> All devotional journal entries - <strong>completely private</strong>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
-                    <div className="text-sm text-purple-800">
-                      <strong>Analytics:</strong> All performance metrics and graphs - <strong>completely private</strong>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">PRIVATE</div>
-                    <div className="text-sm text-purple-800">
-                      <strong>Chanting Counter:</strong> Your rounds, sessions, goals - <strong>completely private</strong>
-                    </div>
-                  </div>
+          {/* FAQ 3: How is my data protected? */}
+          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+            <button
+              onClick={() => toggleSection('privacy-protection')}
+              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Lock className="text-green-600" size={20} />
+                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">How is my data protected?</span>
+              </div>
+              {expandedSections.has('privacy-protection') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </button>
+            {expandedSections.has('privacy-protection') && (
+              <div className="px-4 pb-4 space-y-2 text-sm text-stone-700">
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span><strong>Encrypted in transit:</strong> All data transfers use secure HTTPS/SSL encryption</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span><strong>Stored securely:</strong> Hosted on Firebase's enterprise-grade infrastructure</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span><strong>Private by default:</strong> Only you can access your daily entries, journal, and analytics</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span><strong>Never shared or sold:</strong> Your data will never be shared with third parties</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">✓</span>
+                  <span><strong>You have control:</strong> Export or delete all your data anytime</span>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Export Data Option */}
-          <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-6">
-            <div className="flex items-start gap-3">
-              <Download className="text-amber-600 flex-shrink-0 mt-1" size={24} />
-              <div className="flex-1">
-                <h4 className="text-lg font-bold text-amber-900 mb-2">Export Your Data</h4>
-                <p className="text-amber-800 text-sm mb-4">
-                  Download a complete copy of all your data in JSON format. This includes everything: settings, entries, journal, analytics, and community activity.
+          {/* FAQ 4: Can I export my data? */}
+          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+            <button
+              onClick={() => toggleSection('privacy-export')}
+              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Download className="text-blue-600" size={20} />
+                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">Can I export my data?</span>
+              </div>
+              {expandedSections.has('privacy-export') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </button>
+            {expandedSections.has('privacy-export') && (
+              <div className="px-4 pb-4">
+                <p className="text-sm text-stone-700 mb-3">
+                  Yes! You have complete ownership of your data. Download a complete copy in JSON format including settings, entries, journal, analytics, and community activity.
                 </p>
                 <button
                   onClick={async () => {
@@ -540,20 +579,43 @@ const Settings: React.FC = () => {
                       }
                     }
                   }}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
                 >
-                  <Download size={20} />
+                  <Download size={16} />
                   Download My Data
                 </button>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Privacy Contact */}
-          <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6">
-            <h4 className="text-base font-bold text-gray-900 mb-2">Privacy Questions?</h4>
-            <p className="text-gray-700 text-sm">
-              If you have concerns about your data privacy or want to exercise your data rights, contact us at{' '}
+          {/* FAQ 5: How can I delete my data? */}
+          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+            <button
+              onClick={() => toggleSection('privacy-delete')}
+              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Trash2 className="text-red-600" size={20} />
+                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">How can I delete my data?</span>
+              </div>
+              {expandedSections.has('privacy-delete') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </button>
+            {expandedSections.has('privacy-delete') && (
+              <div className="px-4 pb-4 text-sm text-stone-700">
+                <p className="mb-2">
+                  You can permanently delete all your data anytime using the <strong className="text-red-600">"Clear All My Data"</strong> button in the Danger Zone section below.
+                </p>
+                <p className="text-xs text-stone-600 italic">
+                  Note: This action cannot be undone. All your entries, settings, journal, and progress will be permanently deleted.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* FAQ 6: Privacy Questions Contact */}
+          <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-4 border-2 border-green-300">
+            <p className="text-sm text-green-900">
+              <strong>Have privacy questions?</strong> Contact us at{' '}
               <a href="mailto:jashwanthjavili7@gmail.com" className="text-blue-600 hover:text-blue-800 font-bold underline">
                 jashwanthjavili7@gmail.com
               </a>
@@ -602,6 +664,145 @@ const Settings: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Install App on Your Mobile Section - Collapsible */}
+      <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-blue-300 p-4 sm:p-6">
+        <button
+          onClick={() => toggleSection('install-app')}
+          className="w-full flex justify-between items-center mb-4"
+        >
+          <h3 className="text-xl sm:text-2xl font-bold text-stone-900 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-xl shadow-lg">
+              <Download className="text-white" size={24}/>
+            </div>
+            Install App on Your Mobile
+          </h3>
+          {expandedSections.has('install-app') ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
+        </button>
+        
+        {expandedSections.has('install-app') && (
+          <div className="space-y-6">
+            {/* Install Benefits */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-4 sm:p-6">
+              <h4 className="text-base sm:text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">📱</span>
+                Why Install the App?
+              </h4>
+              <ul className="space-y-2 sm:space-y-3 text-blue-800 text-xs sm:text-sm">
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-green-600 font-bold text-base sm:text-lg flex-shrink-0">✓</span>
+                  <span><strong>Works Offline:</strong> Track your sadhana even without internet connection</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-green-600 font-bold text-base sm:text-lg flex-shrink-0">✓</span>
+                  <span><strong>Quick Access:</strong> Launch directly from your home screen like a native app</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-green-600 font-bold text-base sm:text-lg flex-shrink-0">✓</span>
+                  <span><strong>Full Screen Experience:</strong> No browser bars, just your spiritual practice</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-green-600 font-bold text-base sm:text-lg flex-shrink-0">✓</span>
+                  <span><strong>Faster Performance:</strong> Optimized loading and smooth animations</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-green-600 font-bold text-base sm:text-lg flex-shrink-0">✓</span>
+                  <span><strong>Notifications Ready:</strong> Get reminders for your daily sadhana (coming soon)</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Install Button */}
+            {showInstallButton && (
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 border-2 border-green-400 rounded-xl p-4 sm:p-6 text-center">
+                <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">🎉 Ready to Install!</h4>
+                <p className="text-green-50 mb-3 sm:mb-5 text-xs sm:text-sm">Click the button below to install Sadhana Sanga on your device</p>
+                <button
+                  onClick={handleInstallClick}
+                  className="inline-flex items-center gap-2 sm:gap-3 bg-white text-green-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-3xl transform hover:scale-105 active:scale-95 transition-all"
+                >
+                  <Download size={20} className="sm:w-6 sm:h-6" />
+                  <span>Install App Now</span>
+                </button>
+              </div>
+            )}
+
+            {/* Manual Installation Instructions - Collapsible */}
+            <div className="bg-white border-2 border-stone-300 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('install-manual')}
+                className="w-full flex justify-between items-center p-4 sm:p-6 hover:bg-stone-50 transition-colors"
+              >
+                <h4 className="text-base sm:text-lg font-bold text-stone-900 flex items-center gap-2">
+                  <span className="text-xl sm:text-2xl">📋</span>
+                  Manual Installation Instructions
+                </h4>
+                {expandedSections.has('install-manual') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+              </button>
+              
+              {expandedSections.has('install-manual') && (
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-6">
+                  {/* Android Instructions */}
+                  <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 sm:p-5">
+                    <h5 className="font-bold text-green-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                      <span className="text-lg sm:text-xl">🤖</span>
+                      For Android (Chrome)
+                    </h5>
+                    <ol className="space-y-2 text-xs sm:text-sm text-green-800 list-decimal list-inside">
+                      <li><strong>Tap the menu icon</strong> (three vertical dots ⋮) in the top-right corner</li>
+                      <li><strong>Select "Install app"</strong> or <strong>"Add to Home screen"</strong></li>
+                      <li><strong>Confirm the installation</strong> when prompted</li>
+                      <li><strong>Find the app</strong> on your home screen and tap to open</li>
+                    </ol>
+                  </div>
+
+                  {/* iOS Instructions */}
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 sm:p-5">
+                    <h5 className="font-bold text-blue-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                      <span className="text-lg sm:text-xl">🍎</span>
+                      For iPhone/iPad (Safari)
+                    </h5>
+                    <ol className="space-y-2 text-xs sm:text-sm text-blue-800 list-decimal list-inside">
+                      <li><strong>Tap the Share button</strong> (square with arrow pointing up ⬆️) at the bottom</li>
+                      <li><strong>Scroll down</strong> and tap <strong>"Add to Home Screen"</strong></li>
+                      <li><strong>Edit the name</strong> if desired, then tap <strong>"Add"</strong></li>
+                      <li><strong>Launch the app</strong> from your home screen</li>
+                    </ol>
+                    <p className="mt-3 text-[10px] sm:text-xs text-blue-700 italic">⚠️ Note: Must use Safari browser on iOS (not Chrome)</p>
+                  </div>
+
+                  {/* Desktop Instructions */}
+                  <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 sm:p-5">
+                    <h5 className="font-bold text-purple-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                      <span className="text-lg sm:text-xl">💻</span>
+                      For Desktop (Chrome/Edge)
+                    </h5>
+                    <ol className="space-y-2 text-xs sm:text-sm text-purple-800 list-decimal list-inside">
+                      <li><strong>Look for the install icon</strong> (➕ or ⬇️) in the address bar</li>
+                      <li><strong>Click "Install"</strong> when the prompt appears</li>
+                      <li><strong>The app will open</strong> in its own window</li>
+                      <li><strong>Access anytime</strong> from your taskbar or desktop</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Already Installed Message */}
+            {!showInstallButton && (
+              <div className="bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-400 rounded-xl p-4 sm:p-6 text-center">
+                <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">✅</div>
+                <h4 className="text-lg sm:text-xl font-bold text-green-900 mb-2">App Already Installed!</h4>
+                <p className="text-green-700 text-xs sm:text-sm">
+                  You're either already using the installed app or your browser doesn't support installation.
+                  <br className="hidden sm:block" />
+                  If you're on iOS, please use Safari browser and follow the manual instructions above.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       {/* Danger Zone - Clear All Data */}
       <section className="bg-gradient-to-br from-white to-red-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-red-300 p-4 sm:p-6">

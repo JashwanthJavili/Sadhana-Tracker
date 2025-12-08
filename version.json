@@ -1,7 +1,25 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "buildDate": "2025-12-08",
   "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2025-12-08",
+      "changes": [
+        "Login page spiritual effects with falling Om symbols and gradient animations",
+        "Compact guest button and header design on Login page",
+        "Privacy & Data Control restructured as collapsible FAQ in Settings",
+        "Install App section in Settings with benefits and manual instructions",
+        "About page comprehensive FAQ with 13 questions",
+        "About page moved to separate navigation section",
+        "Settings and About always visible in navigation (no collapse)",
+        "All About sections made collapsible for better mobile experience",
+        "Medium-sized headings throughout About page for balanced appearance",
+        "Feedback interval changed from daily to weekly (7 days)",
+        "Fixed About.tsx syntax error",
+        "Removed duplicate Key Features heading"
+      ]
+    },
     {
       "version": "1.0.1",
       "date": "2025-12-08",

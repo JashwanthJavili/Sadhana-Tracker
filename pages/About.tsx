@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Code, Sparkles, ExternalLink, Book, Shield, Lock, Calendar } from 'lucide-react';
+import { Heart, Code, Sparkles, ExternalLink, Book, Shield, Lock, Calendar, ChevronDown } from 'lucide-react';
 
 // @ts-ignore
 import versionData from '../version.json';
@@ -86,27 +86,37 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* About the App */}
-      <section className="bg-gradient-to-br from-white to-blue-50 rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-3 border-blue-300 p-6 sm:p-8 md:p-10">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-stone-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
-            <Book className="text-white" size={24} />
+      {/* About the App & Features - Collapsible */}
+      <section className="bg-gradient-to-br from-white to-blue-50 rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-3 border-blue-300 overflow-hidden">
+        <details className="group" open>
+          <summary className="flex items-center justify-between gap-3 p-4 sm:p-6 md:p-8 cursor-pointer hover:bg-blue-100/50 transition-colors list-none">
+            <h2 className="text-base sm:text-lg md:text-xl font-serif font-bold text-stone-900 flex items-center gap-2 sm:gap-3">
+              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl shadow-lg">
+                <Book className="text-white" size={20} />
+              </div>
+              What is Sadhana Sanga?
+            </h2>
+            <ChevronDown className="text-blue-600 flex-shrink-0 transition-transform group-open:rotate-180" size={24} />
+          </summary>
+          <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 space-y-3 sm:space-y-4">
+            <p className="text-stone-700 text-xs sm:text-sm md:text-base leading-relaxed">
+              <strong className="text-stone-900 font-bold">Sadhana Sanga</strong> is a comprehensive spiritual practice tracker designed to help devotees maintain consistency in their daily sadhana, set goals, and track progress.
+            </p>
+            <p className="text-stone-600 text-[11px] sm:text-xs md:text-sm italic leading-relaxed">
+              This platform serves as a daily companion for devotees, offering tools for chanting rounds, setting spiritual goals, tracking progress, and connecting with the community.
+            </p>
           </div>
-          What is Included
-        </h2>
-        <div className="space-y-4 sm:space-y-6 text-stone-700 text-sm sm:text-base md:text-lg leading-relaxed">
-          <p>
-            <strong className="text-stone-900 font-bold">Sadhana Sanga</strong> is a comprehensive spiritual practice tracker designed to help devotees maintain consistency in their daily sadhana, set goals, and track progress.
-          </p>
-          <p className="text-stone-600 text-xs sm:text-sm md:text-base italic">
-            This platform serves as a daily companion for devotees, offering tools for chanting rounds, setting spiritual goals, tracking progress, and connecting with the community.
-          </p>
-        </div>
+        </details>
       </section>
 
-      {/* Features */}
-      <section className="bg-gradient-to-br from-white to-green-50 rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-3 border-green-300 p-6 sm:p-8 md:p-10">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-stone-900 mb-6 sm:mb-8">Key Features</h2>
+      {/* Features - Collapsible */}
+      <section className="bg-gradient-to-br from-white to-green-50 rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-3 border-green-300 overflow-hidden">
+        <details className="group" open>
+          <summary className="flex items-center justify-between gap-3 p-4 sm:p-6 md:p-8 cursor-pointer hover:bg-green-100/50 transition-colors list-none">
+            <h2 className="text-base sm:text-lg md:text-xl font-serif font-bold text-stone-900">Key Features</h2>
+            <ChevronDown className="text-green-600 flex-shrink-0 transition-transform group-open:rotate-180" size={24} />
+          </summary>
+          <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {[
             'Daily Planning & Commitments',
@@ -151,6 +161,8 @@ const About: React.FC = () => {
             </a>
           </div>
         </div>
+          </div>
+        </details>
       </section>
 
       {/* Developer Section */}
@@ -347,77 +359,179 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* Privacy & Security Section */}
-      <section className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-3 border-green-400 p-6 sm:p-8 md:p-10">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-stone-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
-            <Shield className="text-white" size={24} />
-          </div>
-          Privacy & Security
-        </h2>
-        <div className="space-y-4 sm:space-y-6">
-          <div className="bg-white p-4 sm:p-5 md:p-6 rounded-lg sm:rounded-xl border-2 border-green-300 shadow-lg">
-            <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-              <div className="bg-green-100 p-2 sm:p-3 rounded-full flex-shrink-0">
-                <Lock className="text-green-700" size={20} />
+      {/* Privacy & Security Section - Collapsible */}
+      <section className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-3 border-green-400 overflow-hidden">
+        <details className="group">
+          <summary className="flex items-center justify-between gap-3 p-4 sm:p-6 md:p-8 cursor-pointer hover:bg-green-100/50 transition-colors list-none">
+            <h2 className="text-base sm:text-lg md:text-xl font-serif font-bold text-stone-900 flex items-center gap-2 sm:gap-3">
+              <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl shadow-lg">
+                <Shield className="text-white" size={20} />
               </div>
-              <div className="flex-1">
-                <h3 className="text-base sm:text-lg md:text-xl font-bold text-stone-900 mb-2">End-to-End Encryption</h3>
-                <p className="text-stone-700 text-xs sm:text-sm md:text-base leading-relaxed">
-                  All messages are protected with AES-256-GCM encryption. Only you and your recipient can read them.
+              Privacy & Security
+            </h2>
+            <ChevronDown className="text-green-600 flex-shrink-0 transition-transform group-open:rotate-180" size={24} />
+          </summary>
+          <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 space-y-3 sm:space-y-4">
+            <div className="bg-white p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl border-2 border-green-300 shadow-lg">
+              <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <div className="bg-green-100 p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                  <Lock className="text-green-700" size={18} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm sm:text-base md:text-lg font-bold text-stone-900 mb-1.5 sm:mb-2">End-to-End Encryption</h3>
+                  <p className="text-stone-700 text-[11px] sm:text-xs md:text-sm leading-relaxed">
+                    All messages are protected with AES-256-GCM encryption. Only you and your recipient can read them.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <div className="bg-white p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
+                <h4 className="font-bold text-stone-900 mb-1.5 sm:mb-2 flex items-center gap-2 text-xs sm:text-sm">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-600 rounded-full flex-shrink-0"></div>
+                  Secure Data Storage
+                </h4>
+                <p className="text-stone-600 text-[10px] sm:text-xs leading-relaxed">
+                  Your data is stored in Firebase's encrypted cloud with automatic backups.
+                </p>
+              </div>
+
+              <div className="bg-white p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
+                <h4 className="font-bold text-stone-900 mb-1.5 sm:mb-2 flex items-center gap-2 text-xs sm:text-sm">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-600 rounded-full flex-shrink-0"></div>
+                  Privacy First
+                </h4>
+                <p className="text-stone-600 text-[10px] sm:text-xs leading-relaxed">
+                  We never sell your data. Your spiritual journey is sacred and confidential.
+                </p>
+              </div>
+
+              <div className="bg-white p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
+                <h4 className="font-bold text-stone-900 mb-1.5 sm:mb-2 flex items-center gap-2 text-xs sm:text-sm">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-600 rounded-full flex-shrink-0"></div>
+                  GDPR Compliant
+                </h4>
+                <p className="text-stone-600 text-[10px] sm:text-xs leading-relaxed">
+                  Full compliance with international privacy regulations.
+                </p>
+              </div>
+
+              <div className="bg-white p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
+                <h4 className="font-bold text-stone-900 mb-1.5 sm:mb-2 flex items-center gap-2 text-xs sm:text-sm">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-600 rounded-full flex-shrink-0"></div>
+                  Your Control
+                </h4>
+                <p className="text-stone-600 text-[10px] sm:text-xs leading-relaxed">
+                  Export or delete your data anytime. Complete control over your information.
                 </p>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="bg-white p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
-              <h4 className="font-bold text-stone-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 bg-green-600 rounded-full flex-shrink-0"></div>
-                Secure Data Storage
-              </h4>
-              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
-                Your data is stored in Firebase's encrypted cloud with automatic backups.
-              </p>
-            </div>
-
-            <div className="bg-white p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
-              <h4 className="font-bold text-stone-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 bg-green-600 rounded-full flex-shrink-0"></div>
-                Privacy First
-              </h4>
-              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
-                We never sell your data. Your spiritual journey is sacred and confidential.
-              </p>
-            </div>
-
-            <div className="bg-white p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
-              <h4 className="font-bold text-stone-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 bg-green-600 rounded-full flex-shrink-0"></div>
-                GDPR Compliant
-              </h4>
-              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
-                Full compliance with international privacy regulations.
-              </p>
-            </div>
-
-            <div className="bg-white p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl border-2 border-green-200 shadow-md">
-              <h4 className="font-bold text-stone-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 bg-green-600 rounded-full flex-shrink-0"></div>
-                Your Control
-              </h4>
-              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
-                Export or delete your data anytime. Complete control over your information.
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl text-white shadow-lg">
+              <p className="text-xs sm:text-sm md:text-base font-semibold mb-1.5 sm:mb-2">🔒 Your data is protected with enterprise-grade security</p>
+              <p className="text-green-100 text-[10px] sm:text-xs">
+                Read our complete <a href="/PRIVACY_POLICY.md" className="underline font-bold hover:text-white">Privacy Policy</a> for detailed information.
               </p>
             </div>
           </div>
+        </details>
+      </section>
 
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 sm:p-5 md:p-6 rounded-lg sm:rounded-xl text-white shadow-lg">
-            <p className="text-sm sm:text-base md:text-lg font-semibold mb-2">🔒 Your data is protected with enterprise-grade security</p>
-            <p className="text-green-100 text-xs sm:text-sm">
-              Read our complete <a href="/PRIVACY_POLICY.md" className="underline font-bold hover:text-white">Privacy Policy</a> for detailed information.
-            </p>
+      {/* Frequently Asked Questions - Collapsible */}
+      <section className="bg-gradient-to-br from-white to-purple-50 rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-3 border-purple-300 p-4 sm:p-6 md:p-8 lg:p-10">
+        <h2 className="text-base sm:text-lg md:text-xl font-serif font-bold text-stone-900 mb-4 sm:mb-6 md:mb-8 flex items-center gap-2 sm:gap-3">
+          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl shadow-lg">
+            <Book className="text-white" size={20} />
           </div>
+          Frequently Asked Questions
+        </h2>
+
+        <div className="space-y-2 sm:space-y-3">
+          {[
+            {
+              question: 'Can I use this app offline?',
+              answer: 'Yes! Once installed, Sadhana Sanga works offline for most features. Your data syncs automatically when you\'re back online. Perfect for traveling or areas with limited connectivity.'
+            },
+            {
+              question: 'How do I track my progress over time?',
+              answer: 'Visit the Analytics page to see detailed graphs, trends, and insights about your sadhana. Track chanting rounds, study hours, discipline scores, and mood patterns over days, weeks, or months.'
+            },
+            {
+              question: 'Is my spiritual data private?',
+              answer: 'Absolutely! Your daily planner, journal, chanting counter, and analytics are completely private. Only your community profile and posts are visible to others. See Settings → Privacy & Data Control for details.'
+            },
+            {
+              question: 'How do I use the Daily Planner?',
+              answer: 'Set your daily commitments (chanting, reading, service) at the start of the day, track them throughout, and reflect in the evening. The app calculates your discipline score and shows your progress.'
+            },
+            {
+              question: 'Can I export my data?',
+              answer: 'Yes! Go to Settings → Privacy & Data Control and click "Can I export my data?" to download all your data as a JSON file. You have complete ownership.'
+            },
+            {
+              question: 'How do I ask questions to the community?',
+              answer: 'Navigate to Community → Q&A section, click "Ask Question", provide a title and details, then submit. Devotees worldwide can answer and discuss.'
+            },
+            {
+              question: 'What is the Devotional Journal for?',
+              answer: 'A private space to record your spiritual insights, realizations, prayers, and reflections. Write about your journey, challenges, and Krishna\'s mercy. Completely confidential.'
+            },
+            {
+              question: 'Does the app work on multiple devices?',
+              answer: 'Yes! Sign in with your Google account on any device (phone, tablet, computer) and your data automatically syncs across all devices through Firebase cloud.'
+            },
+            {
+              question: 'What are the festival features?',
+              answer: 'Browse a community-maintained calendar of Vaishnava festivals, appearance days, and ekadashis. View dates, significance, how to observe, and even contribute new festivals.'
+            },
+            {
+              question: 'How do I install the app on my phone?',
+              answer: 'Visit Settings → "Install App on Your Mobile" for detailed step-by-step instructions for Android, iOS, and Desktop. Or tap the Install button in the navigation menu.'
+            },
+            {
+              question: 'Will I get reminders for my sadhana?',
+              answer: 'Push notifications are coming soon! You\'ll be able to set custom reminders for chanting, reading, temple programs, and more. Stay tuned!'
+            },
+            {
+              question: 'Is the app available in multiple languages?',
+              answer: 'Currently, the app supports English with Telugu mantras. We\'re working on adding more languages including Hindi, Bengali, and others based on community feedback.'
+            },
+            {
+              question: 'Can I contribute or suggest features?',
+              answer: 'Absolutely! We\'d love your feedback. Click "Submit Feedback" below or email us at jashwanthjavili7@gmail.com. Your ideas help serve the devotee community better.'
+            }
+          ].map((faq, idx) => (
+            <div key={idx} className="bg-white rounded-lg sm:rounded-xl border-2 border-purple-200 overflow-hidden shadow-sm hover:shadow-md transition-all">
+              <details className="group">
+                <summary className="flex items-center justify-between gap-3 p-3 sm:p-4 md:p-5 cursor-pointer hover:bg-purple-50 transition-colors list-none">
+                  <span className="font-bold text-purple-900 text-xs sm:text-sm md:text-base flex-1">{faq.question}</span>
+                  <ChevronDown className="text-purple-600 flex-shrink-0 transition-transform group-open:rotate-180" size={18} />
+                </summary>
+                <div className="px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5 pt-0">
+                  <p className="text-stone-700 text-[11px] sm:text-xs md:text-sm leading-relaxed">
+                    {faq.answer.includes('jashwanthjavili7@gmail.com') ? (
+                      <>
+                        {faq.answer.split('jashwanthjavili7@gmail.com')[0]}
+                        <a href="mailto:jashwanthjavili7@gmail.com" className="text-blue-600 hover:text-blue-800 font-bold underline">
+                          jashwanthjavili7@gmail.com
+                        </a>
+                        {faq.answer.split('jashwanthjavili7@gmail.com')[1]}
+                      </>
+                    ) : faq.answer.includes('completely private') ? (
+                      <>
+                        {faq.answer.split('completely private')[0]}
+                        <strong className="text-green-700">completely private</strong>
+                        {faq.answer.split('completely private')[1]}
+                      </>
+                    ) : (
+                      faq.answer
+                    )}
+                  </p>
+                </div>
+              </details>
+            </div>
+          ))}
         </div>
       </section>
 
