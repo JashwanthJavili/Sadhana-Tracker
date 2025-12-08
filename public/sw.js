@@ -1,12 +1,23 @@
 /* Service Worker for Sadhana Sanga PWA - Production Optimized */
 
-const CACHE_NAME = 'sadhana-sanga-v3';
-const RUNTIME_CACHE = 'sadhana-runtime-v3';
+const APP_VERSION = '1.0.2';
+const CACHE_NAME = `sadhana-sanga-v${APP_VERSION}`;
+const RUNTIME_CACHE = `sadhana-runtime-v${APP_VERSION}`;
 const urlsToCache = [
   '/',
   '/index.html',
   '/src/index.css'
 ];
+
+// Send version info to clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: APP_VERSION });
+  }
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // Install event - cache essential files
 self.addEventListener('install', (event) => {
@@ -100,11 +111,4 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
-});
-
-// Message event - allow clients to skip waiting
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
 });

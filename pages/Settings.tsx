@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
 import { UserSettings } from '../types';
-import { Save, User, Wrench, Users, Trash2, RefreshCw, Shield, Lock, Eye, Download, Database, ChevronDown, ChevronRight } from 'lucide-react';
+import { Save, User, Wrench, Users, Trash2, RefreshCw, Shield, Lock, Eye, Download, Database, ChevronDown, ChevronRight, Smartphone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserData } from '../contexts/UserDataContext';
 import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
 import { createUserProfile } from '../services/chat';
 import { ref, remove } from 'firebase/database';
 import { db } from '../services/firebase';
+
+// @ts-ignore
+import versionData from '../version.json';
 
 // Declare global deferredPrompt
 declare global {
@@ -28,6 +31,8 @@ const Settings: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['profile']));
   const [showInstallButton, setShowInstallButton] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   
   // Admin email - only this user has admin privileges
   const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
@@ -186,6 +191,44 @@ const Settings: React.FC = () => {
       setMigrationStatus('error');
       alert('❌ Migration failed. Check console for details.');
       setTimeout(() => setMigrationStatus('idle'), 3000);
+    }
+  };
+
+  const handleCheckForUpdates = async () => {
+    setCheckingUpdate(true);
+    
+    try {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        // Force service worker to check for updates
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.update();
+          
+          // Wait a bit for update check to complete
+          setTimeout(() => {
+            if (registration.waiting) {
+              setUpdateAvailable(true);
+              if (confirm('🎉 New version available! Update now?\n\nThe app will reload to apply the update.')) {
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                window.location.reload();
+              }
+            } else {
+              alert(`✅ You're running the latest version!\n\nVersion: ${versionData.version}\nBuild Date: ${versionData.buildDate}`);
+            }
+            setCheckingUpdate(false);
+          }, 2000);
+        } else {
+          alert(`ℹ️ Running in browser mode\n\nVersion: ${versionData.version}\nInstall as PWA for automatic updates!`);
+          setCheckingUpdate(false);
+        }
+      } else {
+        alert(`ℹ️ Updates are automatic in browser mode\n\nCurrent Version: ${versionData.version}\nJust refresh the page to get latest updates!`);
+        setCheckingUpdate(false);
+      }
+    } catch (error) {
+      console.error('Update check failed:', error);
+      alert('Failed to check for updates. Please try again.');
+      setCheckingUpdate(false);
     }
   };
 
@@ -842,6 +885,92 @@ const Settings: React.FC = () => {
             <p className="text-red-600 text-sm mt-2 font-semibold">
               ⓘ Guest users cannot use this feature. Please sign in with Google.
             </p>
+          )}
+        </div>
+      </section>
+
+      {/* App Version & Updates */}
+      <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-blue-300 p-4 sm:p-6">
+        <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 rounded-xl shadow-lg">
+            <Smartphone className="text-white" size={28}/>
+          </div>
+          App Information
+        </h3>
+        
+        <div className="space-y-4">
+          {/* Version Info */}
+          <div className="bg-white border-2 border-blue-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="text-lg font-bold text-stone-900">Current Version</h4>
+                <p className="text-blue-600 text-2xl font-bold mt-1">v{versionData.version}</p>
+                <p className="text-stone-600 text-sm mt-1">Build Date: {versionData.buildDate}</p>
+              </div>
+              <div className="text-5xl">🎯</div>
+            </div>
+            
+            {/* Check for Updates Button */}
+            <button
+              onClick={handleCheckForUpdates}
+              disabled={checkingUpdate}
+              className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+                checkingUpdate 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : updateAvailable
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+              }`}
+            >
+              <RefreshCw size={20} className={checkingUpdate ? 'animate-spin' : ''} />
+              {checkingUpdate ? 'Checking...' : 
+               updateAvailable ? '🎉 Update Available!' :
+               'Check for Updates'}
+            </button>
+          </div>
+
+          {/* Update Info */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+            <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+              <span className="text-lg">ℹ️</span>
+              How Updates Work
+            </h4>
+            <ul className="space-y-2 text-sm text-blue-800">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span><strong>Browser:</strong> Updates apply automatically on page refresh</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span><strong>Installed App:</strong> You'll see a notification when updates are available</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span><strong>Auto-check:</strong> App checks for updates every 30 minutes when open</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span><strong>Manual check:</strong> Use the button above anytime to check for new versions</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Latest Changes */}
+          {versionData.changelog && versionData.changelog.length > 0 && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4">
+              <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                <span className="text-lg">✨</span>
+                What's New in v{versionData.changelog[0].version}
+              </h4>
+              <ul className="space-y-1.5 text-sm text-purple-800">
+                {versionData.changelog[0].changes.map((change: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-purple-600 font-bold mt-0.5">✓</span>
+                    <span>{change}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </section>
