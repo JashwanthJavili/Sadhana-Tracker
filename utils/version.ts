@@ -3,8 +3,19 @@
  * Handles version updates and notifications
  */
 
-export const APP_VERSION = '1.2.0'; // Update this when releasing new version
+export const APP_VERSION = '1.2.1'; // Update this when releasing new version
 export const VERSION_HISTORY = [
+  {
+    version: '1.2.1',
+    date: '2025-12-09',
+    features: [
+      'Enhanced notification system with centered modal on desktop',
+      'Vibrant orange notification bell icon matching chat style',
+      'Optimized notification panel positioning and sizing',
+      'Fixed Firebase permission rules for announcements',
+      'Improved mobile and desktop notification experience'
+    ]
+  },
   {
     version: '1.2.0',
     date: '2025-12-09',
