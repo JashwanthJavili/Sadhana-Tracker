@@ -23,7 +23,7 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
   const volumeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(0.1); // Start at 10% volume
+  const [volume, setVolume] = useState(0.2); // Start at 20% volume
   const [targetVolume, setTargetVolume] = useState(0.3); // Target 30%
   const [showConsent, setShowConsent] = useState(false);
   const [userConsented, setUserConsented] = useState(false);
@@ -85,7 +85,7 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
 
       volumeIntervalRef.current = setInterval(() => {
         setVolume(prev => {
-          const newVolume = Math.min(prev + 0.02, targetVolume);
+          const newVolume = Math.min(prev + 0.01, targetVolume);
           if (audioRef.current) {
             audioRef.current.volume = newVolume;
           }
@@ -97,7 +97,7 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
           }
           return newVolume;
         });
-      }, 300);
+      }, 500);
     } else if (!isPlaying && volumeIntervalRef.current) {
       clearInterval(volumeIntervalRef.current);
       setIsAutoIncrementing(false);
@@ -333,7 +333,7 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
                 )}
                 
                 {/* Main button - Premium design */}
-                <div className="relative bg-gradient-to-br from-orange-300 via-orange-500 to-orange-600 rounded-full shadow-2xl p-3 hover:scale-110 transition-all duration-300 border-2 border-orange-200/60 backdrop-blur-sm overflow-hidden">
+                <div className="relative bg-gradient-to-br from-orange-300 via-orange-500 to-orange-600 rounded-full shadow-2xl p-4 hover:scale-110 transition-all duration-300 border-2 border-orange-200/60 backdrop-blur-sm overflow-hidden">
                   {/* Shimmer effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse rounded-full"></div>
                   
@@ -512,8 +512,8 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
             return ReactDOM.createPortal(musicPlayer, container);
           }
         }
-        // Mobile: wrap in fixed positioned div
-        return <div className="fixed bottom-24 right-4 z-[60]">{musicPlayer}</div>;
+        // Mobile: align with message notification button (bottom-6 right-6)
+        return <div className="fixed bottom-6 right-24 z-[60]">{musicPlayer}</div>;
       })()}
     </>
   );
