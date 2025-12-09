@@ -289,14 +289,32 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
         
         const musicPlayer = (
           <>
-            {/* Song Name Animation - Shows periodically */}
+            {/* Song Name Animation - Shows periodically with premium styling */}
             {showSongName && !isExpanded && (
-              <div className="absolute bottom-full right-0 mb-3 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white px-4 py-3 rounded-xl shadow-2xl animate-scale-in whitespace-nowrap border border-orange-300/30 backdrop-blur-sm">
-                <div className="text-sm font-bold flex items-center gap-2">
-                  <span className="text-lg animate-bounce">🎵</span>
-                  <span>{currentSong.displayName}</span>
+              <div className="absolute bottom-full right-0 mb-3 group/song">
+                {/* Main card */}
+                <div className="bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 text-white px-5 py-3 rounded-2xl shadow-2xl animate-scale-in whitespace-nowrap border-2 border-orange-200/50 backdrop-blur-sm relative overflow-hidden">
+                  {/* Animated gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                  
+                  {/* Content */}
+                  <div className="relative flex items-center gap-3">
+                    {/* Music note animation */}
+                    <span className="text-xl animate-bounce">🎵</span>
+                    
+                    {/* Song name */}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold leading-tight">{currentSong.displayName}</span>
+                      <span className="text-xs text-orange-50/80">{currentSong.name}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Tail arrow */}
+                  <div className="absolute top-full right-6 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-orange-400"></div>
                 </div>
-                <div className="absolute top-full right-6 w-0 h-0 border-l-6 border-l-transparent border-r-6 border-r-transparent border-t-6 border-t-orange-500"></div>
+                
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-orange-400 rounded-2xl blur-xl opacity-40 -z-10 animate-pulse"></div>
               </div>
             )}
 
@@ -304,32 +322,39 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
             {!isExpanded && (
               <div 
                 onClick={toggleExpand}
-                className="relative group"
+                className="relative group cursor-pointer"
               >
-                {/* Glow effect when playing */}
+                {/* Multi-layer glow effect when playing */}
                 {isPlaying && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full blur-lg opacity-60 animate-pulse"></div>
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-300 to-orange-500 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-orange-400 to-orange-600 rounded-full blur-lg opacity-60 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  </>
                 )}
                 
-                {/* Main button - Same size as notification bell */}
-                <div className="relative bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-full shadow-2xl p-3 cursor-pointer hover:scale-110 transition-all duration-300 border-2 border-orange-300/50">
+                {/* Main button - Premium design */}
+                <div className="relative bg-gradient-to-br from-orange-300 via-orange-500 to-orange-600 rounded-full shadow-2xl p-3 hover:scale-110 transition-all duration-300 border-2 border-orange-200/60 backdrop-blur-sm overflow-hidden">
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse rounded-full"></div>
+                  
+                  {/* Icon */}
                   <Music 
                     size={24} 
-                    className={`text-white drop-shadow-lg ${isPlaying ? 'animate-pulse' : ''}`}
+                    className={`text-white drop-shadow-lg relative z-10 ${isPlaying ? 'animate-pulse' : ''}`}
                     strokeWidth={2.5}
                   />
                   
-                  {/* Playing indicator - animated wave */}
+                  {/* Playing indicator - Enhanced animated wave */}
                   {isPlaying && (
                     <div className="absolute -top-1 -right-1 flex gap-0.5">
-                      <div className="w-1 h-3 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-1 h-4 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-1 h-3 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      <div className="w-1.5 h-3 bg-lime-300 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-1.5 h-4 bg-lime-400 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-1.5 h-3 bg-lime-300 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
                     </div>
                   )}
                 </div>
 
-                {/* Tooltip */}
+                {/* Enhanced Tooltip */}
                 <div className="absolute bottom-full right-0 mb-3 px-4 py-2 bg-gradient-to-br from-gray-800 to-gray-900 text-white text-xs rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-2xl border border-gray-700">
                   <div className="font-semibold flex items-center gap-1">
                     <span>{isPlaying ? '⏸️' : '▶️'}</span>
@@ -342,20 +367,32 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
             )}          {/* Expanded Mode - Full controls */}
           {isExpanded && (
             <div className="bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-3xl shadow-2xl p-5 animate-scale-in border-2 border-orange-300/50 backdrop-blur-sm w-72 sm:w-80">
-              {/* Header with close button */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+              {/* Header with close button and Now Playing indicator */}
+              <div className="flex items-center justify-between mb-4 relative">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm relative">
                     <Music size={20} className={`text-white ${isPlaying ? 'animate-pulse' : ''}`} strokeWidth={2.5} />
+                    {isPlaying && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-lime-400 rounded-full animate-pulse shadow-lg"></div>
+                    )}
                   </div>
-                  <div>
-                    <div className="text-white text-sm font-bold leading-tight">{currentSong.name.split(' ').slice(0, 2).join(' ')}</div>
-                    <div className="text-orange-100 text-xs">{currentSong.name.split(' ').slice(2).join(' ')}</div>
+                  <div className="flex-1">
+                    <div className="text-white text-sm font-bold leading-tight flex items-center gap-2">
+                      {currentSong.name.split(' ').slice(0, 2).join(' ')}
+                      {isPlaying && <span className="inline-flex gap-0.5">
+                        <span className="w-1 h-2 bg-lime-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-1 h-2 bg-lime-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                      </span>}
+                    </div>
+                    <div className="text-orange-100 text-xs flex items-center gap-1">
+                      {isPlaying ? '🎵 Now Playing' : '⏸️ Paused'}
+                      <span className="text-[10px]">{currentSong.name.split(' ').slice(2).join(' ')}</span>
+                    </div>
                   </div>
                 </div>
                 <button
                   onClick={toggleExpand}
-                  className="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full p-1.5"
+                  className="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full p-1.5 flex-shrink-0"
                 >
                   <ChevronDown size={20} strokeWidth={2.5} />
                 </button>
