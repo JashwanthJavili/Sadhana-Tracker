@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
 import { UserSettings } from '../types';
-import { Save, User, Wrench, Users, Trash2, RefreshCw, Shield, Lock, Eye, Download, Database, ChevronDown, ChevronRight, Smartphone } from 'lucide-react';
+import { Save, User, Wrench, Users, Trash2, RefreshCw, Shield, Lock, Eye, Download, Database, ChevronDown, ChevronRight, Smartphone, UserX } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserData } from '../contexts/UserDataContext';
 import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
+import { clearAllChats } from '../scripts/clearAllChats';
 import { createUserProfile } from '../services/chat';
-import { ref, remove } from 'firebase/database';
-import { db } from '../services/firebase';
+import { ref, remove, get } from 'firebase/database';
+import { db, auth } from '../services/firebase';
+import { signOut } from 'firebase/auth';
 
 // @ts-ignore
 import versionData from '../version.json';
@@ -28,6 +30,8 @@ const Settings: React.FC = () => {
   const [editedSettings, setEditedSettings] = useState<UserSettings | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [clearDataStatus, setClearDataStatus] = useState<'idle' | 'clearing' | 'success' | 'error'>('idle');
+  const [deleteAccountStatus, setDeleteAccountStatus] = useState<'idle' | 'deleting' | 'success' | 'error'>('idle');
+  const [clearChatsStatus, setClearChatsStatus] = useState<'idle' | 'clearing' | 'success' | 'error'>('idle');
   const [refreshing, setRefreshing] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['profile']));
   const [showInstallButton, setShowInstallButton] = useState(false);
@@ -194,6 +198,43 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleClearAllChats = async () => {
+    // Admin-only feature
+    if (!isAdmin) {
+      alert('⛔ Access Denied: Only the admin can perform this action.');
+      return;
+    }
+
+    const confirmed = confirm(
+      '🚨 WARNING: This will permanently delete ALL chat messages and conversations for ALL users!\n\n' +
+      'This action CANNOT be undone!\n\n' +
+      'Are you absolutely sure you want to proceed?'
+    );
+
+    if (!confirmed) return;
+
+    const doubleCheck = confirm(
+      '⚠️ FINAL CONFIRMATION!\n\n' +
+      'Click OK to PERMANENTLY DELETE all chats.\n' +
+      'Click Cancel to abort.'
+    );
+
+    if (!doubleCheck) return;
+
+    try {
+      setClearChatsStatus('clearing');
+      await clearAllChats();
+      setClearChatsStatus('success');
+      alert('✅ All chats have been permanently deleted.');
+      setTimeout(() => setClearChatsStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Error clearing chats:', error);
+      setClearChatsStatus('error');
+      alert('❌ Failed to clear chats. Check console for details.');
+      setTimeout(() => setClearChatsStatus('idle'), 3000);
+    }
+  };
+
   const handleCheckForUpdates = async () => {
     setCheckingUpdate(true);
     
@@ -243,8 +284,13 @@ const Settings: React.FC = () => {
       '• Daily entries and history\n' +
       '• Settings and preferences\n' +
       '• Journal entries\n' +
+      '• Chat messages and conversations\n' +
+      '• Connection requests and connections\n' +
+      '• Notifications\n' +
+      '• Questions and answers\n' +
       '• All saved progress\n\n' +
       'This action CANNOT be undone!\n\n' +
+      'Your account will remain active.\n\n' +
       'Are you absolutely sure you want to proceed?'
     );
 
@@ -261,10 +307,86 @@ const Settings: React.FC = () => {
     try {
       setClearDataStatus('clearing');
       
-      // Delete all user data from Firebase
-      await remove(ref(db, `users/${user.uid}`));
+      const userId = user.uid;
       
-      // Clear localStorage just in case
+      // Delete all user data from Firebase
+      await remove(ref(db, `users/${userId}`));
+      
+      // Delete user profile
+      await remove(ref(db, `userProfiles/${userId}`));
+      
+      // Delete notifications
+      await remove(ref(db, `userNotifications/${userId}`));
+      
+      // Delete connections (both directions)
+      const connectionsSnapshot = await get(ref(db, `connections/${userId}`));
+      if (connectionsSnapshot.exists()) {
+        const connectedUsers = Object.keys(connectionsSnapshot.val());
+        for (const connectedUserId of connectedUsers) {
+          await remove(ref(db, `connections/${connectedUserId}/${userId}`));
+        }
+        await remove(ref(db, `connections/${userId}`));
+      }
+      
+      // Delete connection requests (sent and received)
+      const requestsSnapshot = await get(ref(db, 'connectionRequests'));
+      if (requestsSnapshot.exists()) {
+        const deletePromises: Promise<void>[] = [];
+        requestsSnapshot.forEach((requestSnapshot) => {
+          const request = requestSnapshot.val();
+          if (request.fromUserId === userId || request.toUserId === userId) {
+            deletePromises.push(remove(ref(db, `connectionRequests/${requestSnapshot.key}`)));
+          }
+        });
+        await Promise.all(deletePromises);
+      }
+      
+      // Delete chats where user is participant
+      const chatsSnapshot = await get(ref(db, 'chats'));
+      if (chatsSnapshot.exists()) {
+        const deleteChatPromises: Promise<void>[] = [];
+        chatsSnapshot.forEach((chatSnapshot) => {
+          const chat = chatSnapshot.val();
+          if (chat.participants?.includes(userId)) {
+            deleteChatPromises.push(remove(ref(db, `chats/${chatSnapshot.key}`)));
+            deleteChatPromises.push(remove(ref(db, `chatMessages/${chatSnapshot.key}`)));
+          }
+        });
+        await Promise.all(deleteChatPromises);
+      }
+      
+      // Delete questions posted by user
+      const questionsSnapshot = await get(ref(db, 'questions'));
+      if (questionsSnapshot.exists()) {
+        const deleteQuestionPromises: Promise<void>[] = [];
+        questionsSnapshot.forEach((questionSnapshot) => {
+          const question = questionSnapshot.val();
+          if (question.userId === userId) {
+            deleteQuestionPromises.push(remove(ref(db, `questions/${questionSnapshot.key}`)));
+            deleteQuestionPromises.push(remove(ref(db, `answers/${questionSnapshot.key}`)));
+          }
+        });
+        await Promise.all(deleteQuestionPromises);
+      }
+      
+      // Delete answers posted by user
+      const answersSnapshot = await get(ref(db, 'answers'));
+      if (answersSnapshot.exists()) {
+        const deleteAnswerPromises: Promise<void>[] = [];
+        answersSnapshot.forEach((questionAnswersSnapshot) => {
+          questionAnswersSnapshot.forEach((answerSnapshot) => {
+            const answer = answerSnapshot.val();
+            if (answer.userId === userId) {
+              deleteAnswerPromises.push(
+                remove(ref(db, `answers/${questionAnswersSnapshot.key}/${answerSnapshot.key}`))
+              );
+            }
+          });
+        });
+        await Promise.all(deleteAnswerPromises);
+      }
+      
+      // Clear localStorage
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -287,6 +409,142 @@ const Settings: React.FC = () => {
       setClearDataStatus('error');
       alert('❌ Failed to clear data. Please try again or contact support.');
       setTimeout(() => setClearDataStatus('idle'), 3000);
+    }
+  };
+
+  const handleDeleteMyAccount = async () => {
+    if (!user || user.uid === 'guest') {
+      alert('⛔ Cannot delete guest account');
+      return;
+    }
+
+    const confirmed = confirm(
+      '🚨 ACCOUNT DELETION WARNING:\n\n' +
+      'This will PERMANENTLY DELETE your account and ALL data:\n\n' +
+      '• Your account will be completely removed\n' +
+      '• All daily entries and history\n' +
+      '• Settings and preferences\n' +
+      '• Journal entries\n' +
+      '• Chat messages and conversations\n' +
+      '• Connection requests and connections\n' +
+      '• Notifications\n' +
+      '• Questions and answers\n' +
+      '• Everything associated with your account\n\n' +
+      'This action is IRREVERSIBLE!\n' +
+      'You will need to create a new account to use the app again.\n\n' +
+      'Are you absolutely sure?'
+    );
+
+    if (!confirmed) return;
+
+    const finalConfirm = confirm(
+      '⚠️ FINAL CONFIRMATION!\n\n' +
+      'Type your email to confirm deletion: ' + user.email
+    );
+
+    if (!finalConfirm) return;
+
+    const typedEmail = prompt('Type your email to confirm account deletion:');
+    if (typedEmail !== user.email) {
+      alert('❌ Email does not match. Account deletion cancelled.');
+      return;
+    }
+
+    try {
+      setDeleteAccountStatus('deleting');
+      
+      const userId = user.uid;
+      
+      // Delete all user data (same as Clear My Data)
+      await remove(ref(db, `users/${userId}`));
+      await remove(ref(db, `userProfiles/${userId}`));
+      await remove(ref(db, `userNotifications/${userId}`));
+      
+      // Delete connections
+      const connectionsSnapshot = await get(ref(db, `connections/${userId}`));
+      if (connectionsSnapshot.exists()) {
+        const connectedUsers = Object.keys(connectionsSnapshot.val());
+        for (const connectedUserId of connectedUsers) {
+          await remove(ref(db, `connections/${connectedUserId}/${userId}`));
+        }
+        await remove(ref(db, `connections/${userId}`));
+      }
+      
+      // Delete connection requests
+      const requestsSnapshot = await get(ref(db, 'connectionRequests'));
+      if (requestsSnapshot.exists()) {
+        const deletePromises: Promise<void>[] = [];
+        requestsSnapshot.forEach((requestSnapshot) => {
+          const request = requestSnapshot.val();
+          if (request.fromUserId === userId || request.toUserId === userId) {
+            deletePromises.push(remove(ref(db, `connectionRequests/${requestSnapshot.key}`)));
+          }
+        });
+        await Promise.all(deletePromises);
+      }
+      
+      // Delete chats
+      const chatsSnapshot = await get(ref(db, 'chats'));
+      if (chatsSnapshot.exists()) {
+        const deleteChatPromises: Promise<void>[] = [];
+        chatsSnapshot.forEach((chatSnapshot) => {
+          const chat = chatSnapshot.val();
+          if (chat.participants?.includes(userId)) {
+            deleteChatPromises.push(remove(ref(db, `chats/${chatSnapshot.key}`)));
+            deleteChatPromises.push(remove(ref(db, `chatMessages/${chatSnapshot.key}`)));
+          }
+        });
+        await Promise.all(deleteChatPromises);
+      }
+      
+      // Delete questions
+      const questionsSnapshot = await get(ref(db, 'questions'));
+      if (questionsSnapshot.exists()) {
+        const deleteQuestionPromises: Promise<void>[] = [];
+        questionsSnapshot.forEach((questionSnapshot) => {
+          const question = questionSnapshot.val();
+          if (question.userId === userId) {
+            deleteQuestionPromises.push(remove(ref(db, `questions/${questionSnapshot.key}`)));
+            deleteQuestionPromises.push(remove(ref(db, `answers/${questionSnapshot.key}`)));
+          }
+        });
+        await Promise.all(deleteQuestionPromises);
+      }
+      
+      // Delete answers
+      const answersSnapshot = await get(ref(db, 'answers'));
+      if (answersSnapshot.exists()) {
+        const deleteAnswerPromises: Promise<void>[] = [];
+        answersSnapshot.forEach((questionAnswersSnapshot) => {
+          questionAnswersSnapshot.forEach((answerSnapshot) => {
+            const answer = answerSnapshot.val();
+            if (answer.userId === userId) {
+              deleteAnswerPromises.push(
+                remove(ref(db, `answers/${questionAnswersSnapshot.key}/${answerSnapshot.key}`))
+              );
+            }
+          });
+        });
+        await Promise.all(deleteAnswerPromises);
+      }
+      
+      // Clear localStorage
+      localStorage.clear();
+      
+      setDeleteAccountStatus('success');
+      alert('✅ Your account has been permanently deleted.\n\nYou will now be signed out.');
+      
+      // Sign out and redirect
+      setTimeout(async () => {
+        await signOut(auth);
+        window.location.href = '/';
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setDeleteAccountStatus('error');
+      alert('❌ Failed to delete account. Please try again or contact support.');
+      setTimeout(() => setDeleteAccountStatus('idle'), 3000);
     }
   };
 
@@ -467,6 +725,169 @@ const Settings: React.FC = () => {
           <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-4 rounded-lg shadow-sm border-2 border-orange-300">
             <p className="text-xs sm:text-sm text-orange-900 italic font-serif font-medium leading-relaxed">
               "By the mercy of the spiritual master one receives the benediction of Krishna."
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy Settings Section */}
+      <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-blue-300 p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg shadow-lg">
+            <Eye className="text-white" size={18}/>
+          </div>
+          Privacy Settings
+        </h3>
+        
+        <div className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-900 mb-3 font-medium">
+              🔒 Control what other devotees can see about you
+            </p>
+          </div>
+
+          {/* Show Spiritual Guide */}
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+            <div className="flex-1">
+              <p className="font-bold text-stone-800 text-sm sm:text-base">Show Spiritual Guide</p>
+              <p className="text-xs sm:text-sm text-stone-600 mt-1">Allow others to see your spiritual guide</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editedSettings?.showGuruName ?? settings?.showGuruName ?? true}
+                onChange={(e) => {
+                  const newValue = e.target.checked;
+                  if (isEditing) {
+                    setEditedSettings({ ...editedSettings!, showGuruName: newValue });
+                  } else {
+                    setSettings({ ...settings!, showGuruName: newValue });
+                    if (user) {
+                      updateUserSettings({ showGuruName: newValue });
+                    }
+                  }
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          {/* Show ISKCON Center */}
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+            <div className="flex-1">
+              <p className="font-bold text-stone-800 text-sm sm:text-base">Show ISKCON Center</p>
+              <p className="text-xs sm:text-sm text-stone-600 mt-1">Allow others to see your ISKCON center</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editedSettings?.showIskconCenter ?? settings?.showIskconCenter ?? true}
+                onChange={(e) => {
+                  const newValue = e.target.checked;
+                  if (isEditing) {
+                    setEditedSettings({ ...editedSettings!, showIskconCenter: newValue });
+                  } else {
+                    setSettings({ ...settings!, showIskconCenter: newValue });
+                    if (user) {
+                      updateUserSettings({ showIskconCenter: newValue });
+                    }
+                  }
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          {/* Show Last Seen */}
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+            <div className="flex-1">
+              <p className="font-bold text-stone-800 text-sm sm:text-base">Show Last Seen</p>
+              <p className="text-xs sm:text-sm text-stone-600 mt-1">Allow others to see when you were last active</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editedSettings?.showLastSeen ?? settings?.showLastSeen ?? true}
+                onChange={(e) => {
+                  const newValue = e.target.checked;
+                  if (isEditing) {
+                    setEditedSettings({ ...editedSettings!, showLastSeen: newValue });
+                  } else {
+                    setSettings({ ...settings!, showLastSeen: newValue });
+                    if (user) {
+                      updateUserSettings({ showLastSeen: newValue });
+                    }
+                  }
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          {/* Messaging Privacy */}
+          <div className="p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+            <div className="mb-3">
+              <p className="font-bold text-stone-800 text-sm sm:text-base">Who can message you?</p>
+              <p className="text-xs sm:text-sm text-stone-600 mt-1">Control who can send you messages</p>
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg cursor-pointer hover:bg-stone-100 transition-colors">
+                <input
+                  type="radio"
+                  name="messagingPrivacy"
+                  value="everyone"
+                  checked={(editedSettings?.messagingPrivacy ?? settings?.messagingPrivacy ?? 'everyone') === 'everyone'}
+                  onChange={(e) => {
+                    const newValue = 'everyone' as const;
+                    if (isEditing) {
+                      setEditedSettings({ ...editedSettings!, messagingPrivacy: newValue });
+                    } else {
+                      setSettings({ ...settings!, messagingPrivacy: newValue });
+                      if (user) {
+                        updateUserSettings({ messagingPrivacy: newValue });
+                      }
+                    }
+                  }}
+                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                />
+                <div>
+                  <p className="font-semibold text-stone-800 text-sm">Everyone</p>
+                  <p className="text-xs text-stone-600">Any devotee can send you messages</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg cursor-pointer hover:bg-stone-100 transition-colors">
+                <input
+                  type="radio"
+                  name="messagingPrivacy"
+                  value="connections-only"
+                  checked={(editedSettings?.messagingPrivacy ?? settings?.messagingPrivacy ?? 'everyone') === 'connections-only'}
+                  onChange={(e) => {
+                    const newValue = 'connections-only' as const;
+                    if (isEditing) {
+                      setEditedSettings({ ...editedSettings!, messagingPrivacy: newValue });
+                    } else {
+                      setSettings({ ...settings!, messagingPrivacy: newValue });
+                      if (user) {
+                        updateUserSettings({ messagingPrivacy: newValue });
+                      }
+                    }
+                  }}
+                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                />
+                <div>
+                  <p className="font-semibold text-stone-800 text-sm">Connections Only</p>
+                  <p className="text-xs text-stone-600">Only accepted connections can message you</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-4 rounded-lg shadow-sm border-2 border-green-300">
+            <p className="text-xs sm:text-sm text-green-900 italic font-medium leading-relaxed">
+              💡 Your privacy matters! These settings control what information other devotees can see about you in the community section and chat.
             </p>
           </div>
         </div>
@@ -704,6 +1125,35 @@ const Settings: React.FC = () => {
                  'Migrate All Users'}
               </button>
             </div>
+
+            <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
+              <h4 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
+                <Trash2 size={20} />
+                Clear All Chats
+              </h4>
+              <p className="text-red-800 mb-4">
+                <strong>⚠️ DANGER ZONE:</strong> This will permanently delete ALL chat messages and conversations for ALL users. This action cannot be undone!
+              </p>
+              <button
+                onClick={handleClearAllChats}
+                disabled={clearChatsStatus === 'clearing'}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+                  clearChatsStatus === 'clearing' 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : clearChatsStatus === 'success'
+                    ? 'bg-green-600 text-white'
+                    : clearChatsStatus === 'error'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gradient-to-r from-red-600 to-pink-600 text-white'
+                }`}
+              >
+                <Trash2 size={20} />
+                {clearChatsStatus === 'clearing' ? 'Clearing...' : 
+                 clearChatsStatus === 'success' ? '✅ Cleared!' :
+                 clearChatsStatus === 'error' ? '❌ Failed' :
+                 'Clear All Chats'}
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -847,7 +1297,7 @@ const Settings: React.FC = () => {
         )}
       </section>
 
-      {/* Danger Zone - Clear All Data */}
+      {/* Danger Zone - Clear All Data & Delete Account */}
       <section className="bg-gradient-to-br from-white to-red-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-red-300 p-4 sm:p-6">
         <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
           <div className="bg-gradient-to-br from-red-500 to-red-700 p-3 rounded-xl shadow-lg">
@@ -857,35 +1307,76 @@ const Settings: React.FC = () => {
           <span className="ml-auto text-sm bg-red-600 text-white px-3 py-1 rounded-full">⚠️ Irreversible</span>
         </h3>
         
-        <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
-          <h4 className="text-lg font-bold text-red-900 mb-2">Clear All My Data</h4>
-          <p className="text-red-800 mb-4">
-            Permanently delete all your entries, settings, journal, and progress. This action cannot be undone.
-          </p>
-          <button
-            onClick={handleClearMyData}
-            disabled={clearDataStatus === 'clearing' || user?.uid === 'guest'}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
-              clearDataStatus === 'clearing' 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : clearDataStatus === 'success'
-                ? 'bg-green-600 text-white'
-                : clearDataStatus === 'error'
-                ? 'bg-orange-600 text-white'
-                : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800'
-            }`}
-          >
-            <Trash2 size={20} />
-            {clearDataStatus === 'clearing' ? 'Clearing...' : 
-             clearDataStatus === 'success' ? '✅ Cleared!' :
-             clearDataStatus === 'error' ? '❌ Failed' :
-             'Clear All My Data'}
-          </button>
-          {user?.uid === 'guest' && (
-            <p className="text-red-600 text-sm mt-2 font-semibold">
-              ⓘ Guest users cannot use this feature. Please sign in with Google.
+        <div className="space-y-4">
+          {/* Clear All Data */}
+          <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-6">
+            <h4 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
+              <Database size={20} />
+              Clear All My Data
+            </h4>
+            <p className="text-orange-800 mb-4 text-sm">
+              Permanently delete all your entries, settings, journal, chats, connections, and progress. Your account remains active.
             </p>
-          )}
+            <button
+              onClick={handleClearMyData}
+              disabled={clearDataStatus === 'clearing' || user?.uid === 'guest'}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+                clearDataStatus === 'clearing' 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : clearDataStatus === 'success'
+                  ? 'bg-green-600 text-white'
+                  : clearDataStatus === 'error'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-gradient-to-r from-orange-600 to-orange-700 text-white hover:from-orange-700 hover:to-orange-800'
+              }`}
+            >
+              <Trash2 size={20} />
+              {clearDataStatus === 'clearing' ? 'Clearing...' : 
+               clearDataStatus === 'success' ? '✅ Cleared!' :
+               clearDataStatus === 'error' ? '❌ Failed' :
+               'Clear All My Data'}
+            </button>
+            {user?.uid === 'guest' && (
+              <p className="text-orange-600 text-sm mt-2 font-semibold">
+                ⓘ Guest users cannot use this feature. Please sign in with Google.
+              </p>
+            )}
+          </div>
+
+          {/* Delete Account */}
+          <div className="bg-red-100 border-2 border-red-400 rounded-xl p-6">
+            <h4 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
+              <UserX size={20} />
+              Delete My Account Permanently
+            </h4>
+            <p className="text-red-800 mb-4 text-sm">
+              <strong>⚠️ PERMANENT:</strong> Delete your account completely and sign out. You'll need to create a new account to use the app again.
+            </p>
+            <button
+              onClick={handleDeleteMyAccount}
+              disabled={deleteAccountStatus === 'deleting' || user?.uid === 'guest'}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+                deleteAccountStatus === 'deleting' 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : deleteAccountStatus === 'success'
+                  ? 'bg-green-600 text-white'
+                  : deleteAccountStatus === 'error'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gradient-to-r from-red-700 to-red-900 text-white hover:from-red-800 hover:to-red-950'
+              }`}
+            >
+              <UserX size={20} />
+              {deleteAccountStatus === 'deleting' ? 'Deleting Account...' : 
+               deleteAccountStatus === 'success' ? '✅ Account Deleted!' :
+               deleteAccountStatus === 'error' ? '❌ Failed' :
+               'Delete My Account'}
+            </button>
+            {user?.uid === 'guest' && (
+              <p className="text-red-600 text-sm mt-2 font-semibold">
+                ⓘ Guest users cannot use this feature. Please sign in with Google.
+              </p>
+            )}
+          </div>
         </div>
       </section>
 

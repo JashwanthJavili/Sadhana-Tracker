@@ -3,12 +3,14 @@ import { db } from './firebase';
 
 export interface UserNotification {
   id: string;
-  type: 'festival_approved' | 'festival_rejected' | 'sloka_approved' | 'sloka_rejected';
+  type: 'festival_approved' | 'festival_rejected' | 'sloka_approved' | 'sloka_rejected' | 'connection_request' | 'broadcast';
   title: string;
   message: string;
-  requestId: string;
-  requestTitle: string;
+  requestId?: string;
+  requestTitle?: string;
   adminComment?: string;
+  fromUserId?: string;
+  fromUserName?: string;
   timestamp: number;
   read: boolean;
 }

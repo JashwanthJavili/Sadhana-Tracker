@@ -50,27 +50,34 @@ export const getAllUsers = (callback: (users: UserProfile[]) => void) => {
   
   onValue(usersRef, (snapshot) => {
     const users: UserProfile[] = [];
+    let totalNodes = 0;
+    let validProfiles = 0;
+    
     snapshot.forEach((childSnapshot) => {
+      totalNodes++;
       const data = childSnapshot.val();
       
-      // Only include users with a valid chat profile (has userName)
-      // Ignore objects that only have child nodes (entries, settings, journal, usage)
-      if (data.userName && data.guruName && data.iskconCenter) {
+      // Only require userName - other fields are optional
+      // This ensures users with incomplete profiles are still visible
+      if (data && data.userName) {
+        validProfiles++;
         // Extract only the UserProfile fields, excluding child nodes
         const userProfile: UserProfile = {
           uid: data.uid,
           userName: data.userName,
-          guruName: data.guruName,
-          iskconCenter: data.iskconCenter,
+          guruName: data.guruName || 'Not Specified',
+          iskconCenter: data.iskconCenter || 'Not Specified',
           photoURL: data.photoURL,
           bio: data.bio,
-          isOnline: data.isOnline,
-          lastSeen: data.lastSeen,
-          joinedDate: data.joinedDate,
+          isOnline: data.isOnline || false,
+          lastSeen: data.lastSeen || Date.now(),
+          joinedDate: data.joinedDate || Date.now(),
         };
         users.push(userProfile);
       }
     });
+    
+    console.log(`📊 getAllUsers: ${totalNodes} total nodes, ${validProfiles} valid profiles, returning ${users.length} users`);
     callback(users);
   }, (error) => {
     console.error('Error loading users:', error);
@@ -394,5 +401,108 @@ export const getTotalUnreadCount = async (userId: string): Promise<number> => {
   } catch (error) {
     console.warn('Unable to fetch unread count:', error);
     return 0; // Return 0 instead of throwing
+  }
+};
+
+// ============= CHAT MANAGEMENT =============
+
+/**
+ * Clear all messages in a chat (keeps the chat but removes messages)
+ */
+export const clearChatMessages = async (chatId: string): Promise<void> => {
+  try {
+    const messagesRef = ref(database, `messages/${chatId}`);
+    await remove(messagesRef);
+    
+    // Update chat's lastMessage
+    const chatRef = ref(database, `chats/${chatId}`);
+    await update(chatRef, {
+      lastMessage: 'Chat cleared',
+      lastMessageTime: Date.now()
+    });
+  } catch (error) {
+    console.error('Error clearing chat messages:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete entire chat and all its data
+ */
+export const deleteChat = async (chatId: string, userId: string): Promise<void> => {
+  try {
+    // Remove messages
+    const messagesRef = ref(database, `messages/${chatId}`);
+    await remove(messagesRef);
+    
+    // Remove typing indicators
+    const typingRef = ref(database, `typing/${chatId}`);
+    await remove(typingRef);
+    
+    // Remove chat
+    const chatRef = ref(database, `chats/${chatId}`);
+    await remove(chatRef);
+  } catch (error) {
+    console.error('Error deleting chat:', error);
+    throw error;
+  }
+};
+
+/**
+ * Export chat messages as text file
+ */
+export const exportChatMessages = async (chatId: string, currentUserId: string, otherUserName: string): Promise<void> => {
+  try {
+    const messagesRef = ref(database, `messages/${chatId}`);
+    const snapshot = await get(messagesRef);
+    
+    if (!snapshot.exists()) {
+      throw new Error('No messages to export');
+    }
+    
+    const messages: ChatMessage[] = [];
+    snapshot.forEach((childSnapshot) => {
+      messages.push({ id: childSnapshot.key!, ...childSnapshot.val() });
+    });
+    
+    // Sort by timestamp
+    messages.sort((a, b) => a.timestamp - b.timestamp);
+    
+    // Format as text
+    let textContent = `Chat with ${otherUserName}\n`;
+    textContent += `Exported on ${new Date().toLocaleString()}\n`;
+    textContent += '='.repeat(50) + '\n\n';
+    
+    for (const msg of messages) {
+      const date = new Date(msg.timestamp).toLocaleString();
+      const sender = msg.senderId === currentUserId ? 'You' : otherUserName;
+      
+      // Decrypt message if encrypted
+      let messageText = msg.text;
+      if (isEncrypted(msg.text)) {
+        try {
+          messageText = await decryptMessage(msg.text, msg.senderId);
+        } catch (error) {
+          console.error('Failed to decrypt message for export:', error);
+          messageText = '[Encrypted Message]';
+        }
+      }
+      
+      textContent += `[${date}] ${sender}:\n${messageText}\n\n`;
+    }
+    
+    // Create and download file
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-with-${otherUserName.replace(/\s+/g, '-')}-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error exporting chat:', error);
+    throw error;
   }
 };

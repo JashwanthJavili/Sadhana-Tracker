@@ -3,8 +3,36 @@
  * Handles version updates and notifications
  */
 
-export const APP_VERSION = '1.2.3'; // Update this when releasing new version
+export const APP_VERSION = '1.3.0'; // Update this when releasing new version
 export const VERSION_HISTORY = [
+  {
+    version: '1.3.0',
+    date: '2025-12-09',
+    features: [
+      '🔗 LinkedIn-Style Connection System - Professional networking for devotees',
+      '✉️ Connection Requests - Send, accept, or decline connection requests',
+      '💬 Chat Privacy - Clear messages, delete chats, export chat history',
+      '🚫 Remove Connections - Disconnect from devotees when needed',
+      '📱 Mobile Profile View - User profiles now open at top on mobile devices',
+      '🔔 Pending Requests Badge - See incoming connection requests at a glance',
+      '👥 Connected vs Explore Views - Toggle between connected devotees and all users',
+      '🎨 Premium UI - Professional gradients and animations throughout',
+      '📧 Developer Contact - Easy access to developer contact information in About page'
+    ]
+  },
+  {
+    version: '1.2.4',
+    date: '2025-12-09',
+    features: [
+      'Fixed chat messaging issues',
+      'Version history now scrollable and mobile-responsive',
+      'Community section redesigned with simplified user cards',
+      'Click devotee cards to view full profile in popup',
+      'Chat header now shows loading state when username not yet loaded',
+      'Click username in chat to view devotee profile',
+      'Beautiful user profile modal with complete devotee information'
+    ]
+  },
   {
     version: '1.2.3',
     date: '2025-12-09',

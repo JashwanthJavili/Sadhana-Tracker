@@ -93,10 +93,7 @@
     "messages": {
       ".read": "auth != null",
       ".write": "auth != null || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com'",
-      ".indexOn": ["timestamp"],
-      "$messageId": {
-        ".validate": "newData.hasChildren(['text', 'senderId', 'timestamp']) && newData.child('text').isString() && newData.child('senderId').isString() && newData.child('timestamp').isNumber()"
-      }
+      ".indexOn": ["timestamp"]
     },
     "typing": {
       ".read": "auth != null",
@@ -148,7 +145,7 @@
     "userNotifications": {
       "$userId": {
         ".read": "auth != null && auth.uid == $userId",
-        ".write": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+        ".write": "auth != null",
         ".indexOn": ["timestamp", "read"]
       }
     },
@@ -160,6 +157,33 @@
     "broadcasts": {
       ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
       ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+      ".indexOn": ["timestamp"]
+    },
+    "connectionRequests": {
+      ".read": "auth != null",
+      "$requestId": {
+        ".write": "auth != null && (!data.exists() || data.child('fromUserId').val() == auth.uid || data.child('toUserId').val() == auth.uid)",
+        ".indexOn": ["fromUserId", "toUserId", "status", "timestamp"]
+      }
+    },
+    "connections": {
+      "$userId": {
+        ".read": "auth != null",
+        "$connectedUserId": {
+          ".write": "auth != null && (auth.uid == $userId || auth.uid == $connectedUserId)"
+        }
+      }
+    },
+    "userProfiles": {
+      ".read": "auth != null",
+      "$userId": {
+        ".write": "auth != null && auth.uid == $userId",
+        ".indexOn": ["isOnline", "lastSeen"]
+      }
+    },
+    "chatMessages": {
+      ".read": "auth != null",
+      ".write": "auth != null",
       ".indexOn": ["timestamp"]
     }
   }

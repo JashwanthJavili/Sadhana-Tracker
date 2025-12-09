@@ -275,17 +275,24 @@ const ChatsList: React.FC = () => {
                 <div className="flex items-center gap-4">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                       {otherUser.photoURL ? (
                         <img
                           src={otherUser.photoURL}
                           alt={otherUser.userName}
                           className="w-full h-full rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = iskconLogo;
+                            e.currentTarget.classList.remove('rounded-full');
+                            e.currentTarget.classList.add('rounded-full', 'p-1.5');
+                          }}
                         />
                       ) : (
-                        <span className="text-2xl font-bold text-white">
-                          {otherUser.userName.charAt(0).toUpperCase()}
-                        </span>
+                        <img
+                          src={iskconLogo}
+                          alt="ISKCON"
+                          className="w-full h-full object-contain p-1.5"
+                        />
                       )}
                     </div>
                     {/* Online indicator would go here if we track it in chat context */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Check, CheckCheck, Calendar, BookOpen, X } from 'lucide-react';
+import { Bell, Check, CheckCheck, Calendar, BookOpen, X, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
   getUserNotifications,
   markNotificationAsRead,
@@ -10,6 +11,7 @@ import {
 
 export default function NotificationBell() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -50,6 +52,12 @@ export default function NotificationBell() {
     if (!notification.read) {
       await markNotificationAsRead(user.uid, notification.id);
     }
+
+    // Navigate based on notification type
+    if (notification.type === 'connection_request') {
+      setShowDropdown(false);
+      navigate('/connection-requests');
+    }
   };
 
   const handleMarkAllAsRead = async () => {
@@ -58,6 +66,9 @@ export default function NotificationBell() {
   };
 
   const getNotificationIcon = (type: string) => {
+    if (type === 'connection_request') {
+      return <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />;
+    }
     if (type === 'broadcast') {
       return <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />;
     }
@@ -68,6 +79,9 @@ export default function NotificationBell() {
   };
 
   const getNotificationColor = (type: string) => {
+    if (type === 'connection_request') {
+      return 'bg-blue-100 border-2 border-blue-300';
+    }
     if (type === 'broadcast') {
       return 'bg-orange-100 border-2 border-orange-300';
     }

@@ -1,5 +1,25 @@
 // Chat and Community Types
 
+export type ConnectionStatus = 'none' | 'pending' | 'connected' | 'rejected';
+
+export interface ConnectionRequest {
+  id: string;
+  fromUserId: string;
+  fromUserName: string;
+  fromUserPhoto?: string;
+  toUserId: string;
+  toUserName: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  message?: string;
+  timestamp: number;
+  respondedAt?: number;
+}
+
+export interface UserConnection {
+  userId: string;
+  connectedAt: number;
+}
+
 export interface UserProfile {
   uid: string;
   userName: string;
@@ -10,6 +30,16 @@ export interface UserProfile {
   lastSeen: number;
   bio?: string;
   joinedDate: number;
+  createdAt?: number;
+  email?: string;
+  // Privacy settings
+  showGuruName?: boolean;
+  showIskconCenter?: boolean;
+  showLastSeen?: boolean;
+  showEmail?: boolean;
+  // Connection info
+  connections?: string[]; // Array of connected user IDs
+  connectionCount?: number;
 }
 
 export interface ChatMessage {

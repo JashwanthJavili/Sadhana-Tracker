@@ -10,6 +10,7 @@ import InteractiveTour from './InteractiveTour';
 import GuidedTour from './GuidedTour';
 import FeedbackPrompt from './FeedbackPrompt';
 import NotificationBell from './NotificationBell';
+import ConnectionRequestsIcon from './ConnectionRequestsIcon';
 import { useSyncChatProfile } from '../hooks/useSyncChatProfile';
 import { getGreeting } from '../utils/honorific';
 
@@ -251,7 +252,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           />
           <span className="font-serif font-bold text-xl flex-1">Sadhana Sanga</span>
           <div className="flex items-center gap-2">
-            {user && <NotificationBell />}
+            {user && (
+              <>
+                <ConnectionRequestsIcon />
+                <NotificationBell />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -462,7 +468,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Floating Notification Bell - Desktop Only, Above Chat Icon */}
       {!isGuest && (
-        <div className="hidden md:block fixed bottom-24 right-6 z-50">
+        <div className="hidden md:flex fixed bottom-24 right-6 z-50 gap-2">
+          <ConnectionRequestsIcon />
           <NotificationBell />
         </div>
       )}

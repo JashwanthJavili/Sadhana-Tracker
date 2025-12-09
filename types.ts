@@ -67,6 +67,13 @@ export interface UserSettings {
   language: 'en' | 'hi' | 'te';
   isFirstTime: boolean;
   tourCompleted?: boolean;
+  // Privacy settings
+  showGuruName?: boolean;
+  showIskconCenter?: boolean;
+  showLastSeen?: boolean;
+  showEmail?: boolean;
+  // Messaging privacy
+  messagingPrivacy?: 'everyone' | 'connections-only';
 }
 
 export const INITIAL_METRICS: DailyMetrics = {

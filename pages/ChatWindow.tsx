@@ -9,7 +9,11 @@ import {
   getTypingStatus,
   setTypingStatus,
   getUserProfile,
+  clearChatMessages,
+  deleteChat,
+  exportChatMessages,
 } from '../services/chat';
+import { removeConnection } from '../services/connections';
 import { decryptMessage, isEncrypted } from '../services/encryption';
 import {
   ArrowLeft,
@@ -22,11 +26,15 @@ import {
   Quote,
   Lock,
 } from 'lucide-react';
+import UserProfileModal from '../components/UserProfileModal';
+import ChatOptionsMenu from '../components/ChatOptionsMenu';
+import { useToast } from '../contexts/ToastContext';
 
 const ChatWindow: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -39,6 +47,8 @@ const ChatWindow: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Common emojis for quick access
@@ -84,33 +94,46 @@ const ChatWindow: React.FC = () => {
     // Mark messages as read
     markMessagesAsRead(chatId, user.uid);
 
-    // Load other user's profile
+    // Load other user's profile - try chat data first for instant display
     const loadOtherUser = async () => {
-      // Get chat data to find other user
-      const chatMessages = await new Promise<ChatMessage[]>((resolve) => {
-        getChatMessages(chatId, (msgs) => {
-          resolve(msgs);
-        });
-      });
-
-      if (chatMessages.length > 0) {
-        const otherUserId = chatMessages.find((msg) => msg.senderId !== user.uid)?.senderId;
-        if (otherUserId) {
-          // Listen to profile changes in real-time
-          const { ref: dbRef, onValue: onValueFn, off: offFn } = await import('firebase/database');
-          const { database } = await import('../services/firebase');
-          const userProfileRef = dbRef(database, `users/${otherUserId}`);
-          
+      const { ref: dbRef, onValue: onValueFn, get: getFn } = await import('firebase/database');
+      const { database } = await import('../services/firebase');
+      
+      // First try to get from chat participantDetails for instant display
+      const chatRef = dbRef(database, `chats/${chatId}`);
+      const chatSnapshot = await getFn(chatRef);
+      
+      if (chatSnapshot.exists()) {
+        const chatData = chatSnapshot.val();
+        const otherUserId = chatData.participants.find((id: string) => id !== user.uid);
+        
+        if (otherUserId && chatData.participantDetails?.[otherUserId]) {
+          // Set initial data from chat (instant)
+          const initialData = chatData.participantDetails[otherUserId];
+          setOtherUser({
+            uid: otherUserId,
+            userName: initialData.userName,
+            photoURL: initialData.photoURL,
+            guruName: initialData.guruName,
+            iskconCenter: initialData.iskconCenter,
+            isOnline: false,
+            lastSeen: Date.now(),
+            joinedDate: Date.now()
+          });
+        }
+        
+        // Then listen to full profile for updates
+        const otherUserId2 = chatData.participants.find((id: string) => id !== user.uid);
+        if (otherUserId2) {
+          const userProfileRef = dbRef(database, `users/${otherUserId2}`);
           const unsubscribeProfile = onValueFn(userProfileRef, (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.val();
-              // Check if it's a valid UserProfile (has userName field)
               if (data.userName) {
                 setOtherUser(data);
               }
             }
           });
-          
           return unsubscribeProfile;
         }
       }
@@ -239,8 +262,11 @@ const ChatWindow: React.FC = () => {
             <ArrowLeft className="text-white" size={24} />
           </button>
 
-          {otherUser && (
-            <div className="flex items-center gap-3">
+          {otherUser ? (
+            <div 
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-3 cursor-pointer hover:bg-white/10 p-2 rounded-lg transition-all"
+            >
               <div className="relative">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
                   {otherUser.photoURL ? (
@@ -251,7 +277,7 @@ const ChatWindow: React.FC = () => {
                     />
                   ) : (
                     <span className="text-xl font-bold text-orange-600">
-                      {otherUser.userName.charAt(0).toUpperCase()}
+                      {otherUser.userName?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   )}
                 </div>
@@ -263,7 +289,7 @@ const ChatWindow: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-white font-bold text-lg">{otherUser.userName}</h3>
+                <h3 className="text-white font-bold text-lg">{otherUser.userName || 'Unknown User'}</h3>
                 <p className="text-orange-100 text-sm flex items-center gap-1">
                   {otherUser.isOnline ? (
                     <>
@@ -279,10 +305,21 @@ const ChatWindow: React.FC = () => {
                 </p>
               </div>
             </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full animate-pulse" />
+              <div>
+                <div className="h-5 w-32 bg-white/20 rounded animate-pulse mb-1" />
+                <div className="h-4 w-20 bg-white/10 rounded animate-pulse" />
+              </div>
+            </div>
           )}
         </div>
 
-        <button className="p-2 hover:bg-white/20 rounded-lg transition-all">
+        <button 
+          onClick={() => setShowOptionsMenu(true)}
+          className="p-2 hover:bg-white/20 rounded-lg transition-all"
+        >
           <MoreVertical className="text-white" size={24} />
         </button>
         </div>
@@ -462,6 +499,67 @@ const ChatWindow: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        profile={otherUser}
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        showChatButton={false}
+      />
+
+      {/* Chat Options Menu */}
+      {otherUser && chatId && (
+        <ChatOptionsMenu
+          chatId={chatId}
+          otherUserId={otherUser.uid}
+          otherUserName={otherUser.userName || 'Unknown User'}
+          isOpen={showOptionsMenu}
+          onClose={() => setShowOptionsMenu(false)}
+          onClearChat={async () => {
+            try {
+              await clearChatMessages(chatId);
+              showToast({ type: 'success', title: 'Chat cleared successfully' });
+              setMessages([]);
+            } catch (error) {
+              console.error('Error clearing chat:', error);
+              showToast({ type: 'error', title: 'Failed to clear chat' });
+            }
+          }}
+          onDeleteChat={async () => {
+            try {
+              if (!user) return;
+              await deleteChat(chatId, user.uid);
+              showToast({ type: 'success', title: 'Chat deleted successfully' });
+              navigate('/chats');
+            } catch (error) {
+              console.error('Error deleting chat:', error);
+              showToast({ type: 'error', title: 'Failed to delete chat' });
+            }
+          }}
+          onRemoveConnection={async () => {
+            try {
+              if (!user) return;
+              await removeConnection(user.uid, otherUser.uid);
+              showToast({ type: 'success', title: 'Connection removed' });
+              navigate('/chats');
+            } catch (error) {
+              console.error('Error removing connection:', error);
+              showToast({ type: 'error', title: 'Failed to remove connection' });
+            }
+          }}
+          onExportChat={async () => {
+            try {
+              if (!user) return;
+              await exportChatMessages(chatId, user.uid, otherUser.userName || 'Unknown User');
+              showToast({ type: 'success', title: 'Chat exported successfully' });
+            } catch (error) {
+              console.error('Error exporting chat:', error);
+              showToast({ type: 'error', title: 'Failed to export chat' });
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

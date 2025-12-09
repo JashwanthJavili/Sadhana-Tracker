@@ -35,6 +35,7 @@ const ChantingCounter = lazy(() => import('./pages/ChantingCounter'));
 const SlokasLibrary = lazy(() => import('./pages/SlokasLibrary'));
 const FestivalsPage = lazy(() => import('./pages/FestivalsPage'));
 const FestivalDetailPage = lazy(() => import('./pages/FestivalDetailPage'));
+const ConnectionRequests = lazy(() => import('./pages/ConnectionRequests'));
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -288,6 +289,7 @@ function AppContent() {
             <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
             <Route path="/about" element={<PrivateRoute><About /></PrivateRoute>} />
             <Route path="/community" element={<PrivateRoute><Community /></PrivateRoute>} />
+            <Route path="/connection-requests" element={<PrivateRoute><ConnectionRequests /></PrivateRoute>} />
             <Route path="/chats" element={<PrivateRoute><ChatsList /></PrivateRoute>} />
             <Route path="/chat/:chatId" element={<PrivateRoute><ChatWindow /></PrivateRoute>} />
             <Route path="/questions" element={<PrivateRoute><QuestionsPage /></PrivateRoute>} />
@@ -314,17 +316,17 @@ function AppContent() {
       {/* Version Update Modal */}
       {showVersionUpdate && versionInfo && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border-4 border-green-400 animate-scale-in overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white relative overflow-hidden">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] shadow-2xl border-4 border-green-400 animate-scale-in overflow-hidden flex flex-col">
+            {/* Header - Fixed */}
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
               <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
               <div className="relative flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Sparkles size={32} className="text-yellow-300" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Sparkles size={28} className="text-yellow-300 flex-shrink-0" />
                   <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold">New Version Available!</h2>
-                    <p className="text-green-100 mt-1">Version {versionInfo.latestVersion} is here</p>
+                    <h2 className="text-xl sm:text-2xl font-bold">New Version Available!</h2>
+                    <p className="text-green-100 text-sm sm:text-base mt-0.5">Version {versionInfo.latestVersion} is here</p>
                   </div>
                 </div>
                 <button
@@ -332,22 +334,22 @@ function AppContent() {
                     markVersionSeen();
                     setShowVersionUpdate(false);
                   }}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-all"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-all flex-shrink-0"
                 >
-                  <X size={24} />
+                  <X size={22} />
                 </button>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-stone-800 mb-3 flex items-center gap-2">
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-bold text-stone-800 mb-3 flex items-center gap-2 sticky top-0 bg-white pb-2 z-10">
                 🎉 What's New
               </h3>
               <ul className="space-y-2 mb-6">
                 {versionInfo.latestFeatures.map((feature: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-3 text-stone-700">
-                    <span className="text-green-600 font-bold mt-0.5">✓</span>
+                  <li key={idx} className="flex items-start gap-3 text-stone-700 text-sm sm:text-base">
+                    <span className="text-green-600 font-bold mt-0.5 flex-shrink-0">✓</span>
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -355,33 +357,61 @@ function AppContent() {
 
               {/* Version History */}
               <details className="mb-4">
-                <summary className="cursor-pointer text-sm font-bold text-stone-600 hover:text-green-600 transition-colors">
-                  View Full Version History
+                <summary className="cursor-pointer text-sm font-bold text-stone-600 hover:text-green-600 transition-colors py-2">
+                  📜 View Full Version History
                 </summary>
-                <div className="mt-3 space-y-3 pl-4">
-                  {VERSION_HISTORY.slice(1).map((version) => (
-                    <div key={version.version} className="border-l-2 border-stone-200 pl-4">
-                      <p className="font-bold text-stone-700">
-                        Version {version.version} <span className="text-xs text-stone-500">({version.date})</span>
-                      </p>
-                      <ul className="text-sm text-stone-600 mt-1 space-y-1">
-                        {version.features.map((feature, idx) => (
-                          <li key={idx}>• {feature}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                <div className="mt-3 space-y-3 pl-2 sm:pl-4">
+                  {VERSION_HISTORY.slice(1).map((version) => {
+                    // Filter features based on user role - hide ANY mention of admin
+                    const filteredFeatures = version.features.filter(feature => {
+                      // If user is not admin, hide admin-related features
+                      if (!user?.isAdmin) {
+                        const lowerFeature = feature.toLowerCase();
+                        if (
+                          lowerFeature.includes('admin') ||
+                          lowerFeature.includes('permission') ||
+                          lowerFeature.includes('security') ||
+                          lowerFeature.includes('database') ||
+                          lowerFeature.includes('rule') ||
+                          lowerFeature.includes('deploy') ||
+                          lowerFeature.includes('backend')
+                        ) {
+                          return false;
+                        }
+                      }
+                      return true;
+                    });
+
+                    // Only show version if it has features for this user type
+                    if (filteredFeatures.length === 0) return null;
+
+                    return (
+                      <div key={version.version} className="border-l-2 border-stone-200 pl-3 sm:pl-4 py-2">
+                        <p className="font-bold text-stone-700 text-sm sm:text-base">
+                          Version {version.version} <span className="text-xs text-stone-500">({version.date})</span>
+                        </p>
+                        <ul className="text-xs sm:text-sm text-stone-600 mt-1 space-y-1">
+                          {filteredFeatures.map((feature, idx) => (
+                            <li key={idx}>• {feature}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
                 </div>
               </details>
+            </div>
 
+            {/* Footer - Fixed */}
+            <div className="p-4 sm:p-6 border-t border-stone-200 bg-gradient-to-br from-green-50 to-emerald-50 flex-shrink-0">
               <button
                 onClick={() => {
                   markVersionSeen();
                   setShowVersionUpdate(false);
                 }}
-                className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg transition-all transform hover:scale-105 active:scale-95"
+                className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold text-base sm:text-lg shadow-lg transition-all transform hover:scale-105 active:scale-95"
               >
-                Got it, Thanks!
+                Got it, Thanks! 🙏
               </button>
             </div>
           </div>
