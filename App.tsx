@@ -6,6 +6,7 @@ import OnboardingModal from './components/OnboardingModal';
 import GenderSelectionModal from './components/GenderSelectionModal';
 import FeedbackPrompt from './components/FeedbackPrompt';
 import LoadingScreen from './components/LoadingScreen';
+import BackgroundMusic from './components/BackgroundMusic';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { UserDataProvider, useUserData } from './contexts/UserDataContext';
@@ -312,6 +313,9 @@ function AppContent() {
 
       {/* Feedback Prompt - Shows after 2+ days */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
+
+      {/* Background Music - Hare Krishna Mantra */}
+      {user && <BackgroundMusic autoPlay={true} />}
 
       {/* Version Update Modal */}
       {showVersionUpdate && versionInfo && (

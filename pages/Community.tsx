@@ -75,46 +75,63 @@ const Community: React.FC = () => {
 
   useEffect(() => {
     const applyFilters = () => {
-      let filtered = [...users];
+      // ACID COMPLIANCE: Split users into Connected and Explore FIRST
+      // This ensures every user appears in exactly ONE tab (Atomicity + Consistency)
+      const connected = users.filter(u => connectedUserIds.includes(u.uid));
+      const explore = users.filter(u => !connectedUserIds.includes(u.uid));
+      
+      // Start with ALL users in the current view
+      let filtered = view === 'connected' ? connected : explore;
 
-      // Apply search term filter
-      if (searchTerm) {
-        filtered = filtered.filter(u =>
-          u.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.guruName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.iskconCenter?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
+      // Only apply filters if user has actively set them
+      const hasActiveFilters = searchTerm || 
+                                filters.onlineOnly || 
+                                (filters.guruName && filters.guruName !== 'All') || 
+                                (filters.iskconCenter && filters.iskconCenter !== 'All');
 
-      // Apply online filter
-      if (filters.onlineOnly) {
-        filtered = filtered.filter(u => u.isOnline);
-      }
-
-      // Apply guru filter
-      if (filters.guruName && filters.guruName !== 'All') {
-        if (filters.guruName === 'Not Specified') {
-          filtered = filtered.filter(u => !u.guruName || u.guruName === 'Not Specified' || u.guruName === '' || u.guruName.toLowerCase() === 'n/a');
-        } else {
-          filtered = filtered.filter(u => u.guruName === filters.guruName);
+      if (hasActiveFilters) {
+        // Apply search term filter
+        if (searchTerm) {
+          filtered = filtered.filter(u =>
+            u.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.guruName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.iskconCenter?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
         }
-      }
 
-      // Apply ISKCON center filter
-      if (filters.iskconCenter && filters.iskconCenter !== 'All') {
-        if (filters.iskconCenter === 'Not Specified') {
-          filtered = filtered.filter(u => !u.iskconCenter || u.iskconCenter === 'Not Specified' || u.iskconCenter === '' || u.iskconCenter.toLowerCase() === 'n/a');
-        } else {
-          filtered = filtered.filter(u => u.iskconCenter === filters.iskconCenter);
+        // Apply online filter
+        if (filters.onlineOnly) {
+          filtered = filtered.filter(u => u.isOnline);
         }
+
+        // Apply guru filter
+        if (filters.guruName && filters.guruName !== 'All') {
+          if (filters.guruName === 'Not Specified') {
+            filtered = filtered.filter(u => !u.guruName || u.guruName === 'Not Specified' || u.guruName === '' || u.guruName.toLowerCase() === 'n/a');
+          } else {
+            filtered = filtered.filter(u => u.guruName === filters.guruName);
+          }
+        }
+
+        // Apply ISKCON center filter
+        if (filters.iskconCenter && filters.iskconCenter !== 'All') {
+          if (filters.iskconCenter === 'Not Specified') {
+            filtered = filtered.filter(u => !u.iskconCenter || u.iskconCenter === 'Not Specified' || u.iskconCenter === '' || u.iskconCenter.toLowerCase() === 'n/a');
+          } else {
+            filtered = filtered.filter(u => u.iskconCenter === filters.iskconCenter);
+          }
+        }
+
+        console.log(`🔍 ${view === 'connected' ? 'Connected' : 'Explore'} tab: ${filtered.length} users match criteria (from ${view === 'connected' ? connected.length : explore.length} total in this tab)`);
+      } else {
+        console.log(`👥 ${view === 'connected' ? 'Connected' : 'Explore'} tab: Showing all ${filtered.length} users (no filters active)`);
       }
 
-      console.log(`🔍 Filters applied: ${filtered.length} users match criteria (from ${users.length} total)`);
       setFilteredUsers(filtered);
     };
 
     applyFilters();
-  }, [searchTerm, filters, users, connectedUserIds]);
+  }, [searchTerm, filters, users, connectedUserIds, view]);
 
   // Load connections and statuses
   useEffect(() => {
@@ -322,14 +339,17 @@ const Community: React.FC = () => {
     );
   };
 
-  // ACID-compliant filtering: ensure consistency and isolation
-  // Connected: users who ARE in connectedUserIds (with search/filters applied)
-  // Explore: users who are NOT in connectedUserIds (with search/filters applied)
-  const connectedUsers = filteredUsers.filter(u => connectedUserIds.includes(u.uid));
-  const exploreUsers = filteredUsers.filter(u => !connectedUserIds.includes(u.uid));
+  // ACID-compliant display:
+  // filteredUsers already contains the correct users for the current view (Connected or Explore)
+  // with search/filters applied. This ensures:
+  // - Atomicity: Each user in exactly ONE tab
+  // - Consistency: connectedUsers + exploreUsers = all users
+  // - Isolation: Filters don't affect tab membership
+  // - Durability: Real-time updates preserved
+  const connectedUsers = users.filter(u => connectedUserIds.includes(u.uid));
+  const exploreUsers = users.filter(u => !connectedUserIds.includes(u.uid));
   
-  // Atomically determine which list to display based on view
-  const displayUsers = view === 'connected' ? connectedUsers : exploreUsers;
+  const displayUsers = filteredUsers; // Already filtered for current view
 
   if (loading) {
     return (

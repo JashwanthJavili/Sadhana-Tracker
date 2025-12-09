@@ -466,11 +466,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Feedback Modal */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
 
-      {/* Floating Notification Bell - Desktop Only, Above Chat Icon */}
+      {/* Floating Action Icons - Desktop Only: Music, Connection Requests, Notification Bell */}
       {!isGuest && (
-        <div className="hidden md:flex fixed bottom-24 right-6 z-50 gap-2">
-          <ConnectionRequestsIcon />
-          <NotificationBell />
+        <div className="hidden md:flex fixed bottom-24 right-6 z-50 flex-col gap-3">
+          <div id="music-player-container"></div>
+          <div className="flex gap-2">
+            <ConnectionRequestsIcon />
+            <NotificationBell />
+          </div>
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../services/storage';
 import { UserSettings } from '../types';
-import { Save, User, Wrench, Users, Trash2, RefreshCw, Shield, Lock, Eye, Download, Database, ChevronDown, ChevronRight, Smartphone, UserX } from 'lucide-react';
+import { Save, User, Wrench, Users, Trash2, RefreshCw, Shield, Lock, Eye, Download, Database, ChevronDown, ChevronRight, Smartphone, UserX, Edit2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserData } from '../contexts/UserDataContext';
 import { migrateAllUserProfiles } from '../scripts/migrateUserProfiles';
@@ -27,6 +27,7 @@ const Settings: React.FC = () => {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingPrivacy, setIsEditingPrivacy] = useState(false);
   const [editedSettings, setEditedSettings] = useState<UserSettings | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [clearDataStatus, setClearDataStatus] = useState<'idle' | 'clearing' | 'success' | 'error'>('idle');
@@ -732,12 +733,71 @@ const Settings: React.FC = () => {
 
       {/* Privacy Settings Section */}
       <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-blue-300 p-4 sm:p-6">
-        <h3 className="text-base sm:text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg shadow-lg">
-            <Eye className="text-white" size={18}/>
-          </div>
-          Privacy Settings
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base sm:text-lg font-bold text-stone-900 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg shadow-lg">
+              <Eye className="text-white" size={18}/>
+            </div>
+            Privacy Settings
+          </h3>
+          {!isEditingPrivacy ? (
+            <button
+              onClick={() => {
+                setIsEditingPrivacy(true);
+                setEditedSettings({ ...settings! });
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md flex items-center gap-2 text-sm"
+            >
+              <Edit2 size={16} />
+              Edit
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  if (editedSettings && user) {
+                    try {
+                      setSaveStatus('saving');
+                      
+                      // Ensure all values have defaults to prevent undefined errors
+                      const privacyUpdates = {
+                        showGuruName: editedSettings.showGuruName ?? settings?.showGuruName ?? true,
+                        showIskconCenter: editedSettings.showIskconCenter ?? settings?.showIskconCenter ?? true,
+                        showLastSeen: editedSettings.showLastSeen ?? settings?.showLastSeen ?? true,
+                        messagingPrivacy: editedSettings.messagingPrivacy ?? settings?.messagingPrivacy ?? 'everyone',
+                      };
+                      
+                      await updateUserSettings(privacyUpdates);
+                      setSettings({ ...settings!, ...privacyUpdates });
+                      setIsEditingPrivacy(false);
+                      setSaveStatus('saved');
+                      setTimeout(() => setSaveStatus('idle'), 2000);
+                      // Force refresh to update Community page
+                      window.location.reload();
+                    } catch (error) {
+                      console.error('Error saving privacy settings:', error);
+                      alert('Failed to save privacy settings. Please try again.');
+                      setSaveStatus('idle');
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-all shadow-md flex items-center gap-2 text-sm"
+              >
+                <Save size={16} />
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setEditedSettings(null);
+                  setIsEditingPrivacy(false);
+                }}
+                className="px-4 py-2 bg-stone-300 hover:bg-stone-400 text-stone-700 rounded-lg font-bold transition-all text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
         
         <div className="space-y-4">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -755,21 +815,16 @@ const Settings: React.FC = () => {
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={editedSettings?.showGuruName ?? settings?.showGuruName ?? true}
+                checked={isEditingPrivacy ? (editedSettings?.showGuruName ?? settings?.showGuruName ?? true) : (settings?.showGuruName ?? true)}
                 onChange={(e) => {
-                  const newValue = e.target.checked;
-                  if (isEditing) {
-                    setEditedSettings({ ...editedSettings!, showGuruName: newValue });
-                  } else {
-                    setSettings({ ...settings!, showGuruName: newValue });
-                    if (user) {
-                      updateUserSettings({ showGuruName: newValue });
-                    }
+                  if (isEditingPrivacy) {
+                    setEditedSettings({ ...editedSettings!, showGuruName: e.target.checked });
                   }
                 }}
+                disabled={!isEditingPrivacy}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
             </label>
           </div>
 
@@ -782,21 +837,16 @@ const Settings: React.FC = () => {
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={editedSettings?.showIskconCenter ?? settings?.showIskconCenter ?? true}
+                checked={isEditingPrivacy ? (editedSettings?.showIskconCenter ?? settings?.showIskconCenter ?? true) : (settings?.showIskconCenter ?? true)}
                 onChange={(e) => {
-                  const newValue = e.target.checked;
-                  if (isEditing) {
-                    setEditedSettings({ ...editedSettings!, showIskconCenter: newValue });
-                  } else {
-                    setSettings({ ...settings!, showIskconCenter: newValue });
-                    if (user) {
-                      updateUserSettings({ showIskconCenter: newValue });
-                    }
+                  if (isEditingPrivacy) {
+                    setEditedSettings({ ...editedSettings!, showIskconCenter: e.target.checked });
                   }
                 }}
+                disabled={!isEditingPrivacy}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
             </label>
           </div>
 
@@ -809,21 +859,16 @@ const Settings: React.FC = () => {
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={editedSettings?.showLastSeen ?? settings?.showLastSeen ?? true}
+                checked={isEditingPrivacy ? (editedSettings?.showLastSeen ?? settings?.showLastSeen ?? true) : (settings?.showLastSeen ?? true)}
                 onChange={(e) => {
-                  const newValue = e.target.checked;
-                  if (isEditing) {
-                    setEditedSettings({ ...editedSettings!, showLastSeen: newValue });
-                  } else {
-                    setSettings({ ...settings!, showLastSeen: newValue });
-                    if (user) {
-                      updateUserSettings({ showLastSeen: newValue });
-                    }
+                  if (isEditingPrivacy) {
+                    setEditedSettings({ ...editedSettings!, showLastSeen: e.target.checked });
                   }
                 }}
+                disabled={!isEditingPrivacy}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
             </label>
           </div>
 
@@ -834,23 +879,18 @@ const Settings: React.FC = () => {
               <p className="text-xs sm:text-sm text-stone-600 mt-1">Control who can send you messages</p>
             </div>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg cursor-pointer hover:bg-stone-100 transition-colors">
+              <label className={`flex items-center gap-3 p-3 bg-stone-50 rounded-lg ${isEditingPrivacy ? 'cursor-pointer hover:bg-stone-100' : 'cursor-not-allowed opacity-60'} transition-colors`}>
                 <input
                   type="radio"
                   name="messagingPrivacy"
                   value="everyone"
-                  checked={(editedSettings?.messagingPrivacy ?? settings?.messagingPrivacy ?? 'everyone') === 'everyone'}
-                  onChange={(e) => {
-                    const newValue = 'everyone' as const;
-                    if (isEditing) {
-                      setEditedSettings({ ...editedSettings!, messagingPrivacy: newValue });
-                    } else {
-                      setSettings({ ...settings!, messagingPrivacy: newValue });
-                      if (user) {
-                        updateUserSettings({ messagingPrivacy: newValue });
-                      }
+                  checked={(isEditingPrivacy ? editedSettings?.messagingPrivacy : settings?.messagingPrivacy) === 'everyone'}
+                  onChange={() => {
+                    if (isEditingPrivacy) {
+                      setEditedSettings({ ...editedSettings!, messagingPrivacy: 'everyone' });
                     }
                   }}
+                  disabled={!isEditingPrivacy}
                   className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                 />
                 <div>
@@ -858,23 +898,18 @@ const Settings: React.FC = () => {
                   <p className="text-xs text-stone-600">Any devotee can send you messages</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg cursor-pointer hover:bg-stone-100 transition-colors">
+              <label className={`flex items-center gap-3 p-3 bg-stone-50 rounded-lg ${isEditingPrivacy ? 'cursor-pointer hover:bg-stone-100' : 'cursor-not-allowed opacity-60'} transition-colors`}>
                 <input
                   type="radio"
                   name="messagingPrivacy"
                   value="connections-only"
-                  checked={(editedSettings?.messagingPrivacy ?? settings?.messagingPrivacy ?? 'everyone') === 'connections-only'}
-                  onChange={(e) => {
-                    const newValue = 'connections-only' as const;
-                    if (isEditing) {
-                      setEditedSettings({ ...editedSettings!, messagingPrivacy: newValue });
-                    } else {
-                      setSettings({ ...settings!, messagingPrivacy: newValue });
-                      if (user) {
-                        updateUserSettings({ messagingPrivacy: newValue });
-                      }
+                  checked={(isEditingPrivacy ? editedSettings?.messagingPrivacy : settings?.messagingPrivacy) === 'connections-only'}
+                  onChange={() => {
+                    if (isEditingPrivacy) {
+                      setEditedSettings({ ...editedSettings!, messagingPrivacy: 'connections-only' });
                     }
                   }}
+                  disabled={!isEditingPrivacy}
                   className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                 />
                 <div>

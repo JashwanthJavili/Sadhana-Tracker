@@ -121,4 +121,5 @@ export const DEFAULT_SETTINGS: UserSettings = {
   language: 'en',
   isFirstTime: true,
   tourCompleted: false,
+  messagingPrivacy: 'everyone',
 };

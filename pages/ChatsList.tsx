@@ -116,17 +116,6 @@ const ChatsList: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div>
-          <p className="text-stone-600 font-medium text-lg">Loading conversations...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 sm:space-y-8 max-w-5xl mx-auto animate-fadeIn">
       {/* Header */}

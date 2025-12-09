@@ -81,7 +81,7 @@ export const getAllUsers = (callback: (users: UserProfile[]) => void) => {
           isOnline: data.isOnline || false,
           lastSeen: data.lastSeen || Date.now(),
           joinedDate: data.joinedDate || Date.now(),
-          messagingPrivacy: data.messagingPrivacy || 'connections-only',
+          messagingPrivacy: data.messagingPrivacy || 'everyone',
         };
         users.push(userProfile);
       }
@@ -125,6 +125,8 @@ export const setUserOnlineStatus = async (uid: string, isOnline: boolean) => {
 
 export const createOrGetChat = async (currentUserId: string, otherUserId: string): Promise<string> => {
   try {
+    console.log(`🔍 Creating/getting chat between ${currentUserId} and ${otherUserId}`);
+    
     // Check if chat already exists
     const chatsRef = ref(database, 'chats');
     const snapshot = await get(chatsRef);
@@ -132,11 +134,20 @@ export const createOrGetChat = async (currentUserId: string, otherUserId: string
     if (snapshot.exists()) {
       const chats = snapshot.val();
       for (const [chatId, chat] of Object.entries(chats as Record<string, Chat>)) {
+        // Strict validation
+        if (!chat || !chat.participants || !Array.isArray(chat.participants)) {
+          console.warn(`⚠️ Skipping invalid chat ${chatId}:`, chat);
+          continue;
+        }
+        
         if (chat.participants.includes(currentUserId) && chat.participants.includes(otherUserId)) {
+          console.log(`✅ Found existing chat: ${chatId}`);
           return chatId;
         }
       }
     }
+    
+    console.log(`📝 Creating new chat...`);
     
     // Create new chat
     const currentUser = await getUserProfile(currentUserId);
@@ -175,6 +186,7 @@ export const createOrGetChat = async (currentUserId: string, otherUserId: string
     };
     
     await set(newChatRef, newChat);
+    console.log(`✅ New chat created: ${chatId}`);
     return chatId;
   } catch (error) {
     console.error('Error creating/getting chat:', error);
@@ -187,12 +199,36 @@ export const getUserChats = (userId: string, callback: (chats: Chat[]) => void) 
   
   onValue(chatsRef, (snapshot) => {
     const chats: Chat[] = [];
+    let totalChats = 0;
+    let userChats = 0;
+    let invalidChats = 0;
+    
     snapshot.forEach((childSnapshot) => {
+      totalChats++;
       const chat = childSnapshot.val() as Chat;
+      
+      // Strict validation - skip any chat with missing or invalid data
+      if (!chat) {
+        invalidChats++;
+        return;
+      }
+      
+      if (!chat.participants || !Array.isArray(chat.participants)) {
+        console.warn(`⚠️ Chat ${childSnapshot.key} has invalid participants:`, chat.participants);
+        invalidChats++;
+        return;
+      }
+      
       if (chat.participants.includes(userId)) {
+        userChats++;
         chats.push(chat);
       }
     });
+    
+    if (invalidChats > 0) {
+      console.warn(`⚠️ Found ${invalidChats} invalid chats in database`);
+    }
+    console.log(`💬 Loaded ${userChats} chats for user (out of ${totalChats} total chats)`);
     
     // Sort by most recent activity
     chats.sort((a, b) => (b.lastMessage?.timestamp || b.updatedAt) - (a.lastMessage?.timestamp || a.updatedAt));
@@ -241,6 +277,13 @@ export const sendMessage = async (
   
   if (chatSnapshot.exists()) {
     const chat = chatSnapshot.val() as Chat;
+    
+    // Validate chat has participants array
+    if (!chat || !chat.participants || !Array.isArray(chat.participants)) {
+      console.warn('⚠️ Chat has invalid participants, skipping unread count update');
+      return message;
+    }
+    
     const updates: any = {
       lastMessage: {
         text: '[Encrypted Message]', // Don't expose encrypted content in preview
@@ -402,8 +445,9 @@ export const getTotalUnreadCount = async (userId: string): Promise<number> => {
     let totalUnread = 0;
     snapshot.forEach((childSnapshot) => {
       const chat = childSnapshot.val() as Chat;
-      if (chat.participants.includes(userId)) {
-        totalUnread += chat.unreadCount[userId] || 0;
+      // Check if participants array exists and includes userId
+      if (chat && chat.participants && Array.isArray(chat.participants) && chat.participants.includes(userId)) {
+        totalUnread += chat.unreadCount?.[userId] || 0;
       }
     });
     
@@ -415,6 +459,44 @@ export const getTotalUnreadCount = async (userId: string): Promise<number> => {
 };
 
 // ============= CHAT MANAGEMENT =============
+
+/**
+ * Debug function to check for corrupted chats
+ * Use in console: window.checkCorruptedChats()
+ */
+export const checkCorruptedChats = async () => {
+  console.log('🔍 Checking for corrupted chats...');
+  const chatsRef = ref(database, 'chats');
+  const snapshot = await get(chatsRef);
+  
+  if (!snapshot.exists()) {
+    console.log('✅ No chats found');
+    return;
+  }
+  
+  let corrupted = 0;
+  let valid = 0;
+  
+  snapshot.forEach((childSnapshot) => {
+    const chatId = childSnapshot.key!;
+    const chat = childSnapshot.val();
+    
+    if (!chat || !chat.participants || !Array.isArray(chat.participants)) {
+      console.warn(`⚠️ Corrupted chat ${chatId}:`, chat);
+      corrupted++;
+    } else {
+      valid++;
+    }
+  });
+  
+  console.log(`✅ Valid chats: ${valid}`);
+  console.log(`⚠️ Corrupted chats: ${corrupted}`);
+};
+
+// Make it available on window for console debugging
+if (typeof window !== 'undefined') {
+  (window as any).checkCorruptedChats = checkCorruptedChats;
+}
 
 /**
  * Clear all messages in a chat (keeps the chat but removes messages)
