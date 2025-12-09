@@ -45,7 +45,13 @@ const Community: React.FC = () => {
 
     const unsubscribe = getAllUsers((fetchedUsers) => {
       console.log('✅ Fetched users with profiles:', fetchedUsers.length, 'users');
-      console.log('📋 User details:', fetchedUsers.map(u => ({ uid: u.uid, name: u.userName, guru: u.guruName, center: u.iskconCenter })));
+      console.log('📋 User details:', fetchedUsers.map(u => ({ 
+        uid: u.uid, 
+        name: u.userName, 
+        guru: u.guruName, 
+        center: u.iskconCenter,
+        messagingPrivacy: u.messagingPrivacy 
+      })));
       
       // Exclude current user (getAllUsers already filters for valid profiles)
       const validUsers = fetchedUsers.filter(u => u.uid !== user.uid);
@@ -243,22 +249,22 @@ const Community: React.FC = () => {
     return `${Math.floor(seconds / 86400)}d ago`;
   };
 
-  const renderConnectionButton = (userId: string, userName: string, userPhoto?: string) => {
-    const status = connectionStatuses[userId];
+  const renderConnectionButton = (profile: UserProfile) => {
+    const status = connectionStatuses[profile.uid];
 
     if (status === 'connected') {
       return (
         <div className="flex gap-2">
           <button
-            onClick={() => handleStartChat(userId)}
+            onClick={() => handleStartChat(profile.uid)}
             className="flex-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2 shadow-md text-sm"
           >
             <MessageCircle className="w-4 h-4" />
             <span className="hidden sm:inline">Message</span>
           </button>
           <button
-            onClick={() => handleRemoveConnection(userId, userName)}
-            disabled={removingConnection === userId}
+            onClick={() => handleRemoveConnection(profile.uid, profile.userName)}
+            disabled={removingConnection === profile.uid}
             className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             title="Remove Connection"
           >
@@ -270,25 +276,49 @@ const Community: React.FC = () => {
 
     if (status === 'pending') {
       return (
-        <button
-          disabled
-          className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg cursor-not-allowed flex items-center gap-2 text-sm"
-        >
-          <Clock className="w-4 h-4" />
-          Pending
-        </button>
+        <div className="flex gap-2">
+          <button
+            disabled
+            className="flex-1 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg cursor-not-allowed flex items-center gap-2 text-sm"
+          >
+            <Clock className="w-4 h-4" />
+            Pending
+          </button>
+          {/* Show message button if user allows messages from everyone */}
+          {profile.messagingPrivacy === 'everyone' && (
+            <button
+              onClick={() => handleStartChat(profile.uid)}
+              className="px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2 shadow-md text-sm"
+              title="Send Message"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       );
     }
 
-    // status === 'none' or 'rejected' - both show Connect button
+    // status === 'none' or 'rejected' - show Connect button and Message if allowed
     return (
-      <button
-        onClick={() => handleConnect(userId, userName, userPhoto)}
-        className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all flex items-center gap-2 shadow-md text-sm"
-      >
-        <UserPlus className="w-4 h-4" />
-        Connect
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleConnect(profile.uid, profile.userName, profile.photoURL)}
+          className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all flex items-center gap-2 shadow-md text-sm"
+        >
+          <UserPlus className="w-4 h-4" />
+          Connect
+        </button>
+        {/* Show message button if user allows messages from everyone */}
+        {profile.messagingPrivacy === 'everyone' && (
+          <button
+            onClick={() => handleStartChat(profile.uid)}
+            className="px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2 shadow-md text-sm"
+            title="Send Message"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     );
   };
 
@@ -578,7 +608,7 @@ const Community: React.FC = () => {
 
                 {/* Connection Action Button */}
                 <div className="mt-2 sm:mt-3" onClick={(e) => e.stopPropagation()}>
-                  {renderConnectionButton(profile.uid, profile.userName || 'Unknown', profile.photoURL)}
+                  {renderConnectionButton(profile)}
                 </div>
               </div>
             </div>

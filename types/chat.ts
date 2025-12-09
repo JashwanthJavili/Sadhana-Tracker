@@ -37,6 +37,7 @@ export interface UserProfile {
   showIskconCenter?: boolean;
   showLastSeen?: boolean;
   showEmail?: boolean;
+  messagingPrivacy?: 'everyone' | 'connections-only';
   // Connection info
   connections?: string[]; // Array of connected user IDs
   connectionCount?: number;

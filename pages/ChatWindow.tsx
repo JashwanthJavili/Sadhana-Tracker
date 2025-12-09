@@ -49,6 +49,7 @@ const ChatWindow: React.FC = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [loading, setLoading] = useState(true);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Common emojis for quick access
@@ -69,6 +70,7 @@ const ChatWindow: React.FC = () => {
     // Load messages
     const unsubscribeMessages = getChatMessages(chatId, (fetchedMessages) => {
       setMessages(fetchedMessages);
+      setLoading(false);
       scrollToBottom();
       
       // Decrypt messages in background
@@ -327,6 +329,26 @@ const ChatWindow: React.FC = () => {
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-orange-50/30 to-white">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-orange-600 border-t-transparent mb-4"></div>
+              <p className="text-stone-600 font-medium">Loading messages...</p>
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-md">
+              <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <MessageCircle size={48} className="text-orange-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-stone-800 mb-3">No messages yet</h3>
+              <p className="text-lg text-orange-600 font-semibold mb-2">🙏 Chant Hare Krishna 🙏</p>
+              <p className="text-stone-600">Start a conversation with {otherUser?.userName || 'this devotee'}</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {messages.map((message, index) => {
           const isOwnMessage = message.senderId === user.uid;
           const showDateSeparator =
@@ -427,6 +449,8 @@ const ChatWindow: React.FC = () => {
         )}
 
         <div ref={messagesEndRef} />
+        </>
+        )}
       </div>
 
       {/* Reply Preview */}

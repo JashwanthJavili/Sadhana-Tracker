@@ -60,17 +60,18 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('💾 Settings saved to Firebase');
 
       // Update chat profile if identity data changed
-      if (newSettings.userName || newSettings.guruName || newSettings.iskconCenter) {
+      if (newSettings.userName || newSettings.guruName || newSettings.iskconCenter || newSettings.messagingPrivacy) {
         const profileData: any = {
           userName: updatedSettings.userName,
           guruName: updatedSettings.guruName,
           iskconCenter: updatedSettings.iskconCenter,
+          messagingPrivacy: updatedSettings.messagingPrivacy,
         };
         
         if (user.photoURL) profileData.photoURL = user.photoURL;
         
         await createUserProfile(user.uid, profileData);
-        console.log('👤 Chat profile synchronized');
+        console.log('👤 Chat profile synchronized (including messaging privacy)');
       }
 
       // VERIFY: Refresh from server to ensure consistency

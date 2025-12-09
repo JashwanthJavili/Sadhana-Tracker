@@ -17,6 +17,14 @@ export const createUserProfile = async (uid: string, profile: Omit<UserProfile, 
     
     // Use update() instead of set() to preserve child nodes (entries, settings, journal, usage)
     await update(ref(database, `users/${uid}`), userProfile);
+    
+    // Also sync messagingPrivacy to settings if provided
+    if (profile.messagingPrivacy) {
+      await update(ref(database, `users/${uid}/settings`), {
+        messagingPrivacy: profile.messagingPrivacy
+      });
+    }
+    
     await setUserOnlineStatus(uid, true);
   } catch (error) {
     console.error('Error creating user profile:', error);
@@ -61,6 +69,7 @@ export const getAllUsers = (callback: (users: UserProfile[]) => void) => {
       // This ensures users with incomplete profiles are still visible
       if (data && data.userName) {
         validProfiles++;
+        
         // Extract only the UserProfile fields, excluding child nodes
         const userProfile: UserProfile = {
           uid: data.uid,
@@ -72,6 +81,7 @@ export const getAllUsers = (callback: (users: UserProfile[]) => void) => {
           isOnline: data.isOnline || false,
           lastSeen: data.lastSeen || Date.now(),
           joinedDate: data.joinedDate || Date.now(),
+          messagingPrivacy: data.messagingPrivacy || 'connections-only',
         };
         users.push(userProfile);
       }

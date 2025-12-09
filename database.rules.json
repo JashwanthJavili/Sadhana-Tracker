@@ -33,6 +33,10 @@
           ".write": "auth != null && auth.uid == $userId",
           ".read": "auth != null"
         },
+        "messagingPrivacy": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".read": "auth != null"
+        },
         "isOnline": {
           ".write": "auth != null && auth.uid == $userId",
           ".read": "auth != null"
@@ -50,9 +54,12 @@
           }
         },
         "settings": {
-          ".read": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
+          ".read": "auth != null",
           ".write": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",
-          ".validate": "newData.hasChildren(['userName', 'guruName', 'iskconCenter', 'themeColor', 'language'])"
+          ".validate": "newData.hasChildren(['userName', 'guruName', 'iskconCenter', 'themeColor', 'language'])",
+          "messagingPrivacy": {
+            ".read": "auth != null"
+          }
         },
         "journal": {
           ".read": "auth != null && (auth.uid == $userId || root.child('admins').child(auth.uid).exists() || auth.token.email == 'jashwanthjavili7@gmail.com')",

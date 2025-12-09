@@ -234,8 +234,13 @@ const ChatsList: React.FC = () => {
         )}
       </div>
 
-      {/* Chats List */}
-      {filteredChats.length === 0 ? (
+      {/* Loading State */}
+      {loading ? (
+        <div className="text-center py-16">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-orange-600 border-t-transparent"></div>
+          <p className="mt-4 text-stone-600 font-medium">Loading conversations...</p>
+        </div>
+      ) : filteredChats.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-stone-300">
           <MessageCircle className="mx-auto mb-4 text-stone-400" size={64} />
           <p className="text-stone-600 text-lg font-medium mb-2">
@@ -322,7 +327,7 @@ const ChatsList: React.FC = () => {
                           {chat.lastMessage.text === '[Encrypted Message]' ? '🔒 Encrypted Message' : chat.lastMessage.text}
                         </p>
                       ) : (
-                        <p className="text-sm text-stone-400 italic">No messages yet</p>
+                        <p className="text-sm text-stone-400 italic">Start a conversation</p>
                       )}
 
                       {isUnread && (
@@ -339,26 +344,7 @@ const ChatsList: React.FC = () => {
         </div>
       )}
 
-      {/* Empty State */}
-      {!loading && filteredChats.length === 0 && (
-        <div className="text-center py-16 px-4">
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-12 border-2 border-orange-200 max-w-md mx-auto">
-            <MessageCircle size={64} className="text-orange-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-stone-800 mb-3">No Messages Yet</h3>
-            <p className="text-stone-600 mb-6">
-              {searchTerm
-                ? 'No conversations match your search.'
-                : 'Start connecting with devotees from the Community page!'}
-            </p>
-            <button
-              onClick={() => navigate('/community')}
-              className="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-amber-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
-            >
-              Browse Community
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };
