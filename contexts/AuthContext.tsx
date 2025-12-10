@@ -153,22 +153,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user?.uid === 'guest') {
         setUser(null);
         setIsNewUser(false);
-        // Force navigation to login
-        window.location.href = '/login';
-      } else {
-        // Set offline status before signing out
-        if (user) {
-          await setUserOnlineStatus(user.uid, false);
-        }
-        await signOut(auth);
-        setIsNewUser(false);
-        // Redirect to login after sign out
-        window.location.href = '/login';
+        return;
       }
+
+      // For authenticated users: set offline, sign out and clear user state
+      if (user) {
+        try {
+          await setUserOnlineStatus(user.uid, false);
+        } catch (err) {
+          console.warn('Failed to set offline status during logout:', err);
+        }
+      }
+
+      await signOut(auth);
+      setUser(null);
+      setIsNewUser(false);
     } catch (error) {
       console.error("Error signing out:", error);
-      // Force redirect anyway
-      window.location.href = '/login';
+      // swallow error; caller can decide navigation
+      setUser(null);
     }
   };
 
