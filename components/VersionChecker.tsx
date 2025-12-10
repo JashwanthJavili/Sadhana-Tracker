@@ -32,6 +32,7 @@ const VersionChecker: React.FC = () => {
           
           // Get current version from localStorage or set it
           const storedVersion = localStorage.getItem('app_version');
+          const notificationShown = localStorage.getItem('version_notification_shown');
           
           if (!storedVersion) {
             // First time - store current version
@@ -40,11 +41,13 @@ const VersionChecker: React.FC = () => {
           } else {
             setCurrentVersion(storedVersion);
             
-            // Compare versions
-            if (storedVersion !== latestVer) {
+            // Compare versions - only show notification if not already shown for this version
+            if (storedVersion !== latestVer && notificationShown !== latestVer) {
               console.log(`🔄 New version detected: ${storedVersion} → ${latestVer}`);
               setLatestVersion(latestVer);
               setNewVersionAvailable(true);
+              // Mark notification as shown for this version
+              localStorage.setItem('version_notification_shown', latestVer);
             }
           }
         }

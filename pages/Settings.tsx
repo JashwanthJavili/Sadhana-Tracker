@@ -39,7 +39,7 @@ const Settings: React.FC = () => {
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [activeTab, setActiveTab] = useState<'guru' | 'settings' | 'about'>('guru');
+  const [activeTab, setActiveTab] = useState<'settings' | 'guru' | 'version'>('settings');
   
   // Admin email - only this user has admin privileges
   const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
@@ -560,18 +560,18 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg sm:shadow-xl border-2 border-indigo-400">
+      <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-700 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow-lg border-2 border-indigo-400">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1">
-              {activeTab === 'guru' ? 'My Spiritual Guide' : activeTab === 'settings' ? 'Settings' : 'About Sadhana Sang'}
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1">
+              {activeTab === 'settings' ? 'Settings' : activeTab === 'guru' ? 'My Spiritual Guide' : 'Version'}
             </h2>
             <p className="text-indigo-100 text-xs sm:text-sm">
-              {activeTab === 'guru' 
-                ? 'Guru Maharaja and spiritual guidance' 
-                : activeTab === 'settings' 
+              {activeTab === 'settings' 
                 ? 'Account settings and preferences' 
-                : 'Application information'}
+                : activeTab === 'guru' 
+                ? 'Guru Maharaja and spiritual guidance' 
+                : 'Application version and updates'}
             </p>
           </div>
           <button
@@ -589,37 +589,37 @@ const Settings: React.FC = () => {
       <div className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
         <div className="grid grid-cols-3 gap-0">
           <button
-            onClick={() => setActiveTab('guru')}
-            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm md:text-base transition-all ${
-              activeTab === 'guru'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-inner'
-                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            <User size={18} className="mx-auto mb-1" />
-            <span className="block">My Guru</span>
-          </button>
-          <button
             onClick={() => setActiveTab('settings')}
-            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm md:text-base transition-all border-x border-stone-200 ${
+            className={`p-2.5 sm:p-3 font-semibold text-xs sm:text-sm transition-all ${
               activeTab === 'settings'
                 ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-inner'
                 : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
             }`}
           >
-            <Wrench size={18} className="mx-auto mb-1" />
+            <Wrench size={16} className="mx-auto mb-1" />
             <span className="block">Settings</span>
           </button>
           <button
-            onClick={() => setActiveTab('about')}
-            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm md:text-base transition-all ${
-              activeTab === 'about'
+            onClick={() => setActiveTab('guru')}
+            className={`p-2.5 sm:p-3 font-semibold text-xs sm:text-sm transition-all border-x border-stone-200 ${
+              activeTab === 'guru'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-inner'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <User size={16} className="mx-auto mb-1" />
+            <span className="block">My Guru</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('version')}
+            className={`p-2.5 sm:p-3 font-semibold text-xs sm:text-sm transition-all ${
+              activeTab === 'version'
                 ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-inner'
                 : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
             }`}
           >
-            <Smartphone size={18} className="mx-auto mb-1" />
-            <span className="block">About</span>
+            <Smartphone size={16} className="mx-auto mb-1" />
+            <span className="block">Version</span>
           </button>
         </div>
       </div>
@@ -629,16 +629,16 @@ const Settings: React.FC = () => {
         <div className="space-y-4 sm:space-y-6 animate-fadeIn">
           {/* Spiritual Guide Information */}
           <section className="bg-gradient-to-br from-white to-purple-50 rounded-xl shadow-xl border-2 border-purple-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 sm:p-5">
-              <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                <User size={24} />
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <User size={20} />
                 Spiritual Master
               </h3>
             </div>
             
-            <div className="p-4 sm:p-6 space-y-4">
+            <div className="p-3 sm:p-5 space-y-3">
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-stone-700">Guided By</label>
+                <label className="block text-xs sm:text-sm font-semibold text-stone-700">Guided By</label>
                 {!isEditing && (
                   <button
                     onClick={handleEdit}
@@ -656,14 +656,14 @@ const Settings: React.FC = () => {
                     type="text"
                     value={editedSettings?.guruName || ''}
                     onChange={(e) => setEditedSettings({ ...editedSettings!, guruName: e.target.value })}
-                    className="w-full p-3 sm:p-4 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-500 outline-none text-sm sm:text-base font-medium shadow-sm"
+                    className="w-full p-2.5 sm:p-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-500 outline-none text-xs sm:text-sm font-medium shadow-sm"
                     placeholder="His Holiness / His Grace [Name] Maharaja/Prabhu"
                   />
                   <p className="text-xs text-stone-600">Enter your diksha or siksha guru's name</p>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
-                  <p className="text-lg sm:text-xl font-bold text-purple-900">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-200">
+                  <p className="text-sm sm:text-base font-bold text-purple-900">
                     {settings.guruName || 'Not set'}
                   </p>
                 </div>
@@ -695,20 +695,20 @@ const Settings: React.FC = () => {
 
           {/* Guru Pranama */}
           <section className="bg-white rounded-xl shadow-xl border-2 border-orange-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-4 sm:p-5">
-              <h3 className="text-lg sm:text-xl font-bold text-white">Guru Pranama Mantra</h3>
+            <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-bold text-white">Guru Pranama Mantra</h3>
             </div>
             
-            <div className="p-4 sm:p-6 space-y-4">
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 sm:p-6 rounded-lg border border-orange-200">
-                <p className="text-center text-sm sm:text-base font-semibold text-orange-900 leading-relaxed mb-4" style={{ fontFamily: 'serif' }}>
+            <div className="p-3 sm:p-5 space-y-3">
+              <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 sm:p-4 rounded-lg border border-orange-200">
+                <p className="text-center text-xs sm:text-sm font-semibold text-orange-900 leading-relaxed mb-3" style={{ fontFamily: 'serif' }}>
                   oṁ ajñāna-timirāndhasya<br />
                   jñānāñjana-śalākayā<br />
                   cakṣur unmīlitaṁ yena<br />
                   tasmai śrī-gurave namaḥ
                 </p>
-                <div className="border-t-2 border-orange-200 pt-4">
-                  <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                <div className="border-t-2 border-orange-200 pt-3">
+                  <p className="text-xs text-stone-700 leading-relaxed">
                     <strong>Translation:</strong> I offer my respectful obeisances unto my spiritual master, who has opened my eyes, which were blinded by the darkness of ignorance, with the torchlight of knowledge.
                   </p>
                 </div>
@@ -718,39 +718,39 @@ const Settings: React.FC = () => {
 
           {/* Guru Tattva */}
           <section className="bg-white rounded-xl shadow-xl border-2 border-blue-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 sm:p-5">
-              <h3 className="text-lg sm:text-xl font-bold text-white">Understanding Guru Tattva</h3>
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-bold text-white">Understanding Guru Tattva</h3>
             </div>
             
-            <div className="p-4 sm:p-6 space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0"></div>
+            <div className="p-3 sm:p-5 space-y-2.5">
+              <div className="space-y-2">
+                <div className="flex items-start gap-2 p-2.5 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0"></div>
                   <div>
-                    <h4 className="font-bold text-stone-900 text-sm sm:text-base mb-1">Diksha Guru</h4>
-                    <p className="text-xs sm:text-sm text-stone-700">The spiritual master who gives formal initiation and connects you to the disciplic succession</p>
+                    <h4 className="font-bold text-stone-900 text-xs sm:text-sm mb-0.5">Diksha Guru</h4>
+                    <p className="text-xs text-stone-700">The spiritual master who gives formal initiation and connects you to the disciplic succession</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
-                  <div className="w-2 h-2 rounded-full bg-purple-600 mt-2 flex-shrink-0"></div>
+                <div className="flex items-start gap-2 p-2.5 bg-purple-50 rounded-lg border border-purple-100">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0"></div>
                   <div>
-                    <h4 className="font-bold text-stone-900 text-sm sm:text-base mb-1">Siksha Guru</h4>
-                    <p className="text-xs sm:text-sm text-stone-700">The instructing spiritual master who guides your spiritual practice and understanding</p>
+                    <h4 className="font-bold text-stone-900 text-xs sm:text-sm mb-0.5">Siksha Guru</h4>
+                    <p className="text-xs text-stone-700">The instructing spiritual master who guides your spiritual practice and understanding</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
-                  <div className="w-2 h-2 rounded-full bg-green-600 mt-2 flex-shrink-0"></div>
+                <div className="flex items-start gap-2 p-2.5 bg-green-50 rounded-lg border border-green-100">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 flex-shrink-0"></div>
                   <div>
-                    <h4 className="font-bold text-stone-900 text-sm sm:text-base mb-1">Senior Devotees</h4>
-                    <p className="text-xs sm:text-sm text-stone-700">Experienced practitioners who offer guidance and support in your spiritual journey</p>
+                    <h4 className="font-bold text-stone-900 text-xs sm:text-sm mb-0.5">Senior Devotees</h4>
+                    <p className="text-xs text-stone-700">Experienced practitioners who offer guidance and support in your spiritual journey</p>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-gradient-to-r from-orange-100 to-amber-100 p-4 rounded-lg border border-orange-200">
-                <p className="text-xs sm:text-sm text-orange-900 italic leading-relaxed" style={{ fontFamily: 'serif' }}>
+              <div className="bg-gradient-to-r from-orange-100 to-amber-100 p-3 rounded-lg border border-orange-200">
+                <p className="text-xs text-orange-900 italic leading-relaxed" style={{ fontFamily: 'serif' }}>
                   "By the mercy of the spiritual master one receives the benediction of Krishna. Without the grace of the spiritual master, one cannot make any advancement."
-                  <span className="block mt-2 font-bold not-italic">— Sri Caitanya Mahaprabhu</span>
+                  <span className="block mt-1.5 font-bold not-italic text-xs">— Sri Caitanya Mahaprabhu</span>
                 </p>
               </div>
             </div>
@@ -764,70 +764,70 @@ const Settings: React.FC = () => {
       <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
         <button
           onClick={() => toggleSection('profile')}
-          className="w-full flex justify-between items-center p-4 sm:p-5 hover:bg-stone-50 transition-colors"
+          className="w-full flex justify-between items-center p-3 sm:p-4 hover:bg-stone-50 transition-colors"
         >
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg">
-              <User className="text-white" size={18}/>
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-1.5 rounded-lg">
+              <User className="text-white" size={16}/>
             </div>
             <div className="text-left">
-              <h3 className="text-base sm:text-lg font-bold text-stone-900">Profile Information</h3>
-              <p className="text-xs sm:text-sm text-stone-600">Personal details</p>
+              <h3 className="text-sm sm:text-base font-bold text-stone-900">Profile Information</h3>
+              <p className="text-xs text-stone-600">Personal details</p>
             </div>
           </div>
-          {expandedSections.has('profile') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+          {expandedSections.has('profile') ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </button>
         
         {expandedSections.has('profile') && (
-          <div className="p-4 sm:p-5 border-t border-stone-200 bg-stone-50">
+          <div className="p-3 sm:p-4 border-t border-stone-200 bg-stone-50">
             {!isEditing && (
               <button
                 onClick={handleEdit}
-                className="mb-4 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all"
+                className="mb-3 flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs sm:text-sm transition-all"
               >
-                <Wrench size={18} />
+                <Wrench size={16} />
                 Edit Profile
               </button>
             )}
             {isEditing ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
+                  <label className="block text-xs sm:text-sm font-bold text-stone-800 mb-2">Your Name</label>
                   <input
                     type="text"
                     value={editedSettings?.userName || ''}
                     onChange={(e) => setEditedSettings({ ...editedSettings!, userName: e.target.value })}
-                    className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
+                    className="w-full p-2.5 sm:p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 outline-none text-xs sm:text-sm font-semibold shadow-sm hover:border-blue-300 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
+                  <label className="block text-xs sm:text-sm font-bold text-stone-800 mb-2">ISKCON Center / Group Name</label>
                   <input
                     type="text"
                     value={editedSettings?.iskconCenter || ''}
                     onChange={(e) => setEditedSettings({ ...editedSettings!, iskconCenter: e.target.value })}
-                    className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 outline-none text-base font-semibold shadow-md hover:border-blue-300 transition-all"
+                    className="w-full p-2.5 sm:p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 outline-none text-xs sm:text-sm font-semibold shadow-sm hover:border-blue-300 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-base font-bold text-stone-800 mb-3">Gender</label>
-                  <div className="flex gap-3">
+                  <label className="block text-xs sm:text-sm font-bold text-stone-800 mb-2">Gender</label>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => setEditedSettings({ ...editedSettings!, gender: 'male' })}
-                      className={`flex-1 p-4 rounded-xl font-bold text-base transition-all shadow-md ${
+                      className={`flex-1 p-2.5 sm:p-3 rounded-lg font-bold text-xs sm:text-sm transition-all shadow-sm ${
                         editedSettings?.gender === 'male'
-                          ? 'bg-blue-600 text-white border-3 border-blue-700'
-                          : 'bg-white text-stone-700 border-3 border-stone-300 hover:border-blue-300'
+                          ? 'bg-blue-600 text-white border-2 border-blue-700'
+                          : 'bg-white text-stone-700 border-2 border-stone-300 hover:border-blue-300'
                       }`}
                     >
                       👨 Male (Prabhuji)
                     </button>
                     <button
                       onClick={() => setEditedSettings({ ...editedSettings!, gender: 'female' })}
-                      className={`flex-1 p-4 rounded-xl font-bold text-base transition-all shadow-md ${
+                      className={`flex-1 p-2.5 sm:p-3 rounded-lg font-bold text-xs sm:text-sm transition-all shadow-sm ${
                         editedSettings?.gender === 'female'
-                          ? 'bg-pink-600 text-white border-3 border-pink-700'
-                          : 'bg-white text-stone-700 border-3 border-stone-300 hover:border-pink-300'
+                          ? 'bg-pink-600 text-white border-2 border-pink-700'
+                          : 'bg-white text-stone-700 border-2 border-stone-300 hover:border-pink-300'
                       }`}
                     >
                       👩 Female (Mataji)
@@ -838,41 +838,41 @@ const Settings: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-base font-bold text-stone-800 mb-3">Your Name</label>
-                  <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                  <label className="block text-xs sm:text-sm font-bold text-stone-800 mb-2">Your Name</label>
+                  <div className="w-full p-2.5 sm:p-3 bg-white border-2 border-blue-200 rounded-lg text-xs sm:text-sm font-semibold shadow-sm">
                     {settings.userName || 'Not set'}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-base font-bold text-stone-800 mb-3">ISKCON Center / Group Name</label>
-                  <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                  <label className="block text-xs sm:text-sm font-bold text-stone-800 mb-2">ISKCON Center / Group Name</label>
+                  <div className="w-full p-2.5 sm:p-3 bg-white border-2 border-blue-200 rounded-lg text-xs sm:text-sm font-semibold shadow-sm">
                     {settings.iskconCenter || 'Not set'}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-base font-bold text-stone-800 mb-3">Gender</label>
-                  <div className="w-full p-4 bg-white border-3 border-blue-200 rounded-xl text-base font-semibold shadow-md">
+                  <label className="block text-xs sm:text-sm font-bold text-stone-800 mb-2">Gender</label>
+                  <div className="w-full p-2.5 sm:p-3 bg-white border-2 border-blue-200 rounded-lg text-xs sm:text-sm font-semibold shadow-sm">
                     {settings.gender === 'male' ? '👨 Male (Prabhuji)' : settings.gender === 'female' ? '👩 Female (Mataji)' : 'Not set'}
                   </div>
                 </div>
               </div>
             )}
             {isEditing && (
-              <div className="flex gap-4 mt-6">
+              <div className="flex gap-3 mt-4">
                 <button
                   onClick={handleSaveEdit}
-                  className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all shadow-md transform hover:scale-105 active:scale-95 ${
                     saveStatus === 'saved'
                       ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
                   }`}
                 >
-                  <Save size={18} />
+                  <Save size={16} />
                   {saveStatus === 'saved' ? 'Saved!' : 'Save'}
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg font-bold text-sm bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-lg transform hover:scale-105 active:scale-95"
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-bold text-xs sm:text-sm bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-md transform hover:scale-105 active:scale-95"
                 >
                   Cancel
                 </button>
@@ -883,11 +883,11 @@ const Settings: React.FC = () => {
       </section>
 
       {/* Privacy Settings Section */}
-      <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-blue-300 p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base sm:text-lg font-bold text-stone-900 flex items-center gap-2">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg shadow-lg">
-              <Eye className="text-white" size={18}/>
+      <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-blue-300 p-3 sm:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm sm:text-base font-bold text-stone-900 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-1.5 rounded-lg shadow-lg">
+              <Eye className="text-white" size={16}/>
             </div>
             Privacy Settings
           </h3>
@@ -897,9 +897,9 @@ const Settings: React.FC = () => {
                 setIsEditingPrivacy(true);
                 setEditedSettings({ ...settings! });
               }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md flex items-center gap-2 text-sm"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md flex items-center gap-1.5 text-xs sm:text-sm"
             >
-              <Edit2 size={16} />
+              <Edit2 size={14} />
               Edit
             </button>
           ) : (
@@ -932,9 +932,9 @@ const Settings: React.FC = () => {
                     }
                   }
                 }}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-all shadow-md flex items-center gap-2 text-sm"
+                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-all shadow-md flex items-center gap-1.5 text-xs sm:text-sm"
               >
-                <Save size={16} />
+                <Save size={14} />
                 Save
               </button>
               <button
@@ -942,7 +942,7 @@ const Settings: React.FC = () => {
                   setEditedSettings(null);
                   setIsEditingPrivacy(false);
                 }}
-                className="px-4 py-2 bg-stone-300 hover:bg-stone-400 text-stone-700 rounded-lg font-bold transition-all text-sm"
+                className="px-3 py-1.5 bg-stone-300 hover:bg-stone-400 text-stone-700 rounded-lg font-bold transition-all text-xs sm:text-sm"
               >
                 Cancel
               </button>
@@ -950,18 +950,18 @@ const Settings: React.FC = () => {
           )}
         </div>
         
-        <div className="space-y-4">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-900 mb-3 font-medium">
+        <div className="space-y-3">
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <p className="text-xs sm:text-sm text-blue-900 font-medium">
               🔒 Control what other devotees can see about you
             </p>
           </div>
 
           {/* Show Spiritual Guide */}
-          <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+          <div className="flex items-center justify-between p-3 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
             <div className="flex-1">
-              <p className="font-bold text-stone-800 text-sm sm:text-base">Show Spiritual Guide</p>
-              <p className="text-xs sm:text-sm text-stone-600 mt-1">Allow others to see your spiritual guide</p>
+              <p className="font-bold text-stone-800 text-xs sm:text-sm">Show Spiritual Guide</p>
+              <p className="text-xs text-stone-600 mt-0.5">Allow others to see your spiritual guide</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -980,10 +980,10 @@ const Settings: React.FC = () => {
           </div>
 
           {/* Show ISKCON Center */}
-          <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+          <div className="flex items-center justify-between p-3 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
             <div className="flex-1">
-              <p className="font-bold text-stone-800 text-sm sm:text-base">Show ISKCON Center</p>
-              <p className="text-xs sm:text-sm text-stone-600 mt-1">Allow others to see your ISKCON center</p>
+              <p className="font-bold text-stone-800 text-xs sm:text-sm">Show ISKCON Center</p>
+              <p className="text-xs text-stone-600 mt-0.5">Allow others to see your ISKCON center</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1002,10 +1002,10 @@ const Settings: React.FC = () => {
           </div>
 
           {/* Show Last Seen */}
-          <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+          <div className="flex items-center justify-between p-3 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
             <div className="flex-1">
-              <p className="font-bold text-stone-800 text-sm sm:text-base">Show Last Seen</p>
-              <p className="text-xs sm:text-sm text-stone-600 mt-1">Allow others to see when you were last active</p>
+              <p className="font-bold text-stone-800 text-xs sm:text-sm">Show Last Seen</p>
+              <p className="text-xs text-stone-600 mt-0.5">Allow others to see when you were last active</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1024,13 +1024,13 @@ const Settings: React.FC = () => {
           </div>
 
           {/* Messaging Privacy */}
-          <div className="p-4 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
-            <div className="mb-3">
-              <p className="font-bold text-stone-800 text-sm sm:text-base">Who can message you?</p>
-              <p className="text-xs sm:text-sm text-stone-600 mt-1">Control who can send you messages</p>
+          <div className="p-3 bg-white rounded-lg border-2 border-stone-200 hover:border-blue-300 transition-all">
+            <div className="mb-2">
+              <p className="font-bold text-stone-800 text-xs sm:text-sm">Who can message you?</p>
+              <p className="text-xs text-stone-600 mt-0.5">Control who can send you messages</p>
             </div>
             <div className="space-y-2">
-              <label className={`flex items-center gap-3 p-3 bg-stone-50 rounded-lg ${isEditingPrivacy ? 'cursor-pointer hover:bg-stone-100' : 'cursor-not-allowed opacity-60'} transition-colors`}>
+              <label className={`flex items-center gap-2 p-2.5 bg-stone-50 rounded-lg ${isEditingPrivacy ? 'cursor-pointer hover:bg-stone-100' : 'cursor-not-allowed opacity-60'} transition-colors`}>
                 <input
                   type="radio"
                   name="messagingPrivacy"
@@ -1045,11 +1045,11 @@ const Settings: React.FC = () => {
                   className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                 />
                 <div>
-                  <p className="font-semibold text-stone-800 text-sm">Everyone</p>
+                  <p className="font-semibold text-stone-800 text-xs sm:text-sm">Everyone</p>
                   <p className="text-xs text-stone-600">Any devotee can send you messages</p>
                 </div>
               </label>
-              <label className={`flex items-center gap-3 p-3 bg-stone-50 rounded-lg ${isEditingPrivacy ? 'cursor-pointer hover:bg-stone-100' : 'cursor-not-allowed opacity-60'} transition-colors`}>
+              <label className={`flex items-center gap-2 p-2.5 bg-stone-50 rounded-lg ${isEditingPrivacy ? 'cursor-pointer hover:bg-stone-100' : 'cursor-not-allowed opacity-60'} transition-colors`}>
                 <input
                   type="radio"
                   name="messagingPrivacy"
@@ -1064,15 +1064,15 @@ const Settings: React.FC = () => {
                   className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                 />
                 <div>
-                  <p className="font-semibold text-stone-800 text-sm">Connections Only</p>
+                  <p className="font-semibold text-stone-800 text-xs sm:text-sm">Connections Only</p>
                   <p className="text-xs text-stone-600">Only accepted connections can message you</p>
                 </div>
               </label>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-4 rounded-lg shadow-sm border-2 border-green-300">
-            <p className="text-xs sm:text-sm text-green-900 italic font-medium leading-relaxed">
+          <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-3 rounded-lg shadow-sm border-2 border-green-300">
+            <p className="text-xs text-green-900 italic font-medium leading-relaxed">
               💡 Your privacy matters! These settings control what information other devotees can see about you in the community section and chat.
             </p>
           </div>
@@ -1080,29 +1080,29 @@ const Settings: React.FC = () => {
       </section>
 
       {/* Privacy & Data Control Section - FAQ Style */}
-      <section className="bg-gradient-to-br from-white to-green-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-green-300 p-4 sm:p-6">
-        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
-            <Shield className="text-white" size={20}/>
+      <section className="bg-gradient-to-br from-white to-green-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-green-300 p-3 sm:p-4">
+        <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-3 sm:mb-4 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-1.5 rounded-lg shadow-lg">
+            <Shield className="text-white" size={16}/>
           </div>
           Privacy & Data Control
         </h3>
         
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {/* FAQ 1: What data do we store? */}
-          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+          <div className="bg-white rounded-lg border-2 border-green-200 overflow-hidden">
             <button
               onClick={() => toggleSection('privacy-what-store')}
-              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+              className="w-full flex justify-between items-center p-3 hover:bg-green-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <Database className="text-green-600" size={20} />
-                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">What data do you store?</span>
+              <div className="flex items-center gap-2">
+                <Database className="text-green-600" size={16} />
+                <span className="font-bold text-stone-900 text-xs sm:text-sm text-left">What data do you store?</span>
               </div>
-              {expandedSections.has('privacy-what-store') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+              {expandedSections.has('privacy-what-store') ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
             </button>
             {expandedSections.has('privacy-what-store') && (
-              <div className="px-4 pb-4 space-y-2 text-sm text-stone-700">
+              <div className="px-3 pb-3 space-y-1.5 text-xs sm:text-sm text-stone-700">
                 <div><strong className="text-green-700">• Personal Information:</strong> Name, Guru Name, ISKCON Center, Email (from Google Sign-In), Profile Photo</div>
                 <div><strong className="text-green-700">• Spiritual Practice Data:</strong> Daily commitments, chanting rounds, study hours, discipline scores, mood tracking</div>
                 <div><strong className="text-green-700">• Journal Entries:</strong> Your devotional reflections and spiritual insights</div>
@@ -1113,19 +1113,19 @@ const Settings: React.FC = () => {
           </div>
 
           {/* FAQ 2: What can others see? */}
-          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+          <div className="bg-white rounded-lg border-2 border-green-200 overflow-hidden">
             <button
               onClick={() => toggleSection('privacy-what-visible')}
-              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+              className="w-full flex justify-between items-center p-3 hover:bg-green-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <Eye className="text-purple-600" size={20} />
-                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">What can others see about me?</span>
+              <div className="flex items-center gap-2">
+                <Eye className="text-purple-600" size={16} />
+                <span className="font-bold text-stone-900 text-xs sm:text-sm text-left">What can others see about me?</span>
               </div>
-              {expandedSections.has('privacy-what-visible') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+              {expandedSections.has('privacy-what-visible') ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
             </button>
             {expandedSections.has('privacy-what-visible') && (
-              <div className="px-4 pb-4 space-y-3 text-sm">
+              <div className="px-3 pb-3 space-y-2 text-xs sm:text-sm">
                 <div className="flex items-start gap-2">
                   <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap mt-0.5">PUBLIC</span>
                   <span className="text-stone-700"><strong>Community Profile:</strong> Your name, guru, ISKCON center, profile photo, online status</span>
@@ -1151,19 +1151,19 @@ const Settings: React.FC = () => {
           </div>
 
           {/* FAQ 3: How is my data protected? */}
-          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+          <div className="bg-white rounded-lg border-2 border-green-200 overflow-hidden">
             <button
               onClick={() => toggleSection('privacy-protection')}
-              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+              className="w-full flex justify-between items-center p-3 hover:bg-green-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <Lock className="text-green-600" size={20} />
-                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">How is my data protected?</span>
+              <div className="flex items-center gap-2">
+                <Lock className="text-green-600" size={16} />
+                <span className="font-bold text-stone-900 text-xs sm:text-sm text-left">How is my data protected?</span>
               </div>
-              {expandedSections.has('privacy-protection') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+              {expandedSections.has('privacy-protection') ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
             </button>
             {expandedSections.has('privacy-protection') && (
-              <div className="px-4 pb-4 space-y-2 text-sm text-stone-700">
+              <div className="px-3 pb-3 space-y-1.5 text-xs sm:text-sm text-stone-700">
                 <div className="flex items-start gap-2">
                   <span className="text-green-600 font-bold">✓</span>
                   <span><strong>Encrypted in transit:</strong> All data transfers use secure HTTPS/SSL encryption</span>
@@ -1189,20 +1189,20 @@ const Settings: React.FC = () => {
           </div>
 
           {/* FAQ 4: Can I export my data? */}
-          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+          <div className="bg-white rounded-lg border-2 border-green-200 overflow-hidden">
             <button
               onClick={() => toggleSection('privacy-export')}
-              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+              className="w-full flex justify-between items-center p-3 hover:bg-green-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <Download className="text-blue-600" size={20} />
-                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">Can I export my data?</span>
+              <div className="flex items-center gap-2">
+                <Download className="text-blue-600" size={16} />
+                <span className="font-bold text-stone-900 text-xs sm:text-sm text-left">Can I export my data?</span>
               </div>
-              {expandedSections.has('privacy-export') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+              {expandedSections.has('privacy-export') ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
             </button>
             {expandedSections.has('privacy-export') && (
-              <div className="px-4 pb-4">
-                <p className="text-sm text-stone-700 mb-3">
+              <div className="px-3 pb-3">
+                <p className="text-xs sm:text-sm text-stone-700 mb-2">
                   Yes! You have complete ownership of your data. Download a complete copy in JSON format including settings, entries, journal, analytics, and community activity.
                 </p>
                 <button
@@ -1229,9 +1229,9 @@ const Settings: React.FC = () => {
                       }
                     }
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all"
                 >
-                  <Download size={16} />
+                  <Download size={14} />
                   Download My Data
                 </button>
               </div>
@@ -1239,20 +1239,20 @@ const Settings: React.FC = () => {
           </div>
 
           {/* FAQ 5: How can I delete my data? */}
-          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden">
+          <div className="bg-white rounded-lg border-2 border-green-200 overflow-hidden">
             <button
               onClick={() => toggleSection('privacy-delete')}
-              className="w-full flex justify-between items-center p-4 hover:bg-green-50 transition-colors"
+              className="w-full flex justify-between items-center p-3 hover:bg-green-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <Trash2 className="text-red-600" size={20} />
-                <span className="font-bold text-stone-900 text-sm sm:text-base text-left">How can I delete my data?</span>
+              <div className="flex items-center gap-2">
+                <Trash2 className="text-red-600" size={16} />
+                <span className="font-bold text-stone-900 text-xs sm:text-sm text-left">How can I delete my data?</span>
               </div>
-              {expandedSections.has('privacy-delete') ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+              {expandedSections.has('privacy-delete') ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
             </button>
             {expandedSections.has('privacy-delete') && (
-              <div className="px-4 pb-4 text-sm text-stone-700">
-                <p className="mb-2">
+              <div className="px-3 pb-3 text-xs sm:text-sm text-stone-700">
+                <p className="mb-1.5">
                   You can permanently delete all your data anytime using the <strong className="text-red-600">"Clear All My Data"</strong> button in the Danger Zone section below.
                 </p>
                 <p className="text-xs text-stone-600 italic">
@@ -1263,8 +1263,8 @@ const Settings: React.FC = () => {
           </div>
 
           {/* FAQ 6: Privacy Questions Contact */}
-          <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-4 border-2 border-green-300">
-            <p className="text-sm text-green-900">
+          <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-3 border-2 border-green-300">
+            <p className="text-xs sm:text-sm text-green-900">
               <strong>Have privacy questions?</strong> Contact us at{' '}
               <a href="mailto:jashwanthjavili7@gmail.com" className="text-blue-600 hover:text-blue-800 font-bold underline">
                 jashwanthjavili7@gmail.com
@@ -1276,19 +1276,19 @@ const Settings: React.FC = () => {
 
       {/* Admin Tools Section - Only visible to admin */}
       {isAdmin && (
-        <section className="bg-gradient-to-br from-white to-indigo-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-indigo-300 p-4 sm:p-6">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg">
-              <Users className="text-white" size={20}/>
+        <section className="bg-gradient-to-br from-white to-indigo-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-indigo-300 p-3 sm:p-4">
+          <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-1.5 rounded-lg shadow-lg">
+              <Users className="text-white" size={16}/>
             </div>
             Admin Tools
-            <span className="ml-auto text-sm bg-red-600 text-white px-3 py-1 rounded-full">Admin Only</span>
+            <span className="ml-auto text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">Admin Only</span>
           </h3>
           
-          <div className="space-y-4">
-            <div className="bg-indigo-100 border-2 border-indigo-300 rounded-xl p-6">
-              <h4 className="text-lg font-bold text-indigo-900 mb-2">Migrate User Profiles</h4>
-              <p className="text-indigo-800 mb-4">
+          <div className="space-y-3">
+            <div className="bg-indigo-100 border-2 border-indigo-300 rounded-lg p-4">
+              <h4 className="text-sm sm:text-base font-bold text-indigo-900 mb-1.5">Migrate User Profiles</h4>
+              <p className="text-xs sm:text-sm text-indigo-800 mb-3">
                 Create chat profiles for all existing users from their settings data. This will make all users visible in the Community page.
               </p>
               <button
@@ -1484,29 +1484,29 @@ const Settings: React.FC = () => {
       </section>
 
       {/* Danger Zone - Clear All Data & Delete Account */}
-      <section className="bg-gradient-to-br from-white to-red-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-red-300 p-4 sm:p-6">
-        <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-red-500 to-red-700 p-3 rounded-xl shadow-lg">
-            <Trash2 className="text-white" size={28}/>
+      <section className="bg-gradient-to-br from-white to-red-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-red-300 p-3 sm:p-4">
+        <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-3 sm:mb-4 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-red-500 to-red-700 p-1.5 rounded-lg shadow-lg">
+            <Trash2 className="text-white" size={16}/>
           </div>
           Danger Zone
-          <span className="ml-auto text-sm bg-red-600 text-white px-3 py-1 rounded-full">⚠️ Irreversible</span>
+          <span className="ml-auto text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">⚠️ Irreversible</span>
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Clear All Data */}
-          <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-6">
-            <h4 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
-              <Database size={20} />
+          <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
+            <h4 className="text-sm sm:text-base font-bold text-orange-900 mb-1.5 flex items-center gap-2">
+              <Database size={16} />
               Clear All My Data
             </h4>
-            <p className="text-orange-800 mb-4 text-sm">
+            <p className="text-orange-800 mb-3 text-xs sm:text-sm">
               Permanently delete all your entries, settings, journal, chats, connections, and progress. Your account remains active.
             </p>
             <button
               onClick={handleClearMyData}
               disabled={clearDataStatus === 'clearing' || user?.uid === 'guest'}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all ${
                 clearDataStatus === 'clearing' 
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : clearDataStatus === 'success'
@@ -1516,32 +1516,32 @@ const Settings: React.FC = () => {
                   : 'bg-gradient-to-r from-orange-600 to-orange-700 text-white hover:from-orange-700 hover:to-orange-800'
               }`}
             >
-              <Trash2 size={20} />
+              <Trash2 size={14} />
               {clearDataStatus === 'clearing' ? 'Clearing...' : 
                clearDataStatus === 'success' ? '✅ Cleared!' :
                clearDataStatus === 'error' ? '❌ Failed' :
                'Clear All My Data'}
             </button>
             {user?.uid === 'guest' && (
-              <p className="text-orange-600 text-sm mt-2 font-semibold">
+              <p className="text-orange-600 text-xs mt-2 font-semibold">
                 ⓘ Guest users cannot use this feature. Please sign in with Google.
               </p>
             )}
           </div>
 
           {/* Delete Account */}
-          <div className="bg-red-100 border-2 border-red-400 rounded-xl p-6">
-            <h4 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
-              <UserX size={20} />
+          <div className="bg-red-100 border-2 border-red-400 rounded-lg p-4">
+            <h4 className="text-sm sm:text-base font-bold text-red-900 mb-1.5 flex items-center gap-2">
+              <UserX size={16} />
               Delete My Account Permanently
             </h4>
-            <p className="text-red-800 mb-4 text-sm">
+            <p className="text-red-800 mb-3 text-xs sm:text-sm">
               <strong>⚠️ PERMANENT:</strong> Delete your account completely and sign out. You'll need to create a new account to use the app again.
             </p>
             <button
               onClick={handleDeleteMyAccount}
               disabled={deleteAccountStatus === 'deleting' || user?.uid === 'guest'}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all ${
                 deleteAccountStatus === 'deleting' 
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : deleteAccountStatus === 'success'
@@ -1568,42 +1568,42 @@ const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* About Tab Content */}
-      {activeTab === 'about' && (
-        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+      {/* Version Tab Content */}
+      {activeTab === 'version' && (
+        <div className="space-y-3 sm:space-y-4 animate-fadeIn">
           {/* App Version */}
-          <section className="bg-white rounded-xl shadow-xl border-2 border-blue-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4 sm:p-5">
-              <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                <Smartphone size={24} />
+          <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-blue-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <Smartphone size={16} />
                 Application Information
               </h3>
             </div>
             
-            <div className="p-4 sm:p-6 space-y-4">
+            <div className="p-3 sm:p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-stone-600 mb-1">Version</p>
-                  <p className="text-2xl font-bold text-blue-600">v{versionData.version}</p>
+                  <p className="text-xs font-semibold text-stone-600 mb-0.5">Version</p>
+                  <p className="text-lg sm:text-xl font-bold text-blue-600">v{versionData.version}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-stone-600 mb-1">Build Date</p>
-                  <p className="text-base font-medium text-stone-900">{versionData.buildDate}</p>
+                  <p className="text-xs font-semibold text-stone-600 mb-0.5">Build Date</p>
+                  <p className="text-xs sm:text-sm font-medium text-stone-900">{versionData.buildDate}</p>
                 </div>
               </div>
               
               <button
                 onClick={handleCheckForUpdates}
                 disabled={checkingUpdate}
-                className={`w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-lg font-bold text-sm sm:text-base shadow-lg transition-all ${
+                className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md transition-all ${
                   checkingUpdate 
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : updateAvailable
-                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-xl'
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-xl'
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg'
                 }`}
               >
-                <RefreshCw size={18} className={checkingUpdate ? 'animate-spin' : ''} />
+                <RefreshCw size={14} className={checkingUpdate ? 'animate-spin' : ''} />
                 {checkingUpdate ? 'Checking for Updates...' : 
                  updateAvailable ? 'Update Available' :
                  'Check for Updates'}
@@ -1612,30 +1612,30 @@ const Settings: React.FC = () => {
           </section>
 
           {/* Update Information */}
-          <section className="bg-white rounded-xl shadow-xl border-2 border-indigo-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 sm:p-5">
-              <h3 className="text-lg sm:text-xl font-bold text-white">Update Information</h3>
+          <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-indigo-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-bold text-white">Update Information</h3>
             </div>
             
-            <div className="p-4 sm:p-6 space-y-3">
-              <div className="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0"></div>
+            <div className="p-3 sm:p-4 space-y-2">
+              <div className="flex items-start gap-2 p-2.5 bg-indigo-50 rounded-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 mt-1.5 flex-shrink-0"></div>
                 <div>
-                  <p className="font-semibold text-stone-900 text-sm mb-1">Browser Updates</p>
+                  <p className="font-semibold text-stone-900 text-xs sm:text-sm mb-0.5">Browser Updates</p>
                   <p className="text-xs text-stone-700">Updates apply automatically when you refresh the page</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-purple-600 mt-2 flex-shrink-0"></div>
+              <div className="flex items-start gap-2 p-2.5 bg-purple-50 rounded-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0"></div>
                 <div>
-                  <p className="font-semibold text-stone-900 text-sm mb-1">Installed App</p>
+                  <p className="font-semibold text-stone-900 text-xs sm:text-sm mb-0.5">Installed App</p>
                   <p className="text-xs text-stone-700">You'll receive a notification when new versions are available</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0"></div>
+              <div className="flex items-start gap-2 p-2.5 bg-blue-50 rounded-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0"></div>
                 <div>
-                  <p className="font-semibold text-stone-900 text-sm mb-1">Auto-Check</p>
+                  <p className="font-semibold text-stone-900 text-xs sm:text-sm mb-0.5">Auto-Check</p>
                   <p className="text-xs text-stone-700">The app automatically checks for updates every 30 minutes</p>
                 </div>
               </div>
@@ -1644,15 +1644,15 @@ const Settings: React.FC = () => {
 
           {/* What's New */}
           {versionData.changelog && versionData.changelog.length > 0 && (
-            <section className="bg-white rounded-xl shadow-xl border-2 border-purple-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 sm:p-5">
-                <h3 className="text-lg sm:text-xl font-bold text-white">What's New in v{versionData.changelog[0].version}</h3>
+            <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-purple-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 sm:p-4">
+                <h3 className="text-sm sm:text-base font-bold text-white">What's New in v{versionData.changelog[0].version}</h3>
               </div>
               
-              <div className="p-4 sm:p-6">
-                <ul className="space-y-2">
+              <div className="p-3 sm:p-4">
+                <ul className="space-y-1.5">
                   {versionData.changelog[0].changes.map((change: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-stone-700">
+                    <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-stone-700">
                       <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0"></div>
                       <span>{change}</span>
                     </li>
@@ -1664,18 +1664,18 @@ const Settings: React.FC = () => {
 
           {/* Install App Section */}
           {showInstallButton && (
-            <section className="bg-white rounded-xl shadow-xl border-2 border-green-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 sm:p-5">
-                <h3 className="text-lg sm:text-xl font-bold text-white">Install Application</h3>
+            <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-green-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-3 sm:p-4">
+                <h3 className="text-sm sm:text-base font-bold text-white">Install Application</h3>
               </div>
               
-              <div className="p-4 sm:p-6">
-                <p className="text-sm text-stone-700 mb-4">Install Sadhana Sang on your device for quick access and offline functionality.</p>
+              <div className="p-3 sm:p-4">
+                <p className="text-xs sm:text-sm text-stone-700 mb-3">Install Sadhana Sang on your device for quick access and offline functionality.</p>
                 <button
                   onClick={handleInstallClick}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold text-base shadow-lg hover:shadow-xl transition-all"
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all"
                 >
-                  <Download size={18} />
+                  <Download size={14} />
                   Install App
                 </button>
               </div>
@@ -1683,18 +1683,18 @@ const Settings: React.FC = () => {
           )}
 
           {/* About Sadhana Sang */}
-          <section className="bg-white rounded-xl shadow-xl border-2 border-orange-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-4 sm:p-5">
-              <h3 className="text-lg sm:text-xl font-bold text-white">About Sadhana Sang</h3>
+          <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-orange-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-bold text-white">About Sadhana Sang</h3>
             </div>
             
-            <div className="p-4 sm:p-6 space-y-4">
-              <p className="text-sm text-stone-700 leading-relaxed">
+            <div className="p-3 sm:p-4 space-y-3">
+              <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
                 Sadhana Sang is a comprehensive spiritual practice tracker designed to help devotees in their Krishna consciousness journey. Track your daily commitments, maintain a devotional journal, connect with fellow practitioners, and grow in your spiritual life.
               </p>
               
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <p className="text-xs sm:text-sm text-orange-900 italic leading-relaxed">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <p className="text-xs text-orange-900 italic leading-relaxed">
                   Developed with devotion for the ISKCON community to support consistent spiritual practice and community engagement.
                 </p>
               </div>
