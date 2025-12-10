@@ -247,56 +247,32 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
             )}
 
             {/* Main button container */}
-            <div className="relative group pointer-events-none">
-                {/* Multi-layer glow and ripple effects when playing - NOT CLICKABLE */}
-                {isPlaying && (
-                  <>
-                    {/* Breathing glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-orange-300 to-orange-500 rounded-full blur-2xl opacity-50 animate-pulse pointer-events-none"></div>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-orange-400 to-orange-600 rounded-full blur-lg opacity-60 animate-pulse pointer-events-none" style={{ animationDelay: '0.2s' }}></div>
-                    
-                    {/* Ripple effect rings */}
-                    <div className="absolute inset-0 -m-2 border-2 border-orange-400/30 rounded-full animate-ping pointer-events-none"></div>
-                    <div className="absolute inset-0 -m-4 border border-orange-300/20 rounded-full animate-ping pointer-events-none" style={{ animationDelay: '0.3s' }}></div>
-                  </>
-                )}
-                
-                {/* Subtle pulse when not playing to draw attention */}
-                {!isPlaying && (
-                  <div className="absolute inset-0 bg-orange-400/20 rounded-full blur-xl animate-pulse pointer-events-none"></div>
-                )}
+            <div className="relative pointer-events-none">
                 
                 {/* Main button - ONLY THE ICON IS CLICKABLE: single tap toggles play/pause */}
                 <div 
                   onClick={togglePlay}
-                  className="relative bg-gradient-to-br from-orange-300 via-orange-500 to-orange-600 rounded-full shadow-2xl p-3 sm:p-5 hover:scale-110 hover:rotate-12 transition-all duration-300 border-2 border-orange-200/60 backdrop-blur-sm overflow-hidden cursor-pointer pointer-events-auto"
+                  className="relative bg-gradient-to-br from-orange-300 via-orange-500 to-orange-600 rounded-full shadow-2xl p-3 sm:p-5 border-2 border-orange-200/60 backdrop-blur-sm cursor-pointer pointer-events-auto"
                 >
-                  {/* Shimmer effect - NOT CLICKABLE */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse rounded-full pointer-events-none"></div>
-                  
-                  {/* Rotating gradient background when playing - NOT CLICKABLE */}
-                  {isPlaying && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-pink-400 to-orange-400 opacity-50 animate-spin pointer-events-none" style={{ animationDuration: '3s' }}></div>
-                  )}
                   
                   {/* Icon - Use same size on mobile and web (24px) for better visibility */}
                   {isPlaying ? (
                     <Music 
                       size={28} 
-                      className="text-white drop-shadow-lg relative z-10 animate-pulse"
+                      className="text-white drop-shadow-lg relative z-10"
                       strokeWidth={2.5}
                     />
                   ) : (
                     showMuteIcon ? (
                       <VolumeX 
                         size={28} 
-                        className="text-white drop-shadow-lg relative z-10 transition-all duration-500"
+                        className="text-white drop-shadow-lg relative z-10"
                         strokeWidth={2.5}
                       />
                     ) : (
                       <Music 
                         size={28} 
-                        className="text-white drop-shadow-lg relative z-10 transition-all duration-500"
+                        className="text-white drop-shadow-lg relative z-10"
                         strokeWidth={2.5}
                       />
                     )
