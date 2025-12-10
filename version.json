@@ -1,13 +1,21 @@
 {
-  "version": "1.3.2",
-  "buildDate": "2025-12-09",
+  "version": "1.3.3",
+  "buildDate": "2025-12-10",
   "changelog": [
     {
-      "version": "1.3.2",
-      "date": "2025-12-09",
+      "version": "1.3.3",
+      "date": "2025-12-10",
       "changes": [
-        "Connection System: Complete ACID-compliant connection flow (send, accept, reject, cancel, remove)",
-        "UI: ISKCON logo as default avatar across Community, Messages, and Connection Requests",
+        "Branding: Renamed app from 'Sadhana Sanga' to 'Sadhana Sang'",
+        "Loading Screens: Added ISKCON logo to all loading screens with spinning animation",
+        "Loading Screens: Removed Hare Krishna mantra, centered logo perfectly on all screen sizes",
+        "UI Icons: Standardized all floating action icons (Music, Notification Bell, Message) to 28px",
+        "UI Icons: Consolidated all desktop icons into single flex container with equal gap-3 spacing",
+        "Background Music: Frequent devotional popup (every 12 seconds, 3.5s duration, single-line text)",
+        "Background Music: Orange-to-red gradient with Volume2/VolumeX icons (no emoji)",
+        "Responsive Design: All changes tested and working on mobile and desktop views"
+      ]
+    },
         "Community: Fixed user count display - now shows all users with profiles",
         "Community: ACID-compliant filtering - Connected and Explore tabs properly isolated",
         "Community: Enhanced header showing total devotees, connected count, and online count",
