@@ -25,6 +25,7 @@ import {
   WifiOff,
   Quote,
   Lock,
+  MessageCircle,
 } from 'lucide-react';
 import UserProfileModal from '../components/UserProfileModal';
 import ChatOptionsMenu from '../components/ChatOptionsMenu';

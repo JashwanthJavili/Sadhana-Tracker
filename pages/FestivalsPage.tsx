@@ -520,7 +520,7 @@ const FestivalsPage: React.FC = () => {
                             }
                           `}
                         >
-                          {lang.flag} {lang.name}
+{lang.name}
                         </button>
                       ))}
                     </div>
@@ -550,7 +550,7 @@ const FestivalsPage: React.FC = () => {
                                 }
                               `}
                             >
-                              {lang.flag} {lang.name}
+    {lang.name}
                             </button>
                           ))}
                         </div>

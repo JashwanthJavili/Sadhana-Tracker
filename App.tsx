@@ -369,7 +369,8 @@ function AppContent() {
                     // Filter features based on user role - hide ANY mention of admin
                     const filteredFeatures = version.features.filter(feature => {
                       // If user is not admin, hide admin-related features
-                      if (!user?.isAdmin) {
+                      const isUserAdmin = user?.email === 'jashwanthjavili7@gmail.com';
+                      if (!isUserAdmin) {
                         const lowerFeature = feature.toLowerCase();
                         if (
                           lowerFeature.includes('admin') ||

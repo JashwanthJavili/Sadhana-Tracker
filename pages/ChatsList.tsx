@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Chat, UserProfile } from '../types/chat';
 import { getUserChats, getTotalUnreadCount } from '../services/chat';
 import { MessageCircle, Search, Users, Wifi, WifiOff, Filter, X } from 'lucide-react';
+// @ts-ignore
+import iskconLogo from '../utils/Images/Iscon_LOgo-removebg-preview.png';
 
 const ChatsList: React.FC = () => {
   const { user } = useAuth();

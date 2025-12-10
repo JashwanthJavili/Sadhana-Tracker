@@ -477,12 +477,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       )}
 
-      {/* Floating WhatsApp-style Message Icon - Always Visible */}
+      {/* Floating WhatsApp-style Message Icon - Always Visible - Responsive Size */}
       {!isGuest && location.pathname !== '/chats' && !location.pathname.startsWith('/chat/') && (
         <button
           onClick={() => navigate('/chats')}
-          className={`fixed bottom-6 right-6 z-50 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 hover:scale-110 active:scale-95 flex items-center gap-3 group ${
-            unreadCount > 0 ? 'px-5 py-4' : 'p-4'
+          className={`fixed bottom-6 right-6 z-50 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 hover:scale-110 active:scale-95 flex items-center gap-3 group p-3 sm:p-4 ${
+            unreadCount > 0 ? 'sm:px-5 sm:py-4' : ''
           }`}
           style={unreadCount > 0 ? {
             animation: 'bounce-gentle 2s ease-in-out infinite'
@@ -490,7 +490,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           aria-label={unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : 'Messages'}
         >
           <div className="relative">
-            <MessageCircle size={24} />
+            <MessageCircle size={18} className="sm:hidden" />
+            <MessageCircle size={24} className="hidden sm:block" />
             {unreadCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 ring-2 ring-white shadow-lg animate-pulse">
                 {unreadCount > 99 ? '99+' : unreadCount}

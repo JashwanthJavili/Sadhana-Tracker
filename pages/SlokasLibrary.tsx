@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ref, get, set, push, remove, update } from 'firebase/database';
 import { db } from '../services/firebase';
-import { BookOpen, Plus, MessageSquare, Trash2, Search, Heart, User, Clock, Languages, GripVertical, Send } from 'lucide-react';
+import { BookOpen, Plus, MessageSquare, Trash2, Search, Heart, User, Clock, Languages, GripVertical, Send, X } from 'lucide-react';
 import { translateText, SUPPORTED_LANGUAGES } from '../services/translator';
 import { isAdmin } from '../services/admin';
 import SlokaRequestForm from '../components/SlokaRequestForm';
@@ -522,7 +522,7 @@ const SlokasLibrary: React.FC = () => {
                               }
                             `}
                           >
-                            {lang.flag} {lang.name}
+{lang.name}
                           </button>
                         ))}
                       </div>
@@ -552,7 +552,7 @@ const SlokasLibrary: React.FC = () => {
                                   }
                                 `}
                               >
-                                {lang.flag} {lang.name}
+    {lang.name}
                               </button>
                             ))}
                           </div>
