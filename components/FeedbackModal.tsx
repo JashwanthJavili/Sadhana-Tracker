@@ -163,29 +163,29 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose }) => {
   if (submitted) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-4 animate-fadeIn">
-        <div className="bg-gradient-to-br from-white to-orange-50 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center space-y-6 border-3 border-orange-200">
-          <div className="bg-gradient-to-r from-green-100 to-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
-            <Heart className="text-green-600 w-12 h-12 fill-green-600 animate-bounce-soft" />
+        <div className="bg-gradient-to-br from-white via-green-50 to-emerald-50 rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center space-y-4 sm:space-y-6 border-2 border-green-200 animate-scale-in">
+          <div className="bg-gradient-to-r from-green-100 to-emerald-100 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <Heart className="text-green-600 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 fill-green-600 animate-bounce" />
           </div>
           
-          <div className="space-y-3">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          <div className="space-y-2 sm:space-y-3">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
               {content[lang].thankYou}
             </h2>
-            <p className="text-stone-700 text-lg leading-relaxed">
+            <p className="text-stone-700 text-sm sm:text-base md:text-lg leading-relaxed px-2">
               {content[lang].thankYouMessage}
             </p>
-            <p className="text-blue-600 text-sm font-semibold mt-4">
+            <p className="text-blue-600 text-xs sm:text-sm font-semibold mt-3 sm:mt-4 px-2">
               {content[lang].submitAgain}
             </p>
-            <p className="text-orange-600 font-bold">Hare Krishna! 🙏</p>
+            <p className="text-orange-600 font-bold text-sm sm:text-base">Hare Krishna! 🙏</p>
           </div>
 
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-1 sm:gap-2">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                className={`w-7 h-7 transition-all ${
+                className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-all ${
                   i < rating 
                     ? 'text-yellow-400 fill-yellow-400 scale-110' 
                     : 'text-stone-300'
@@ -199,47 +199,49 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-4 animate-fadeIn">
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-3 border-orange-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100000] p-2 sm:p-4 animate-fadeIn">
+      <div className="bg-gradient-to-br from-white via-orange-50/30 to-amber-50/40 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border-2 border-orange-200/50">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-orange-600 to-amber-600 p-6 rounded-t-3xl border-b-3 border-orange-700">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <MessageCircle className="text-white w-8 h-8" />
+        <div className="sticky top-0 bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 p-4 sm:p-6 rounded-t-2xl sm:rounded-t-3xl border-b-2 border-orange-700 z-10">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                <MessageCircle className="text-white w-5 h-5 sm:w-7 sm:h-7" />
               </div>
-              <div>
-                <h2 className="text-3xl font-bold text-white">{content[lang].title}</h2>
-                <p className="text-orange-100 text-sm mt-1">{content[lang].subtitle}</p>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-white truncate">{content[lang].title}</h2>
+                <p className="text-orange-100 text-xs sm:text-sm mt-0.5 sm:mt-1 line-clamp-1">{content[lang].subtitle}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg sm:rounded-xl transition-colors flex-shrink-0"
+              aria-label="Close"
             >
-              <X className="text-white w-6 h-6" />
+              <X className="text-white w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Rating */}
-          <div className="space-y-3">
-            <label className="block text-lg font-bold text-stone-900">
+          <div className="space-y-2 sm:space-y-3">
+            <label className="block text-sm sm:text-base md:text-lg font-bold text-stone-900">
               {content[lang].ratingLabel}
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 bg-gradient-to-r from-orange-50 to-amber-50 p-3 sm:p-4 rounded-xl border-2 border-orange-200">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoveredRating(star)}
                   onMouseLeave={() => setHoveredRating(0)}
-                  className="transition-transform hover:scale-125 active:scale-110"
+                  className="transition-transform hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-400 rounded-lg p-1"
+                  aria-label={`Rate ${star} stars`}
                 >
                   <Star
-                    className={`w-12 h-12 transition-all ${
+                    className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-all ${
                       star <= (hoveredRating || rating)
                         ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg'
                         : 'text-stone-300'
@@ -247,72 +249,80 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose }) => {
                   />
                 </button>
               ))}
-              {(hoveredRating || rating) > 0 && (
-                <span className="ml-2 text-sm font-bold text-orange-600 animate-fadeIn">
+            </div>
+            {(hoveredRating || rating) > 0 && (
+              <div className="text-center">
+                <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs sm:text-sm font-bold rounded-full animate-scale-in shadow-md">
                   {content[lang].ratingDescriptions[(hoveredRating || rating) - 1]}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Category */}
-          <div className="space-y-3">
-            <label className="block text-lg font-bold text-stone-900">
+          <div className="space-y-2 sm:space-y-3">
+            <label className="block text-sm sm:text-base md:text-lg font-bold text-stone-900">
               {content[lang].categoryLabel}
             </label>
-            <div className="grid responsive-grid-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {Object.entries(content[lang].categories).map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setCategory(key)}
-                  className={`p-4 rounded-xl border-2 font-semibold transition-all transform hover:scale-105 active:scale-95 ${
+                  className={`p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border-2 font-semibold text-xs sm:text-sm md:text-base transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-400 ${
                     category === key
-                      ? 'bg-orange-600 text-white border-orange-700 shadow-lg'
-                      : 'bg-white text-stone-700 border-stone-300 hover:border-orange-400'
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white border-orange-600 shadow-lg'
+                      : 'bg-white text-stone-700 border-stone-300 hover:border-orange-400 hover:bg-orange-50'
                   }`}
                 >
-                  {label}
+                  <span className="line-clamp-1">{label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Message */}
-          <div className="space-y-3">
-            <label className="block text-lg font-bold text-stone-900">
+          <div className="space-y-2 sm:space-y-3">
+            <label className="block text-sm sm:text-base md:text-lg font-bold text-stone-900 flex items-center gap-2">
               {content[lang].messageLabel}
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
             </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={content[lang].messagePlaceholder}
-              className="w-full p-4 border-3 border-stone-300 rounded-xl focus:ring-4 focus:ring-orange-300 focus:border-orange-500 outline-none text-base resize-none shadow-md hover:border-orange-300 transition-all"
-              rows={5}
-            />
-            <p className="text-sm text-stone-500">{message.length} characters</p>
+            <div className="relative">
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder={content[lang].messagePlaceholder}
+                className="w-full p-3 sm:p-4 border-2 border-stone-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-500 outline-none text-sm sm:text-base resize-none shadow-sm hover:border-orange-300 transition-all bg-white"
+                rows={4}
+                maxLength={1000}
+              />
+              <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 text-xs text-stone-400 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md">
+                {message.length}/1000
+              </div>
+            </div>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-4">
             <button
               onClick={handleMaybeLater}
-              className="flex-1 px-6 py-4 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95"
+              className="w-full sm:flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl font-bold text-sm sm:text-base md:text-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-stone-400"
             >
               {content[lang].laterButton}
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting || rating === 0 || !category}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full sm:flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl font-bold text-sm sm:text-base md:text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
               {submitting ? (
                 <>
-                  <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                  Submitting...
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 sm:border-3 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm sm:text-base">Submitting...</span>
                 </>
               ) : (
                 <>
-                  <Send size={20} />
+                  <Send size={18} className="sm:w-5 sm:h-5" />
                   {content[lang].submitButton}
                 </>
               )}
