@@ -1,7 +1,22 @@
 {
-  "version": "1.3.3",
+  "version": "1.3.4",
   "buildDate": "2025-12-10",
   "changelog": [
+    {
+      "version": "1.3.4",
+      "date": "2025-12-10",
+      "changes": [
+        "Auto-Update System: Version checker checks every 60 seconds for updates",
+        "Auto-Update System: Automatic reload with 10-second countdown when update detected",
+        "Auto-Update System: Service worker checks every 2 minutes instead of 30 minutes",
+        "Auto-Update System: Aggressive cache clearing on updates for immediate changes",
+        "Cache Busting: Added cache control headers to prevent stale content",
+        "Cache Busting: Hash-based filenames in production builds",
+        "UI: Update banner with countdown timer and 'Update Now' button",
+        "Performance: Manifest generation for better cache tracking",
+        "Bug Fix: Removed all animations from music icon to keep constant size"
+      ]
+    },
     {
       "version": "1.3.3",
       "date": "2025-12-10",

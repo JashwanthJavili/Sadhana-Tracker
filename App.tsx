@@ -7,6 +7,7 @@ import GenderSelectionModal from './components/GenderSelectionModal';
 import FeedbackPrompt from './components/FeedbackPrompt';
 import LoadingScreen from './components/LoadingScreen';
 import BackgroundMusic from './components/BackgroundMusic';
+import VersionChecker from './components/VersionChecker';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { UserDataProvider, useUserData } from './contexts/UserDataContext';
@@ -277,6 +278,9 @@ function AppContent() {
 
   return (
     <>
+      {/* Version Checker - Always active, checks every 60 seconds */}
+      <VersionChecker />
+      
       <Layout>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>

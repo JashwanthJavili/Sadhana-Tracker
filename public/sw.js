@@ -1,7 +1,7 @@
-/* Service Worker for Sadhana Sang PWA - Production Optimized */
+/* Service Worker for Sadhana Sang PWA - Auto-Update Optimized */
 
-const APP_VERSION = '1.0.2';
-const CACHE_NAME = `sadhana-sanga-v${APP_VERSION}`;
+const APP_VERSION = '1.3.3';
+const CACHE_NAME = `sadhana-sang-v${APP_VERSION}`;
 const RUNTIME_CACHE = `sadhana-runtime-v${APP_VERSION}`;
 const urlsToCache = [
   '/',
@@ -16,6 +16,18 @@ self.addEventListener('message', (event) => {
   }
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  // Clear all caches on demand
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      }).then(() => {
+        event.ports[0].postMessage({ success: true });
+      })
+    );
   }
 });
 

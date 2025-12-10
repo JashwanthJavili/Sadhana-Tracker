@@ -18,6 +18,20 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        // Cache busting - add hash to filenames
+        rollupOptions: {
+          output: {
+            entryFileNames: 'assets/[name].[hash].js',
+            chunkFileNames: 'assets/[name].[hash].js',
+            assetFileNames: 'assets/[name].[hash].[ext]'
+          }
+        },
+        // Clear output directory before build
+        emptyOutDir: true,
+        // Generate manifest for cache tracking
+        manifest: true
       }
     };
 });
