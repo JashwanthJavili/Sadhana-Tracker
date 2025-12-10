@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { createUserNotification } from '../services/notifications';
 
 /**
  * VersionChecker - Automatically checks for app updates and forces reload
@@ -7,6 +9,7 @@ import { RefreshCw, AlertCircle } from 'lucide-react';
  * Shows update banner with countdown when new version detected
  */
 const VersionChecker: React.FC = () => {
+  const { user } = useAuth();
   const [newVersionAvailable, setNewVersionAvailable] = useState(false);
   const [countdown, setCountdown] = useState(10);
   const [currentVersion, setCurrentVersion] = useState<string>('');
@@ -48,6 +51,15 @@ const VersionChecker: React.FC = () => {
               setNewVersionAvailable(true);
               // Mark notification as shown for this version
               localStorage.setItem('version_notification_shown', latestVer);
+              
+              // Send notification to user if logged in
+              if (user && user.uid !== 'guest') {
+                createUserNotification(user.uid, {
+                  type: 'broadcast',
+                  title: '🎉 New Version Available!',
+                  message: `Sadhana Sang has been updated to version ${latestVer}. The app will refresh automatically in 10 seconds to apply the update.`
+                }).catch(err => console.error('Failed to create version notification:', err));
+              }
             }
           }
         }
