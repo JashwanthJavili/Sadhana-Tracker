@@ -10,6 +10,7 @@ import { createUserProfile } from '../services/chat';
 import { ref, remove, get } from 'firebase/database';
 import { db, auth } from '../services/firebase';
 import { signOut } from 'firebase/auth';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 // @ts-ignore
 import versionData from '../version.json';
