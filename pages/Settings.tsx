@@ -39,7 +39,7 @@ const Settings: React.FC = () => {
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [activeTab, setActiveTab] = useState<'settings' | 'guru' | 'about'>('settings');
+  const [activeTab, setActiveTab] = useState<'guru' | 'settings' | 'about'>('guru');
   
   // Admin email - only this user has admin privileges
   const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
@@ -563,16 +563,15 @@ const Settings: React.FC = () => {
       <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg sm:shadow-xl border-2 border-indigo-400">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 flex items-center gap-2">
-              <Wrench className="text-white" size={20} />
-              {activeTab === 'settings' ? 'Settings' : activeTab === 'guru' ? 'My Guru' : 'About'}
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1">
+              {activeTab === 'guru' ? 'My Spiritual Guide' : activeTab === 'settings' ? 'Settings' : 'About Sadhana Sang'}
             </h2>
             <p className="text-indigo-100 text-xs sm:text-sm">
-              {activeTab === 'settings' 
-                ? 'Configure your spiritual practice' 
-                : activeTab === 'guru' 
-                ? 'Spiritual guidance and inspiration' 
-                : 'App information and version'}
+              {activeTab === 'guru' 
+                ? 'Guru Maharaja and spiritual guidance' 
+                : activeTab === 'settings' 
+                ? 'Account settings and preferences' 
+                : 'Application information'}
             </p>
           </div>
           <button
@@ -590,40 +589,174 @@ const Settings: React.FC = () => {
       <div className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
         <div className="grid grid-cols-3 gap-0">
           <button
-            onClick={() => setActiveTab('settings')}
-            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm transition-all ${
-              activeTab === 'settings'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
-                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            <Wrench size={18} className="mx-auto mb-1" />
-            Settings
-          </button>
-          <button
             onClick={() => setActiveTab('guru')}
-            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm transition-all border-x border-stone-200 ${
+            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm md:text-base transition-all ${
               activeTab === 'guru'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-inner'
                 : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
             }`}
           >
             <User size={18} className="mx-auto mb-1" />
-            My Guru
+            <span className="block">My Guru</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm md:text-base transition-all border-x border-stone-200 ${
+              activeTab === 'settings'
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-inner'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <Wrench size={18} className="mx-auto mb-1" />
+            <span className="block">Settings</span>
           </button>
           <button
             onClick={() => setActiveTab('about')}
-            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm transition-all ${
+            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm md:text-base transition-all ${
               activeTab === 'about'
-                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-inner'
                 : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
             }`}
           >
             <Smartphone size={18} className="mx-auto mb-1" />
-            About
+            <span className="block">About</span>
           </button>
         </div>
       </div>
+
+      {/* My Guru Tab Content */}
+      {activeTab === 'guru' && (
+        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+          {/* Spiritual Guide Information */}
+          <section className="bg-gradient-to-br from-white to-purple-50 rounded-xl shadow-xl border-2 border-purple-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 sm:p-5">
+              <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <User size={24} />
+                Spiritual Master
+              </h3>
+            </div>
+            
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-stone-700">Guided By</label>
+                {!isEditing && (
+                  <button
+                    onClick={handleEdit}
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium text-xs sm:text-sm transition-all shadow-md flex items-center gap-1.5"
+                  >
+                    <Edit2 size={14} />
+                    Edit
+                  </button>
+                )}
+              </div>
+              
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={editedSettings?.guruName || ''}
+                    onChange={(e) => setEditedSettings({ ...editedSettings!, guruName: e.target.value })}
+                    className="w-full p-3 sm:p-4 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-500 outline-none text-sm sm:text-base font-medium shadow-sm"
+                    placeholder="His Holiness / His Grace [Name] Maharaja/Prabhu"
+                  />
+                  <p className="text-xs text-stone-600">Enter your diksha or siksha guru's name</p>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+                  <p className="text-lg sm:text-xl font-bold text-purple-900">
+                    {settings.guruName || 'Not set'}
+                  </p>
+                </div>
+              )}
+
+              {isEditing && (
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={handleSaveEdit}
+                    className={`flex items-center gap-2 px-6 py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base transition-all shadow-lg ${
+                      saveStatus === 'saved'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-xl'
+                    }`}
+                  >
+                    <Save size={16} />
+                    {saveStatus === 'saved' ? 'Saved' : 'Save'}
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-6 py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base bg-stone-200 text-stone-700 hover:bg-stone-300 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Guru Pranama */}
+          <section className="bg-white rounded-xl shadow-xl border-2 border-orange-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-4 sm:p-5">
+              <h3 className="text-lg sm:text-xl font-bold text-white">Guru Pranama Mantra</h3>
+            </div>
+            
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 sm:p-6 rounded-lg border border-orange-200">
+                <p className="text-center text-sm sm:text-base font-semibold text-orange-900 leading-relaxed mb-4" style={{ fontFamily: 'serif' }}>
+                  oṁ ajñāna-timirāndhasya<br />
+                  jñānāñjana-śalākayā<br />
+                  cakṣur unmīlitaṁ yena<br />
+                  tasmai śrī-gurave namaḥ
+                </p>
+                <div className="border-t-2 border-orange-200 pt-4">
+                  <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                    <strong>Translation:</strong> I offer my respectful obeisances unto my spiritual master, who has opened my eyes, which were blinded by the darkness of ignorance, with the torchlight of knowledge.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Guru Tattva */}
+          <section className="bg-white rounded-xl shadow-xl border-2 border-blue-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 sm:p-5">
+              <h3 className="text-lg sm:text-xl font-bold text-white">Understanding Guru Tattva</h3>
+            </div>
+            
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-bold text-stone-900 text-sm sm:text-base mb-1">Diksha Guru</h4>
+                    <p className="text-xs sm:text-sm text-stone-700">The spiritual master who gives formal initiation and connects you to the disciplic succession</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                  <div className="w-2 h-2 rounded-full bg-purple-600 mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-bold text-stone-900 text-sm sm:text-base mb-1">Siksha Guru</h4>
+                    <p className="text-xs sm:text-sm text-stone-700">The instructing spiritual master who guides your spiritual practice and understanding</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                  <div className="w-2 h-2 rounded-full bg-green-600 mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-bold text-stone-900 text-sm sm:text-base mb-1">Senior Devotees</h4>
+                    <p className="text-xs sm:text-sm text-stone-700">Experienced practitioners who offer guidance and support in your spiritual journey</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-orange-100 to-amber-100 p-4 rounded-lg border border-orange-200">
+                <p className="text-xs sm:text-sm text-orange-900 italic leading-relaxed" style={{ fontFamily: 'serif' }}>
+                  "By the mercy of the spiritual master one receives the benediction of Krishna. Without the grace of the spiritual master, one cannot make any advancement."
+                  <span className="block mt-2 font-bold not-italic">— Sri Caitanya Mahaprabhu</span>
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* Settings Tab Content */}
       {activeTab === 'settings' && (
@@ -1435,223 +1568,138 @@ const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* My Guru Tab Content */}
-      {activeTab === 'guru' && (
-        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
-          {/* Spiritual Guide Information */}
-          <section className="bg-gradient-to-br from-white to-purple-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-purple-300 p-4 sm:p-6">
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg">
-                <User className="text-white" size={28}/>
-              </div>
-              My Spiritual Guide
-            </h3>
-            
-            <div className="space-y-6">
-              {/* Guru Name Section */}
-              <div className="bg-white rounded-xl border-2 border-purple-200 p-5 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-base font-bold text-stone-900">Guided By</label>
-                  {!isEditing && (
-                    <button
-                      onClick={handleEdit}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-sm transition-all shadow-md flex items-center gap-2"
-                    >
-                      <Edit2 size={16} />
-                      Edit
-                    </button>
-                  )}
-                </div>
-                
-                {isEditing ? (
-                  <div>
-                    <input
-                      type="text"
-                      value={editedSettings?.guruName || ''}
-                      onChange={(e) => setEditedSettings({ ...editedSettings!, guruName: e.target.value })}
-                      className="w-full p-4 border-3 border-purple-300 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 outline-none text-base font-semibold shadow-md hover:border-purple-400 transition-all"
-                      placeholder="e.g., His Grace Pranavanand Das Prabhu"
-                    />
-                    <p className="text-xs text-stone-600 mt-2">Enter your spiritual guide's name (Guru, Siksha Guru, or senior devotee who guides you)</p>
-                  </div>
-                ) : (
-                  <div className="text-2xl font-bold text-purple-900 bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
-                    {settings.guruName || 'Not set'}
-                  </div>
-                )}
-              </div>
-
-              {/* Inspirational Quote */}
-              <div className="bg-gradient-to-br from-orange-100 via-amber-100 to-yellow-100 p-6 rounded-xl shadow-lg border-3 border-orange-300">
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl">🙏</div>
-                  <div>
-                    <p className="text-sm sm:text-base text-orange-900 italic font-serif font-semibold leading-relaxed mb-2">
-                      "By the mercy of the spiritual master one receives the benediction of Krishna. Without the grace of the spiritual master, one cannot make any advancement."
-                    </p>
-                    <p className="text-xs text-orange-800 font-bold">— Sri Caitanya Mahaprabhu</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Guru Tattva Section */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-300 p-5">
-                <h4 className="font-bold text-blue-900 mb-4 flex items-center gap-2 text-base sm:text-lg">
-                  <span className="text-2xl">📖</span>
-                  Understanding Guru Tattva
-                </h4>
-                <ul className="space-y-3 text-sm text-blue-900">
-                  <li className="flex items-start gap-3">
-                    <span className="text-blue-600 font-bold text-lg mt-0.5">•</span>
-                    <span><strong>Diksha Guru:</strong> The spiritual master who gives formal initiation and connects you to the disciplic succession</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-blue-600 font-bold text-lg mt-0.5">•</span>
-                    <span><strong>Siksha Guru:</strong> The instructing spiritual master who guides your spiritual practice and understanding</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-blue-600 font-bold text-lg mt-0.5">•</span>
-                    <span><strong>Senior Devotees:</strong> Experienced practitioners who offer guidance and support in your spiritual journey</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Daily Prayer Section */}
-              <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl border-2 border-purple-300 p-5">
-                <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2 text-base sm:text-lg">
-                  <span className="text-2xl">🕉️</span>
-                  Guru Pranama Mantra
-                </h4>
-                <div className="bg-white rounded-lg p-4 space-y-3">
-                  <p className="text-purple-900 font-semibold text-center text-base sm:text-lg italic">
-                    oṁ ajñāna-timirāndhasya<br />
-                    jñānāñjana-śalākayā<br />
-                    cakṣur unmīlitaṁ yena<br />
-                    tasmai śrī-gurave namaḥ
-                  </p>
-                  <div className="border-t-2 border-purple-200 pt-3">
-                    <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                      <strong>Translation:</strong> I offer my respectful obeisances unto my spiritual master, who has opened my eyes, which were blinded by the darkness of ignorance, with the torchlight of knowledge.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Save Button if Editing */}
-              {isEditing && (
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleSaveEdit}
-                    className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 ${
-                      saveStatus === 'saved'
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
-                    }`}
-                  >
-                    <Save size={18} />
-                    {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex items-center gap-2 px-6 py-4 rounded-xl font-bold text-base bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-lg transform hover:scale-105 active:scale-95"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-      )}
-
       {/* About Tab Content */}
       {activeTab === 'about' && (
         <div className="space-y-4 sm:space-y-6 animate-fadeIn">
-      {/* App Version & Updates - Moving to About tab */}
-      <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-blue-300 p-4 sm:p-6">
-        <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 rounded-xl shadow-lg">
-            <Smartphone className="text-white" size={28}/>
-          </div>
-          App Information
-        </h3>
-        
-        <div className="space-y-4">
-          {/* Version Info */}
-          <div className="bg-white border-2 border-blue-200 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h4 className="text-lg font-bold text-stone-900">Current Version</h4>
-                <p className="text-blue-600 text-2xl font-bold mt-1">v{versionData.version}</p>
-                <p className="text-stone-600 text-sm mt-1">Build Date: {versionData.buildDate}</p>
-              </div>
-              <div className="text-5xl">🎯</div>
+          {/* App Version */}
+          <section className="bg-white rounded-xl shadow-xl border-2 border-blue-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4 sm:p-5">
+              <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <Smartphone size={24} />
+                Application Information
+              </h3>
             </div>
             
-            {/* Check for Updates Button */}
-            <button
-              onClick={handleCheckForUpdates}
-              disabled={checkingUpdate}
-              className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all ${
-                checkingUpdate 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : updateAvailable
-                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
-              }`}
-            >
-              <RefreshCw size={20} className={checkingUpdate ? 'animate-spin' : ''} />
-              {checkingUpdate ? 'Checking...' : 
-               updateAvailable ? '🎉 Update Available!' :
-               'Check for Updates'}
-            </button>
-          </div>
-
-          {/* Update Info */}
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-            <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-              <span className="text-lg">ℹ️</span>
-              How Updates Work
-            </h4>
-            <ul className="space-y-2 text-sm text-blue-800">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span><strong>Browser:</strong> Updates apply automatically on page refresh</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span><strong>Installed App:</strong> You'll see a notification when updates are available</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span><strong>Auto-check:</strong> App checks for updates every 30 minutes when open</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span><strong>Manual check:</strong> Use the button above anytime to check for new versions</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Latest Changes */}
-          {versionData.changelog && versionData.changelog.length > 0 && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4">
-              <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
-                <span className="text-lg">✨</span>
-                What's New in v{versionData.changelog[0].version}
-              </h4>
-              <ul className="space-y-1.5 text-sm text-purple-800">
-                {versionData.changelog[0].changes.map((change: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-purple-600 font-bold mt-0.5">✓</span>
-                    <span>{change}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-stone-600 mb-1">Version</p>
+                  <p className="text-2xl font-bold text-blue-600">v{versionData.version}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-stone-600 mb-1">Build Date</p>
+                  <p className="text-base font-medium text-stone-900">{versionData.buildDate}</p>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleCheckForUpdates}
+                disabled={checkingUpdate}
+                className={`w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-lg font-bold text-sm sm:text-base shadow-lg transition-all ${
+                  checkingUpdate 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : updateAvailable
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-xl'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-xl'
+                }`}
+              >
+                <RefreshCw size={18} className={checkingUpdate ? 'animate-spin' : ''} />
+                {checkingUpdate ? 'Checking for Updates...' : 
+                 updateAvailable ? 'Update Available' :
+                 'Check for Updates'}
+              </button>
             </div>
+          </section>
+
+          {/* Update Information */}
+          <section className="bg-white rounded-xl shadow-xl border-2 border-indigo-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 sm:p-5">
+              <h3 className="text-lg sm:text-xl font-bold text-white">Update Information</h3>
+            </div>
+            
+            <div className="p-4 sm:p-6 space-y-3">
+              <div className="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg">
+                <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="font-semibold text-stone-900 text-sm mb-1">Browser Updates</p>
+                  <p className="text-xs text-stone-700">Updates apply automatically when you refresh the page</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                <div className="w-2 h-2 rounded-full bg-purple-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="font-semibold text-stone-900 text-sm mb-1">Installed App</p>
+                  <p className="text-xs text-stone-700">You'll receive a notification when new versions are available</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="font-semibold text-stone-900 text-sm mb-1">Auto-Check</p>
+                  <p className="text-xs text-stone-700">The app automatically checks for updates every 30 minutes</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* What's New */}
+          {versionData.changelog && versionData.changelog.length > 0 && (
+            <section className="bg-white rounded-xl shadow-xl border-2 border-purple-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 sm:p-5">
+                <h3 className="text-lg sm:text-xl font-bold text-white">What's New in v{versionData.changelog[0].version}</h3>
+              </div>
+              
+              <div className="p-4 sm:p-6">
+                <ul className="space-y-2">
+                  {versionData.changelog[0].changes.map((change: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-stone-700">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-1.5 flex-shrink-0"></div>
+                      <span>{change}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
           )}
-        </div>
-      </section>
+
+          {/* Install App Section */}
+          {showInstallButton && (
+            <section className="bg-white rounded-xl shadow-xl border-2 border-green-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 sm:p-5">
+                <h3 className="text-lg sm:text-xl font-bold text-white">Install Application</h3>
+              </div>
+              
+              <div className="p-4 sm:p-6">
+                <p className="text-sm text-stone-700 mb-4">Install Sadhana Sang on your device for quick access and offline functionality.</p>
+                <button
+                  onClick={handleInstallClick}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold text-base shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Download size={18} />
+                  Install App
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* About Sadhana Sang */}
+          <section className="bg-white rounded-xl shadow-xl border-2 border-orange-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-4 sm:p-5">
+              <h3 className="text-lg sm:text-xl font-bold text-white">About Sadhana Sang</h3>
+            </div>
+            
+            <div className="p-4 sm:p-6 space-y-4">
+              <p className="text-sm text-stone-700 leading-relaxed">
+                Sadhana Sang is a comprehensive spiritual practice tracker designed to help devotees in their Krishna consciousness journey. Track your daily commitments, maintain a devotional journal, connect with fellow practitioners, and grow in your spiritual life.
+              </p>
+              
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <p className="text-xs sm:text-sm text-orange-900 italic leading-relaxed">
+                  Developed with devotion for the ISKCON community to support consistent spiritual practice and community engagement.
+                </p>
+              </div>
+            </div>
+          </section>
         </div>
       )}
     </div>
