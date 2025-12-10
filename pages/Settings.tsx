@@ -749,9 +749,6 @@ const Settings: React.FC = () => {
         )}
       </section>
 
-      {/* Spiritual Guide Section - Moving to My Guru tab */}
-      </section>
-
       {/* Privacy Settings Section */}
       <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-blue-300 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
