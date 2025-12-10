@@ -251,7 +251,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             alt="ISKCON Logo" 
             className="h-10 w-10 object-contain bg-white/90 rounded-lg p-1 flex-shrink-0"
           />
-          <span className="font-serif font-bold text-xl flex-1">Sadhana Sanga</span>
+          <span className="font-serif font-bold text-xl flex-1">Sadhana Sang</span>
           <div className="flex items-center gap-2">
             {user && (
               <>
@@ -281,7 +281,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           
           <div>
             <h1 className="font-serif font-bold text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-200 to-orange-300">
-              Sadhana Sanga
+              Sadhana Sang
             </h1>
             {settings?.guruName && settings.guruName.toLowerCase() !== 'n/a' && (
               <p className="text-xs text-stone-400 mt-0.5">Guided by {settings.guruName}</p>
