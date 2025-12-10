@@ -16,23 +16,12 @@
         "Responsive Design: All changes tested and working on mobile and desktop views"
       ]
     },
-        "Community: Fixed user count display - now shows all users with profiles",
-        "Community: ACID-compliant filtering - Connected and Explore tabs properly isolated",
-        "Community: Enhanced header showing total devotees, connected count, and online count",
-        "Settings: Delete My Account feature with email confirmation",
-        "Settings: Clear My Data now removes connections, notifications, chats, and all user data",
-        "Database: Fixed connection permission rules for bidirectional connections",
-        "Real-time: Instant connection status updates using listenToUserConnections",
-        "Data Integrity: Removed orphaned notifications and requests after accept/reject/cancel",
-        "Performance: Simplified connection operations, removed unnecessary permission checks",
-        "UX: Filter panel shows result counts for transparency",
-        "Filters: Added 'Not Specified' option for guru names and ISKCON centers"
-      ]
-    },
     {
-      "version": "1.3.1",
+      "version": "1.3.2",
       "date": "2025-12-09",
       "changes": [
+        "Connection System: Complete ACID-compliant connection flow (send, accept, reject, cancel, remove)",
+        "UI: ISKCON logo as default avatar across Community, Messages, and Connection Requests",
         "Admin: Clear all chats functionality for admin users",
         "Privacy: Messaging privacy setting (Everyone vs Connections Only)",
         "Fixed: User display name shows registration name instead of email",
