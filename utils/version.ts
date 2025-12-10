@@ -3,8 +3,23 @@
  * Handles version updates and notifications
  */
 
-export const APP_VERSION = '1.3.0'; // Update this when releasing new version
+export const APP_VERSION = '1.3.4'; // Update this when releasing new version
 export const VERSION_HISTORY = [
+  {
+    version: '1.3.4',
+    date: '2025-12-10',
+    features: [
+      '🔄 Auto-Update System - Version checker checks every 60 seconds for updates',
+      '⏱️ Smart Countdown - Automatic reload with 10-second countdown when update detected',
+      '🚀 Faster Updates - Service worker checks every 2 minutes instead of 30 minutes',
+      '💨 Cache Clearing - Aggressive cache clearing on updates for immediate changes',
+      '🎯 Cache Busting - Hash-based filenames prevent stale content',
+      '🔔 Update Banner - Clean notification with countdown timer and Update Now button',
+      '📦 Manifest Generation - Better cache tracking for offline support',
+      '🎵 Music Icon Fix - Removed all animations to keep constant 28px size',
+      '✅ One-Time Notifications - Version updates show only once per version'
+    ]
+  },
   {
     version: '1.3.0',
     date: '2025-12-09',
