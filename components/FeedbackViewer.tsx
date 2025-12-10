@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, Star, Filter, Search, Calendar, User, Mail, MapPin, Award, CheckCircle, Clock, AlertCircle, Download, X } from 'lucide-react';
 import { ref, onValue, update } from 'firebase/database';
 import { db } from '../services/firebase';
+import LoadingSpinner from './LoadingSpinner';
 
 interface Feedback {
   id: string;
@@ -149,11 +150,8 @@ const FeedbackViewer: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto"></div>
-          <p className="text-stone-600">Loading feedback...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner message="Loading feedback..." size="lg" />
       </div>
     );
   }
@@ -438,7 +436,7 @@ const FeedbackViewer: React.FC = () => {
               </div>
 
               {/* Category & Status */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid responsive-grid-2 gap-4">
                 <div className="space-y-2">
                   <p className="text-sm text-stone-600 font-semibold">Category</p>
                   <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold border-2 ${getCategoryColor(selectedFeedback.category)}`}>

@@ -8,6 +8,7 @@ import { translateText, SUPPORTED_LANGUAGES } from '../services/translator';
 import { isAdmin } from '../services/admin';
 import FestivalRequestForm from '../components/FestivalRequestForm';
 import { getUserFestivalRequests, FestivalRequest } from '../services/requests';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 interface Festival {
   id: string;
@@ -595,8 +596,7 @@ const FestivalsPage: React.FC = () => {
 
       {loading ? (
         <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-stone-300">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mb-4"></div>
-          <p className="text-stone-500 text-lg">Loading festivals...</p>
+          <LoadingSpinner message="Loading festivals..." size="lg" />
         </div>
       ) : filteredFestivals.length === 0 && (
         <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-stone-300">

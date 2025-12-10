@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { Question, Answer } from '../types/questions';
 import {
@@ -214,10 +215,7 @@ const QuestionDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div>
-          <p className="text-stone-600 font-medium text-lg">Loading question...</p>
-        </div>
+        <LoadingSpinner message="Loading question..." size="lg" />
       </div>
     );
   }

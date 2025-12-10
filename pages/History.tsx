@@ -21,7 +21,11 @@ const History: React.FC = () => {
     fetch();
   }, [user]);
 
-  if (loading) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4"></div><p className="text-stone-600 font-medium text-lg">Loading history...</p></div></div>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <LoadingSpinner message="Loading history..." size="lg" />
+    </div>
+  );
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-fadeIn">

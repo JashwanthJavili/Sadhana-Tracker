@@ -549,7 +549,11 @@ const Settings: React.FC = () => {
     }
   };
 
-  if (!settings) return <div className="flex items-center justify-center min-h-[400px]"><div className="text-center"><div className="inline-block w-12 h-12 border-3 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-3"></div><p className="text-stone-600 font-medium text-sm sm:text-base">Loading settings...</p></div></div>;
+  if (!settings) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <LoadingSpinner message="Loading settings..." size="md" />
+    </div>
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto animate-fadeIn">
