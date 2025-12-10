@@ -224,7 +224,7 @@ const Dashboard: React.FC = () => {
 
       {/* Version Footer */}
       <div className="text-center text-stone-400 text-xs py-4">
-        <p>Sadhana Sanga v{versionData.version}</p>
+        <p>Sadhana Sang v{versionData.version}</p>
       </div>
     </div>
   );

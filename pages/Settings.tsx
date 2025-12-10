@@ -1248,7 +1248,7 @@ const Settings: React.FC = () => {
             {showInstallButton && (
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 border-2 border-green-400 rounded-xl p-4 sm:p-6 text-center">
                 <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">🎉 Ready to Install!</h4>
-                <p className="text-green-50 mb-3 sm:mb-5 text-xs sm:text-sm">Click the button below to install Sadhana Sanga on your device</p>
+                <p className="text-green-50 mb-3 sm:mb-5 text-xs sm:text-sm">Click the button below to install Sadhana Sang on your device</p>
                 <button
                   onClick={handleInstallClick}
                   className="inline-flex items-center gap-2 sm:gap-3 bg-white text-green-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-3xl transform hover:scale-105 active:scale-95 transition-all"

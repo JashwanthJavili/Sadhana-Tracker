@@ -1,4 +1,4 @@
-/* Service Worker for Sadhana Sanga PWA - Production Optimized */
+/* Service Worker for Sadhana Sang PWA - Production Optimized */
 
 const APP_VERSION = '1.0.2';
 const CACHE_NAME = `sadhana-sanga-v${APP_VERSION}`;

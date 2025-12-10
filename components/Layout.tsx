@@ -467,22 +467,59 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Feedback Modal */}
       {showFeedback && <FeedbackPrompt onClose={() => setShowFeedback(false)} />}
 
-      {/* Floating Action Icons - Desktop Only: Music, Connection Requests, Notification Bell */}
+      {/* Floating Action Icons - Desktop Only: Music, Connection Requests, Notification Bell, Message */}
       {!isGuest && (
-        <div className="hidden md:flex fixed bottom-24 right-6 z-50 flex-col gap-3">
+        <div className="hidden md:flex fixed bottom-6 right-6 z-50 flex-col gap-3">
           <div id="music-player-container"></div>
-          <div className="flex gap-2">
-            <ConnectionRequestsIcon />
-            <NotificationBell />
-          </div>
+          <ConnectionRequestsIcon />
+          <NotificationBell />
+          {location.pathname !== '/chats' && !location.pathname.startsWith('/chat/') && (
+            <button
+              onClick={() => navigate('/chats')}
+              className={`bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 hover:scale-110 active:scale-95 flex items-center gap-4 group p-3 sm:p-5 ${
+                unreadCount > 0 ? 'sm:px-6 sm:py-4' : ''
+              }`}
+              style={unreadCount > 0 ? {
+                animation: 'bounce-gentle 2s ease-in-out infinite'
+              } : undefined}
+              aria-label={unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : 'Messages'}
+            >
+              <div className="relative">
+                <MessageCircle size={28} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 ring-2 ring-white shadow-lg animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
+              {unreadCount > 0 && (
+                <span className="font-semibold text-sm whitespace-nowrap">
+                  {unreadCount === 1 ? '1 Unread Message' : `${unreadCount} Unread Messages`}
+                </span>
+              )}
+              
+              {unreadCount > 0 && (
+                <style>{`
+                  @keyframes bounce-gentle {
+                    0%, 100% {
+                      transform: translateY(0);
+                    }
+                    50% {
+                      transform: translateY(-8px);
+                    }
+                  }
+                `}</style>
+              )}
+            </button>
+          )}
         </div>
       )}
 
-      {/* Floating WhatsApp-style Message Icon - Always Visible - Responsive Size */}
+      {/* Floating WhatsApp-style Message Icon - Mobile Only */}
       {!isGuest && location.pathname !== '/chats' && !location.pathname.startsWith('/chat/') && (
         <button
           onClick={() => navigate('/chats')}
-          className={`fixed bottom-6 right-6 z-50 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 hover:scale-110 active:scale-95 flex items-center gap-4 group p-3 sm:p-5 ${
+          className={`md:hidden fixed bottom-6 right-6 z-50 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 hover:scale-110 active:scale-95 flex items-center gap-4 group p-3 sm:p-5 ${
             unreadCount > 0 ? 'sm:px-6 sm:py-4' : ''
           }`}
           style={unreadCount > 0 ? {

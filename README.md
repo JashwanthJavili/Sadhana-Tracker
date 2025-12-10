@@ -1,4 +1,4 @@
-# 🙏 Sadhana Sanga
+# 🙏 Sadhana Sang
 
 **A spiritual productivity tracker for ISKCON devotees**
 

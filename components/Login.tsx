@@ -96,7 +96,7 @@ const Login: React.FC = () => {
 
               {/* App Name - Smaller */}
               <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white drop-shadow-lg">
-                Sadhana Sanga
+                Sadhana Sang
               </h1>
 
               {/* Telugu Guru Pranaam */}

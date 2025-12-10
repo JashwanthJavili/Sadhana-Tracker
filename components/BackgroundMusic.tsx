@@ -216,7 +216,7 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
         const currentSong = SONGS.find(s => s.id === currentSongId) || SONGS[0];
         
         const musicPlayer = (
-          <>
+          <div className="relative">
             {/* Devotional Mantra Popup - Shows full name with icon */}
             {showSongName && (
               <div className="absolute bottom-full right-0 mb-2">
@@ -246,8 +246,8 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
               </div>
             )}
 
-            {/* Compact Mode - Enhanced with interesting features */}
-              <div className="relative group pointer-events-none">
+            {/* Main button container */}
+            <div className="relative group pointer-events-none">
                 {/* Multi-layer glow and ripple effects when playing - NOT CLICKABLE */}
                 {isPlaying && (
                   <>
@@ -312,14 +312,14 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
                   )}
                 </div>
               </div>
-          </>
+          </div>
         );
 
         // On desktop, render into the container; on mobile, render at fixed position
         if (!isMobile) {
           const container = document.getElementById('music-player-container');
           if (container) {
-            return ReactDOM.createPortal(<div ref={playerRef}>{musicPlayer}</div>, container);
+            return ReactDOM.createPortal(musicPlayer, container);
           }
         }
         // Mobile: position vertically above message button (fixed position)

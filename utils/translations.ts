@@ -17,14 +17,14 @@ export const translations = {
     
     // Login Page
     login: {
-      title: 'Sadhana Sanga',
+      title: 'Sadhana Sang',
       subtitle: 'Track Your Spiritual Journey',
       description: 'A complete spiritual productivity platform for ISKCON devotees',
       signInWithGoogle: 'Sign in with Google',
       continueAsGuest: 'Continue as Guest',
       guestNote: 'Guest data is saved locally. Sign in to sync across devices.',
       features: {
-        title: 'Why Sadhana Sanga?',
+        title: 'Why Sadhana Sang?',
         track: 'Track daily spiritual practices',
         analyze: 'Analyze your progress with insights',
         journal: 'Record devotional feelings',

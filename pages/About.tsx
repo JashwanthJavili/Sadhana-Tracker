@@ -20,7 +20,7 @@ const About: React.FC = () => {
             <div className="bg-white/20 p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl">
               <Sparkles size={28} className="text-yellow-200 sm:w-10 sm:h-10" />
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold leading-tight">About Sadhana Sanga</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold leading-tight">About Sadhana Sang</h1>
           </div>
           {/* ISKCON Logo */}
           <div className="bg-white/95 p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-xl">
@@ -523,7 +523,7 @@ const About: React.FC = () => {
           {[
             {
               question: 'Can I use this app offline?',
-              answer: 'Yes! Once installed, Sadhana Sanga works offline for most features. Your data syncs automatically when you\'re back online. Perfect for traveling or areas with limited connectivity.'
+              answer: 'Yes! Once installed, Sadhana Sang works offline for most features. Your data syncs automatically when you\'re back online. Perfect for traveling or areas with limited connectivity.'
             },
             {
               question: 'How do I track my progress over time?',
@@ -611,7 +611,7 @@ const About: React.FC = () => {
       <section className="bg-gradient-to-br from-orange-600 via-amber-600 to-orange-600 rounded-xl sm:rounded-2xl p-6 sm:p-7 md:p-8 text-white shadow-2xl border-2 border-orange-400">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold mb-3 sm:mb-4">Share Your Feedback</h2>
         <p className="text-orange-50 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg leading-relaxed">
-          Your feedback helps us improve Sadhana Sanga for the community.
+          Your feedback helps us improve Sadhana Sang for the community.
         </p>
         <a
           href="https://forms.zohopublic.in/jashwanthjashu684gm1/form/SadhanaTracerFeedbackForm/formperma/KOoeajQ20c3B6YQ6Bmmy76hxc3xkOC9-BAc-Lu7GEjU"
@@ -626,7 +626,7 @@ const About: React.FC = () => {
 
       {/* Version & Credits */}
       <div className="text-center text-stone-500 text-xs sm:text-sm space-y-1 pb-6 sm:pb-8 px-4">
-        <p className="font-bold text-base">Sadhana Sanga v{versionData.version}</p>
+        <p className="font-bold text-base">Sadhana Sang v{versionData.version}</p>
         <p className="text-xs text-stone-400">Build Date: {versionData.buildDate}</p>
         <p>Made with ❤️ for the ISKCON community</p>
         <p className="italic text-xs">Hare Krishna Hare Krishna Krishna Krishna Hare Hare</p>
