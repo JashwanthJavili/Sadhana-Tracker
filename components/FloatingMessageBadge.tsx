@@ -35,42 +35,26 @@ const FloatingMessageBadge: React.FC = () => {
   // Hide on ChatsList and ChatWindow pages
   useEffect(() => {
     const isChatPage = location.pathname === '/chats' || location.pathname.startsWith('/chat/');
-    setIsVisible(!isChatPage && unreadCount > 0);
-  }, [location.pathname, unreadCount]);
+    setIsVisible(!isChatPage);
+  }, [location.pathname]);
 
   if (!isVisible) return null;
 
   return (
-    <button
-      onClick={() => navigate('/chats')}
-      className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-full shadow-2xl hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center gap-2 px-4 py-3 animate-bounce-slow"
-      style={{
-        animation: 'bounce-gentle 2s ease-in-out infinite'
-      }}
-    >
-      <div className="relative">
-        <MessageCircle size={24} />
+    <>
+      {/* Fixed round message icon button with badge number - Mobile Only, positioned below music icon */}
+      <button
+        onClick={() => navigate('/chats')}
+        className="md:hidden fixed bottom-6 right-6 z-[55] bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg active:scale-95 transition-all duration-300"
+      >
+        <MessageCircle size={24} className="relative z-10" />
         {unreadCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 border-2 border-white shadow-lg">
+          <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full min-w-[22px] h-6 flex items-center justify-center border-2 border-orange-600 shadow-lg">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </div>
-      <span className="font-bold text-sm">
-        {unreadCount === 1 ? '1 Unread Message' : `${unreadCount} Unread Messages`}
-      </span>
-      
-      <style>{`
-        @keyframes bounce-gentle {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-      `}</style>
-    </button>
+      </button>
+    </>
   );
 };
 

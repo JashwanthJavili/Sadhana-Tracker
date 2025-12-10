@@ -7,7 +7,6 @@ import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserData } from '../contexts/UserDataContext';
 import LoadingScreen from '../components/LoadingScreen';
-import { getGreeting } from '../utils/honorific';
 
 // @ts-ignore
 import versionData from '../version.json';
@@ -82,7 +81,7 @@ const Dashboard: React.FC = () => {
 
         <div className="relative z-10">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold mb-2">
-            Hare Krishna, {settings?.userName && settings?.gender ? getGreeting(settings.userName, settings.gender) : (settings?.userName || 'Devotee')}
+            Namaskar {settings?.userName || 'Devotee'}, Hare Krishna
           </h1>
           <p className="text-orange-100 text-xs sm:text-sm mb-1">
             {settings?.iskconCenter || 'Local Center'}
@@ -116,8 +115,8 @@ const Dashboard: React.FC = () => {
               <Award size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </div>
           </div>
-          <div className="h-8 sm:h-10 md:h-12 mb-2">
-             <ResponsiveContainer width="100%" height="100%">
+          <div className="h-8 sm:h-10 md:h-12 mb-2 w-full">
+             <ResponsiveContainer width="100%" height={32} minWidth={50}>
                 <LineChart data={sparklineData}>
                   <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={2} dot={false} />
                 </LineChart>

@@ -98,12 +98,12 @@ export default function NotificationBell() {
       {/* Bell Icon Button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-3 sm:p-5 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-full transition-all hover:scale-110 active:scale-95 shadow-2xl hover:shadow-orange-500/50"
+        className="relative w-14 h-14 bg-gradient-to-r from-orange-600 to-orange-700 hover:shadow-xl rounded-full flex items-center justify-center transition-shadow duration-300 shadow-lg"
         aria-label="Notifications"
       >
-        <Bell size={28} className="text-white" />
+        <Bell size={24} className="text-white" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse px-1.5 ring-2 ring-white shadow-lg">
+          <span className="absolute -top-1 -right-1 min-w-[22px] h-6 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-orange-600 shadow-lg">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

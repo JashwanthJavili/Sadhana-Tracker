@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Question } from '../types/questions';
 import { getAllQuestions, searchQuestions, upvoteQuestion } from '../services/questions';
 import { HelpCircle, Search, Plus, ThumbsUp, MessageCircle, Eye, TrendingUp, Clock, Filter, X } from 'lucide-react';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const QuestionsPage: React.FC = () => {
   const { user } = useAuth();

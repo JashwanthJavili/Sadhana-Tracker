@@ -14,6 +14,18 @@ const VersionChecker: React.FC = () => {
   const [countdown, setCountdown] = useState(10);
   const [currentVersion, setCurrentVersion] = useState<string>('');
   const [latestVersion, setLatestVersion] = useState<string>('');
+  
+  // Check if user is new (account created within 5 minutes)
+  const checkIfNewUser = () => {
+    if (!user || user.uid === 'guest') return false;
+    const userCreatedAt = user.metadata?.creationTime;
+    if (!userCreatedAt) return false;
+    const now = new Date();
+    const isRecentlyCreated = (now.getTime() - new Date(userCreatedAt).getTime()) < 5 * 60 * 1000; // 5 minutes
+    return isRecentlyCreated;
+  };
+
+  const isNewUser = checkIfNewUser();
 
   // Check version on mount and every 60 seconds
   useEffect(() => {
@@ -44,8 +56,8 @@ const VersionChecker: React.FC = () => {
           } else {
             setCurrentVersion(storedVersion);
             
-            // Compare versions - only show notification if not already shown for this version
-            if (storedVersion !== latestVer && notificationShown !== latestVer) {
+            // Compare versions - only show notification if not a new user and not already shown for this version
+            if (storedVersion !== latestVer && notificationShown !== latestVer && !isNewUser) {
               console.log(`🔄 New version detected: ${storedVersion} → ${latestVer}`);
               setLatestVersion(latestVer);
               setNewVersionAvailable(true);
@@ -64,7 +76,11 @@ const VersionChecker: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Version check failed:', error);
+        // Silently fail - version check is not critical
+        if (error instanceof Error && error.message.includes('setCurrentVersion')) {
+          // This can happen during hot reload, ignore it
+          return;
+        }
       }
     };
 
@@ -75,7 +91,7 @@ const VersionChecker: React.FC = () => {
     const interval = setInterval(checkVersion, 60 * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [user, isNewUser]);
 
   // Countdown timer when update detected
   useEffect(() => {

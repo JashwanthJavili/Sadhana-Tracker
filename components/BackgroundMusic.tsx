@@ -22,10 +22,16 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const volumeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const playerRef = useRef<HTMLDivElement | null>(null);
+  
+  // Load saved volume from localStorage or use maximum by default
+  const savedVolume = typeof window !== 'undefined' ? localStorage.getItem('backgroundMusicVolume') : null;
+  const defaultVolume = savedVolume ? parseFloat(savedVolume) / 100 : 1.0; // Default 100%
+  const defaultTargetVolume = savedVolume ? parseFloat(savedVolume) / 100 : 1.0; // Default 100%
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(0.2); // Start at 20% volume
-  const [targetVolume, setTargetVolume] = useState(0.3); // Target 30%
+  const [volume, setVolume] = useState(defaultVolume);
+  const [targetVolume, setTargetVolume] = useState(defaultTargetVolume);
   const [showConsent, setShowConsent] = useState(false);
   const [userConsented, setUserConsented] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
@@ -252,28 +258,28 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ autoPlay = true }) =>
                 {/* Main button - ONLY THE ICON IS CLICKABLE: single tap toggles play/pause */}
                 <div 
                   onClick={togglePlay}
-                  className="relative bg-gradient-to-br from-orange-300 via-orange-500 to-orange-600 rounded-full shadow-2xl p-3 sm:p-5 border-2 border-orange-200/60 backdrop-blur-sm cursor-pointer pointer-events-auto"
+                  className="relative bg-gradient-to-br from-orange-600 to-orange-700 rounded-full shadow-lg w-14 h-14 flex items-center justify-center border border-orange-500/50 backdrop-blur-sm cursor-pointer pointer-events-auto hover:shadow-xl transition-shadow duration-300"
                 >
                   
-                  {/* Icon - Use same size on mobile and web (24px) for better visibility */}
+                  {/* Icon - Fixed 24px size for consistency */}
                   {isPlaying ? (
                     <Music 
-                      size={28} 
-                      className="text-white drop-shadow-lg relative z-10"
-                      strokeWidth={2.5}
+                      size={24} 
+                      className="text-white drop-shadow-lg"
+                      strokeWidth={2}
                     />
                   ) : (
                     showMuteIcon ? (
                       <VolumeX 
-                        size={28} 
-                        className="text-white drop-shadow-lg relative z-10"
-                        strokeWidth={2.5}
+                        size={24} 
+                        className="text-white drop-shadow-lg"
+                        strokeWidth={2}
                       />
                     ) : (
                       <Music 
-                        size={28} 
-                        className="text-white drop-shadow-lg relative z-10"
-                        strokeWidth={2.5}
+                        size={24} 
+                        className="text-white drop-shadow-lg"
+                        strokeWidth={2}
                       />
                     )
                   )}
