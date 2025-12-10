@@ -39,6 +39,7 @@ const Settings: React.FC = () => {
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [activeTab, setActiveTab] = useState<'settings' | 'guru' | 'about'>('settings');
   
   // Admin email - only this user has admin privileges
   const ADMIN_EMAIL = 'jashwanthjavili7@gmail.com';
@@ -558,14 +559,21 @@ const Settings: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto animate-fadeIn">
+      {/* Header */}
       <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg sm:shadow-xl border-2 border-indigo-400">
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 flex items-center gap-2">
               <Wrench className="text-white" size={20} />
-              Settings
+              {activeTab === 'settings' ? 'Settings' : activeTab === 'guru' ? 'My Guru' : 'About'}
             </h2>
-            <p className="text-indigo-100 text-xs sm:text-sm">Configure your spiritual practice</p>
+            <p className="text-indigo-100 text-xs sm:text-sm">
+              {activeTab === 'settings' 
+                ? 'Configure your spiritual practice' 
+                : activeTab === 'guru' 
+                ? 'Spiritual guidance and inspiration' 
+                : 'App information and version'}
+            </p>
           </div>
           <button
             onClick={handleRefresh}
@@ -578,7 +586,48 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* Profile Section */}
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
+        <div className="grid grid-cols-3 gap-0">
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm transition-all ${
+              activeTab === 'settings'
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <Wrench size={18} className="mx-auto mb-1" />
+            Settings
+          </button>
+          <button
+            onClick={() => setActiveTab('guru')}
+            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm transition-all border-x border-stone-200 ${
+              activeTab === 'guru'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <User size={18} className="mx-auto mb-1" />
+            My Guru
+          </button>
+          <button
+            onClick={() => setActiveTab('about')}
+            className={`p-3 sm:p-4 font-bold text-xs sm:text-sm transition-all ${
+              activeTab === 'about'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                : 'bg-stone-50 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            <Smartphone size={18} className="mx-auto mb-1" />
+            About
+          </button>
+        </div>
+      </div>
+
+      {/* Settings Tab Content */}
+      {activeTab === 'settings' && (
+        <div className="space-y-4 sm:space-y-6 animate-fadeIn">{/* Profile Section */}
       <section className="bg-white rounded-lg sm:rounded-xl shadow-lg border-2 border-stone-200 overflow-hidden">
         <button
           onClick={() => toggleSection('profile')}
@@ -700,40 +749,7 @@ const Settings: React.FC = () => {
         )}
       </section>
 
-      {/* Spiritual Guide Section */}
-      <section className="bg-gradient-to-br from-white to-purple-50 rounded-lg sm:rounded-xl shadow-lg border-2 border-purple-300 p-4 sm:p-6">
-        <h3 className="text-base sm:text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-2 rounded-lg shadow-lg">
-            <User className="text-white" size={18}/>
-          </div>
-          Spiritual Guide
-        </h3>
-        <div className="space-y-4">
-          {isEditing ? (
-            <div>
-              <label className="block text-sm font-bold text-stone-800 mb-2">Guided By</label>
-              <input
-                type="text"
-                value={editedSettings?.guruName || ''}
-                onChange={(e) => setEditedSettings({ ...editedSettings!, guruName: e.target.value })}
-                className="w-full p-3 border-2 border-stone-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-500 outline-none text-sm font-medium shadow-sm hover:border-purple-300 transition-all"
-                placeholder="e.g. HG Pranavanand Das Prabhu"
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-bold text-stone-800 mb-2">Guided By</label>
-              <div className="w-full p-3 bg-white border-2 border-purple-200 rounded-lg text-sm font-medium shadow-sm">
-                {settings.guruName || 'Not set'}
-              </div>
-            </div>
-          )}
-          <div className="bg-gradient-to-br from-orange-100 to-amber-100 p-4 rounded-lg shadow-sm border-2 border-orange-300">
-            <p className="text-xs sm:text-sm text-orange-900 italic font-serif font-medium leading-relaxed">
-              "By the mercy of the spiritual master one receives the benediction of Krishna."
-            </p>
-          </div>
-        </div>
+      {/* Spiritual Guide Section - Moving to My Guru tab */}
       </section>
 
       {/* Privacy Settings Section */}
@@ -1419,8 +1435,142 @@ const Settings: React.FC = () => {
           </div>
         </div>
       </section>
+        </div>
+      )}
 
-      {/* App Version & Updates */}
+      {/* My Guru Tab Content */}
+      {activeTab === 'guru' && (
+        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+          {/* Spiritual Guide Information */}
+          <section className="bg-gradient-to-br from-white to-purple-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-purple-300 p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
+              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+                <User className="text-white" size={28}/>
+              </div>
+              My Spiritual Guide
+            </h3>
+            
+            <div className="space-y-6">
+              {/* Guru Name Section */}
+              <div className="bg-white rounded-xl border-2 border-purple-200 p-5 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-base font-bold text-stone-900">Guided By</label>
+                  {!isEditing && (
+                    <button
+                      onClick={handleEdit}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-sm transition-all shadow-md flex items-center gap-2"
+                    >
+                      <Edit2 size={16} />
+                      Edit
+                    </button>
+                  )}
+                </div>
+                
+                {isEditing ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={editedSettings?.guruName || ''}
+                      onChange={(e) => setEditedSettings({ ...editedSettings!, guruName: e.target.value })}
+                      className="w-full p-4 border-3 border-purple-300 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-500 outline-none text-base font-semibold shadow-md hover:border-purple-400 transition-all"
+                      placeholder="e.g., His Grace Pranavanand Das Prabhu"
+                    />
+                    <p className="text-xs text-stone-600 mt-2">Enter your spiritual guide's name (Guru, Siksha Guru, or senior devotee who guides you)</p>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold text-purple-900 bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                    {settings.guruName || 'Not set'}
+                  </div>
+                )}
+              </div>
+
+              {/* Inspirational Quote */}
+              <div className="bg-gradient-to-br from-orange-100 via-amber-100 to-yellow-100 p-6 rounded-xl shadow-lg border-3 border-orange-300">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">🙏</div>
+                  <div>
+                    <p className="text-sm sm:text-base text-orange-900 italic font-serif font-semibold leading-relaxed mb-2">
+                      "By the mercy of the spiritual master one receives the benediction of Krishna. Without the grace of the spiritual master, one cannot make any advancement."
+                    </p>
+                    <p className="text-xs text-orange-800 font-bold">— Sri Caitanya Mahaprabhu</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Guru Tattva Section */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-300 p-5">
+                <h4 className="font-bold text-blue-900 mb-4 flex items-center gap-2 text-base sm:text-lg">
+                  <span className="text-2xl">📖</span>
+                  Understanding Guru Tattva
+                </h4>
+                <ul className="space-y-3 text-sm text-blue-900">
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-600 font-bold text-lg mt-0.5">•</span>
+                    <span><strong>Diksha Guru:</strong> The spiritual master who gives formal initiation and connects you to the disciplic succession</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-600 font-bold text-lg mt-0.5">•</span>
+                    <span><strong>Siksha Guru:</strong> The instructing spiritual master who guides your spiritual practice and understanding</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-600 font-bold text-lg mt-0.5">•</span>
+                    <span><strong>Senior Devotees:</strong> Experienced practitioners who offer guidance and support in your spiritual journey</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Daily Prayer Section */}
+              <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl border-2 border-purple-300 p-5">
+                <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2 text-base sm:text-lg">
+                  <span className="text-2xl">🕉️</span>
+                  Guru Pranama Mantra
+                </h4>
+                <div className="bg-white rounded-lg p-4 space-y-3">
+                  <p className="text-purple-900 font-semibold text-center text-base sm:text-lg italic">
+                    oṁ ajñāna-timirāndhasya<br />
+                    jñānāñjana-śalākayā<br />
+                    cakṣur unmīlitaṁ yena<br />
+                    tasmai śrī-gurave namaḥ
+                  </p>
+                  <div className="border-t-2 border-purple-200 pt-3">
+                    <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                      <strong>Translation:</strong> I offer my respectful obeisances unto my spiritual master, who has opened my eyes, which were blinded by the darkness of ignorance, with the torchlight of knowledge.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button if Editing */}
+              {isEditing && (
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleSaveEdit}
+                    className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl transform hover:scale-105 active:scale-95 ${
+                      saveStatus === 'saved'
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                    }`}
+                  >
+                    <Save size={18} />
+                    {saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="flex items-center gap-2 px-6 py-4 rounded-xl font-bold text-base bg-stone-300 text-stone-700 hover:bg-stone-400 transition-all shadow-lg transform hover:scale-105 active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* About Tab Content */}
+      {activeTab === 'about' && (
+        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+      {/* App Version & Updates - Moving to About tab */}
       <section className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-xl border-2 sm:border-3 border-blue-300 p-4 sm:p-6">
         <h3 className="text-2xl font-bold text-stone-900 mb-6 flex items-center gap-3">
           <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 rounded-xl shadow-lg">
@@ -1505,6 +1655,8 @@ const Settings: React.FC = () => {
           )}
         </div>
       </section>
+        </div>
+      )}
     </div>
   );
 };
