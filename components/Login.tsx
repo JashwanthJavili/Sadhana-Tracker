@@ -203,6 +203,11 @@ const Login: React.FC = () => {
             <p className="text-orange-900 text-sm font-serif italic font-semibold">
               "Hare Krishna • Hare Rama"
             </p>
+            <p className="text-orange-800 text-xs sm:text-sm font-semibold mt-1 leading-tight">
+              Developed with Devotion
+              <br />
+              by J Jashwanth
+            </p>
           </div>
         </div>
       </div>
